@@ -2,5 +2,5 @@
 
 return [
     'name' => 'Woocommerce',
-    'module_version' => "0.8"
+    'module_version' => "1.0"
 ];

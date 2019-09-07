@@ -1,8 +1,12 @@
 @forelse($products as $product)
 	<div class="col-md-3 col-xs-4 product_list no-print">
-		<div class="product_box bg-gray" data-toggle="tooltip" data-placement="bottom" data-variation_id="{{$product->variation_id}}" title="{{$product->name}} @if($product->type == 'variable')- {{$product->variation}} @endif {{ '(' . $product->sub_sku . ')'}}">
+		<div class="product_box bg-gray" data-toggle="tooltip" data-placement="bottom" data-variation_id="{{$product->id}}" title="{{$product->name}} @if($product->type == 'variable')- {{$product->variation}} @endif {{ '(' . $product->sub_sku . ')'}}">
 		<div class="image-container">
-			<img src="{{$product->image_url}}" alt="">
+			@if(count($product->media) > 0)
+				<img src="{{$product->media->first()->display_url}}" alt="Product Image">
+			@else
+				<img src="{{asset('/img/default.png')}}" alt="Product Image">
+			@endif
 		</div>
 			<div class="text text-muted text-uppercase">
 				<small>{{$product->name}} 

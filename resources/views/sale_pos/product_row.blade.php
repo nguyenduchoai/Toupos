@@ -16,6 +16,10 @@
 			{!! $product_name !!}
 		@endif
 		<input type="hidden" class="enable_sr_no" value="{{$product->enable_sr_no}}">
+		<input type="hidden" 
+			class="product_type" 
+			name="products[{{$row_count}}][product_type]" 
+			value="{{$product->product_type}}">
 		<div data-toggle="tooltip" data-placement="bottom" title="@lang('lang_v1.add_description')">
 			<i class="fa fa-commenting cursor-pointer text-primary add-pos-row-description" data-toggle="modal" data-target="#row_description_modal_{{$row_count}}"></i>
 		</div>
@@ -164,9 +168,23 @@
         @endforeach
 		<div class="input-group input-number">
 			<span class="input-group-btn"><button type="button" class="btn btn-default btn-flat quantity-down"><i class="fa fa-minus text-danger"></i></button></span>
-		<input type="text" data-min="1" class="form-control pos_quantity input_number mousetrap input_quantity" value="{{@format_quantity($product->quantity_ordered)}}" name="products[{{$row_count}}][quantity]" data-allow-overselling="@if(empty($pos_settings['allow_overselling'])){{'false'}}@else{{'true'}}@endif" 
-		@if($allow_decimal) data-decimal=1 @else data-decimal=0 data-rule-abs_digit="true" data-msg-abs_digit="@lang('lang_v1.decimal_value_not_allowed')" @endif
-		data-rule-required="true" data-msg-required="@lang('validation.custom-messages.this_field_is_required')" @if($product->enable_stock && empty($pos_settings['allow_overselling']) ) data-rule-max-value="{{$max_qty_rule}}" data-qty_available="{{$product->qty_available}}" data-msg-max-value="{{$max_qty_msg}}" data-msg_max_default="@lang('validation.custom-messages.quantity_not_available', ['qty'=> $product->formatted_qty_available, 'unit' => $product->unit  ])" @endif >
+		<input type="text" data-min="1" 
+			class="form-control pos_quantity input_number mousetrap input_quantity" 
+			value="{{@format_quantity($product->quantity_ordered)}}" name="products[{{$row_count}}][quantity]" data-allow-overselling="@if(empty($pos_settings['allow_overselling'])){{'false'}}@else{{'true'}}@endif" 
+			@if($allow_decimal) 
+				data-decimal=1 
+			@else 
+				data-decimal=0 
+				data-rule-abs_digit="true" 
+				data-msg-abs_digit="@lang('lang_v1.decimal_value_not_allowed')" 
+			@endif
+			data-rule-required="true" 
+			data-msg-required="@lang('validation.custom-messages.this_field_is_required')" 
+			@if($product->enable_stock && empty($pos_settings['allow_overselling']) )
+				data-rule-max-value="{{$max_qty_rule}}" data-qty_available="{{$product->qty_available}}" data-msg-max-value="{{$max_qty_msg}}" 
+				data-msg_max_default="@lang('validation.custom-messages.quantity_not_available', ['qty'=> $product->formatted_qty_available, 'unit' => $product->unit  ])" 
+			@endif 
+		>
 		<span class="input-group-btn"><button type="button" class="btn btn-default btn-flat quantity-up"><i class="fa fa-plus text-success"></i></button></span>
 		</div>
 		
@@ -188,12 +206,52 @@
 
 		<input type="hidden" class="hidden_base_unit_sell_price" value="{{$product->default_sell_price / $multiplier}}">
 		
+		{{-- Hidden fields for combo products --}}
+		@if($product->product_type == 'combo')
+
+			@foreach($product->combo_products as $k => $combo_product)
+
+				@if(isset($action) && $action == 'edit')
+					@php
+						$combo_product['qty_required'] = $combo_product['quantity'] / $product->quantity_ordered;
+
+						$qty_total = $combo_product['quantity'];
+					@endphp
+				@else
+					@php
+						$qty_total = $combo_product['qty_required'];
+					@endphp
+				@endif
+
+				<input type="hidden" 
+					name="products[{{$row_count}}][combo][{{$k}}][product_id]"
+					value="{{$combo_product['product_id']}}">
+
+					<input type="hidden" 
+					name="products[{{$row_count}}][combo][{{$k}}][variation_id]"
+					value="{{$combo_product['variation_id']}}">
+
+					<input type="hidden"
+					class="combo_product_qty" 
+					name="products[{{$row_count}}][combo][{{$k}}][quantity]"
+					data-unit_quantity="{{$combo_product['qty_required']}}"
+					value="{{$qty_total}}">
+
+					@if(isset($action) && $action == 'edit')
+						<input type="hidden" 
+							name="products[{{$row_count}}][combo][{{$k}}][transaction_sell_lines_id]"
+							value="{{$combo_product['id']}}">
+					@endif
+
+			@endforeach
+		@endif
 	</td>
-	@if(!empty($waiters))
+
+	@if(!empty($pos_settings['inline_service_staff']))
 		<td>
 			<div class="form-group">
 				<div class="input-group">
-					{!! Form::select("products[" . $row_count . "][res_service_staff_id]", $waiters, !empty($product->res_service_staff_id) ? $product->res_service_staff_id : null, ['class' => 'form-control select2 order_line_service_staff', 'placeholder' => __('restaurant.select_service_staff')]); !!}
+					{!! Form::select("products[" . $row_count . "][res_service_staff_id]", $waiters, !empty($product->res_service_staff_id) ? $product->res_service_staff_id : null, ['class' => 'form-control select2 order_line_service_staff', 'placeholder' => __('restaurant.select_service_staff'), 'required' => (!empty($pos_settings['is_service_staff_required']) && $pos_settings['is_service_staff_required'] == 1) ? true : false ]); !!}
 				</div>
 			</div>
 		</td>

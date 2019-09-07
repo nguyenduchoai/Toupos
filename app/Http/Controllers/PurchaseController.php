@@ -2,28 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\AccountTransaction;
+use App\Business;
+use App\BusinessLocation;
 use App\Contact;
+use App\CustomerGroup;
 use App\Product;
-use App\Variation;
+use App\PurchaseLine;
 use App\TaxRate;
 use App\Transaction;
-use App\PurchaseLine;
-use App\BusinessLocation;
-use App\Business;
-use App\CustomerGroup;
 use App\User;
-use App\Unit;
-use App\AccountTransaction;
+use App\Utils\BusinessUtil;
 
+use App\Utils\ModuleUtil;
+use App\Utils\ProductUtil;
+use App\Utils\TransactionUtil;
+
+use App\Variation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
-use Validator;
-
-use App\Utils\ProductUtil;
-use App\Utils\TransactionUtil;
-use App\Utils\BusinessUtil;
-use App\Utils\ModuleUtil;
 
 class PurchaseController extends Controller
 {
@@ -196,7 +194,7 @@ class PurchaseController extends Controller
                     'final_total',
                     '<span class="display_currency final_total" data-currency_symbol="true" data-orig-value="{{$final_total}}">{{$final_total}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                 ->editColumn(
                     'status',
                     '<span class="label @transaction_status($status) status-label no-print" data-status-name="{{__(\'lang_v1.\' . $status)}}" data-orig-value="{{$status}}">{{__(\'lang_v1.\' . $status)}}
@@ -359,7 +357,7 @@ class PurchaseController extends Controller
             $transaction_data['created_by'] = $user_id;
             $transaction_data['type'] = 'purchase';
             $transaction_data['payment_status'] = 'due';
-            $transaction_data['transaction_date'] = $this->productUtil->uf_date($transaction_data['transaction_date']);
+            $transaction_data['transaction_date'] = $this->productUtil->uf_date($transaction_data['transaction_date'], true);
 
             //upload document
             $transaction_data['document'] = $this->transactionUtil->uploadFile($request, 'document', 'documents');
@@ -439,7 +437,7 @@ class PurchaseController extends Controller
 
         foreach ($purchase->purchase_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
-                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value);
+                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
                 $purchase->purchase_lines[$key] = $formated_purchase_line;
             }
         }
@@ -505,7 +503,7 @@ class PurchaseController extends Controller
                         'purchase_lines',
                         'purchase_lines.product',
                         'purchase_lines.product.unit',
-                        'purchase_lines.product.unit.sub_units',
+                        //'purchase_lines.product.unit.sub_units',
                         'purchase_lines.variations',
                         'purchase_lines.variations.product_variation',
                         'location',
@@ -515,7 +513,7 @@ class PurchaseController extends Controller
         
         foreach ($purchase->purchase_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
-                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value);
+                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
                 $purchase->purchase_lines[$key] = $formated_purchase_line;
             }
         }
@@ -602,7 +600,7 @@ class PurchaseController extends Controller
             //Reverse exchage rate and save
             //$update_data['exchange_rate'] = number_format(1 / $update_data['exchange_rate'], 2);
 
-            $update_data['transaction_date'] = $this->productUtil->uf_date($update_data['transaction_date']);
+            $update_data['transaction_date'] = $this->productUtil->uf_date($update_data['transaction_date'], true);
 
             //unformat input values
             $update_data['total_before_tax'] = $this->productUtil->num_uf($update_data['total_before_tax'], $currency_details) * $exchange_rate;
@@ -907,8 +905,8 @@ class PurchaseController extends Controller
                 $product = Product::where('id', $product_id)
                                     ->with(['unit'])
                                     ->first();
-
-                $sub_units = $this->productUtil->getSubUnits($business_id, $product->unit->id);
+                
+                $sub_units = $this->productUtil->getSubUnits($business_id, $product->unit->id, false, $product_id);
 
                 $query = Variation::where('product_id', $product_id)
                                         ->with(['product_variation']);

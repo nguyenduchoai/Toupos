@@ -27,7 +27,6 @@ class AddBusinessBasedUsernameSettingsToSystemTable extends Migration
     public function down()
     {
         Schema::table('system', function (Blueprint $table) {
-
         });
     }
 }

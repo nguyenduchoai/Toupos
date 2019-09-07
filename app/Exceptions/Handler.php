@@ -2,14 +2,14 @@
 
 namespace App\Exceptions;
 
+use App\Mail\ExceptionOccured;
 use Exception;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Mail;
 use Symfony\Component\Debug\Exception\FlattenException;
 use Symfony\Component\Debug\ExceptionHandler as SymfonyExceptionHandler;
-use App\Mail\ExceptionOccured;
 
 class Handler extends ExceptionHandler
 {

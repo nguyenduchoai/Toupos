@@ -6,9 +6,9 @@ $(document).ready(function() {
     }
 
     //Date picker
-    $('#transaction_date').datepicker({
-        autoclose: true,
-        format: datepicker_date_format,
+    $('#transaction_date').datetimepicker({
+        format: moment_date_format + ' ' + moment_time_format,
+        ignoreReadonly: true,
     });
 
     //get suppliers
@@ -712,6 +712,11 @@ function get_purchase_entry_row(product_id, variation_id) {
                         update_table_total();
                         update_grand_total();
                         update_table_sr_number();
+
+                        //Check if multipler is present then multiply it when a new row is added.
+                        if(__getUnitMultiplier(row) > 1){
+                            row.find('select.sub_unit').trigger('change');
+                        }
                     });
                 if ($(result).find('.purchase_quantity').length) {
                     $('#row_count').val(

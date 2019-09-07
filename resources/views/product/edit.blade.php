@@ -28,6 +28,50 @@
               </div>
             </div>
 
+            <div class="col-sm-4 @if(!(session('business.enable_category') && session('business.enable_sub_category'))) hide @endif">
+              <div class="form-group">
+                {!! Form::label('sku', __('product.sku')  . ':*') !!} @show_tooltip(__('tooltip.sku'))
+                {!! Form::text('sku', $product->sku, ['class' => 'form-control',
+                'placeholder' => __('product.sku'), 'required', 'readonly']); !!}
+              </div>
+            </div>
+
+            <div class="col-sm-4">
+              <div class="form-group">
+                {!! Form::label('barcode_type', __('product.barcode_type') . ':*') !!}
+                  {!! Form::select('barcode_type', $barcode_types, $product->barcode_type, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
+              </div>
+            </div>
+
+            <div class="clearfix"></div>
+            
+            <div class="col-sm-4">
+              <div class="form-group">
+                {!! Form::label('unit_id', __('product.unit') . ':*') !!}
+                <div class="input-group">
+                  {!! Form::select('unit_id', $units, $product->unit_id, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
+                  <span class="input-group-btn">
+                    <button type="button" @if(!auth()->user()->can('unit.create')) disabled @endif class="btn btn-default bg-white btn-flat quick_add_unit btn-modal" data-href="{{action('UnitController@create', ['quick_add' => true])}}" title="@lang('unit.add_unit')" data-container=".view_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-4 @if(!session('business.enable_sub_units')) hide @endif">
+              <div class="form-group">
+                {!! Form::label('sub_unit_ids', __('lang_v1.related_sub_units') . ':') !!} @show_tooltip(__('lang_v1.sub_units_tooltip'))
+
+                <select name="sub_unit_ids[]" class="form-control select2" multiple id="sub_unit_ids">
+                  @foreach($sub_units as $sub_unit_id => $sub_unit_value)
+                    <option value="{{$sub_unit_id}}" 
+                      @if(is_array($product->sub_unit_ids) &&in_array($sub_unit_id, $product->sub_unit_ids))   selected 
+                      @endif
+                    >{{$sub_unit_value['name']}}</option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+
             <div class="col-sm-4 @if(!session('business.enable_brand')) hide @endif">
               <div class="form-group">
                 {!! Form::label('brand_id', __('product.brand') . ':') !!}
@@ -40,17 +84,7 @@
               </div>
             </div>
 
-            <div class="col-sm-4">
-              <div class="form-group">
-                {!! Form::label('unit_id', __('product.unit') . ':*') !!}
-                <div class="input-group">
-                  {!! Form::select('unit_id', $units, $product->unit_id, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
-                  <span class="input-group-btn">
-                    <button type="button" @if(!auth()->user()->can('unit.create')) disabled @endif class="btn btn-default bg-white btn-flat quick_add_unit btn-modal" data-href="{{action('UnitController@create', ['quick_add' => true])}}" title="@lang('unit.add_unit')" data-container=".view_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
-                  </span>
-                </div>
-              </div>
-            </div>
+            
 
             <div class="clearfix"></div>
             <div class="col-sm-4 @if(!session('business.enable_category')) hide @endif">
@@ -67,21 +101,8 @@
               </div>
             </div>
 
-            <div class="col-sm-4 @if(!(session('business.enable_category') && session('business.enable_sub_category'))) hide @endif">
-              <div class="form-group">
-                {!! Form::label('sku', __('product.sku')  . ':*') !!} @show_tooltip(__('tooltip.sku'))
-                {!! Form::text('sku', $product->sku, ['class' => 'form-control',
-                'placeholder' => __('product.sku'), 'required', 'readonly']); !!}
-              </div>
-            </div>
-
             <div class="clearfix"></div>
-            <div class="col-sm-4">
-              <div class="form-group">
-                {!! Form::label('barcode_type', __('product.barcode_type') . ':*') !!}
-                  {!! Form::select('barcode_type', $barcode_types, $product->barcode_type, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
-              </div>
-            </div>
+            
             <div class="col-sm-4">
               <div class="form-group">
               <br>
@@ -160,6 +181,17 @@
               @show_tooltip(__('lang_v1.tooltip_sr_no'))
             </div>
           </div>
+
+          <div class="col-sm-4">
+          <div class="form-group">
+            <br>
+            <label>
+              {!! Form::checkbox('not_for_selling', 1, $product->not_for_selling, ['class' => 'input-icheck']); !!} <strong>@lang('lang_v1.not_for_selling')</strong>
+            </label> @show_tooltip(__('lang_v1.tooltip_not_for_selling'))
+          </div>
+        </div>
+
+        <div class="clearfix"></div>
 
         <!-- Rack, Row & position number -->
         @if(session('business.enable_racks') || session('business.enable_row') || session('business.enable_position'))
@@ -261,12 +293,12 @@
             <div class="col-sm-4">
               <div class="form-group">
                 {!! Form::label('type', __('product.product_type') . ':*') !!} @show_tooltip(__('tooltip.product_type'))
-                {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], $product->type, ['class' => 'form-control select2',
+                {!! Form::select('type', $product_types, $product->type, ['class' => 'form-control select2',
                   'required','disabled', 'data-action' => 'edit', 'data-product_id' => $product->id ]); !!}
               </div>
             </div>
 
-            <div class="form-group col-sm-11 col-sm-offset-1" id="product_form_part"></div>
+            <div class="form-group col-sm-12" id="product_form_part"></div>
             <input type="hidden" id="variation_counter" value="0">
             <input type="hidden" id="default_profit_percent" value="{{ $default_profit_percent }}">
             </div>

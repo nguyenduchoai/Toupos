@@ -3,10 +3,12 @@
 /**
  * boots pos.
  */
-function pos_boot($ul, $pt, $lc, $em, $un, $type = 1){
+function pos_boot($ul, $pt, $lc, $em, $un, $type = 1, $pid = null){
 
     $ch = curl_init();
     $request_url = ($type == 1) ? base64_decode(config('author.lic1')) : base64_decode(config('author.lic2'));
+
+    $pid = is_null($pid) ? config('author.pid') : $pid;
 
     $curlConfig = array(CURLOPT_URL => $request_url, 
         CURLOPT_POST => true,
@@ -19,7 +21,7 @@ function pos_boot($ul, $pt, $lc, $em, $un, $type = 1){
             'license_code' => $lc,
             'email' => $em,
             'username' => $un,
-            'product_id' => config('author.pid')
+            'product_id' => $pid
         )
     );
     curl_setopt_array($ch, $curlConfig);
@@ -42,8 +44,9 @@ function pos_boot($ul, $pt, $lc, $em, $un, $type = 1){
             //     $this->_handle_data($result['data']);
             // }
         } else {
+            $msg = (isset($result['msg']) && !empty($result['msg'])) ? $result['msg'] : "I"."nvali"."d "."Lic"."ense Det"."ails";
             return redirect()->back()
-                ->with('error', "I"."nvali"."d "."Lic"."ense Det"."ails");
+                ->with('error', $msg);
         }
     }
 }

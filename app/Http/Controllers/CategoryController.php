@@ -3,11 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Category;
-use Yajra\DataTables\Facades\DataTables;
+use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController extends Controller
 {
+    /**
+     * All Utils instance.
+     *
+     */
+    protected $moduleUtil;
+
+    /**
+     * Constructor
+     *
+     * @param ProductUtils $product
+     * @return void
+     */
+    public function __construct(ModuleUtil $moduleUtil)
+    {
+        $this->moduleUtil = $moduleUtil;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -237,5 +255,22 @@ class CategoryController extends Controller
 
             return $output;
         }
+    }
+
+    public function getCategoriesApi()
+    {
+        try {
+            $api_token = request()->header('API-TOKEN');
+
+            $api_settings = $this->moduleUtil->getApiSettings($api_token);
+            
+            $categories = Category::catAndSubCategories($api_settings->business_id);
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            return $this->respondWentWrong($e);
+        }
+
+        return $this->respond($categories);
     }
 }

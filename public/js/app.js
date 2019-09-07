@@ -358,9 +358,9 @@ $(document).ready(function() {
     //Start: CRUD for Contacts
     //contacts table
     var contact_table_type = $('#contact_type').val();
-    var targets = 4;
+    var targets = 5;
     if (contact_table_type == 'supplier') {
-        targets = [4, 5, 6];
+        targets = [5, 6, 7];
     }
     var contact_table = $('#contact_table').DataTable({
         processing: true,
@@ -752,7 +752,10 @@ $(document).ready(function() {
     $('#category_id').change(function() {
         get_sub_categories();
     });
-    if ($('.product_form').length) {
+    $(document).on('change', '#unit_id', function() {
+        get_sub_units();
+    });
+    if ($('.product_form').length && !$('.product_form').hasClass('create')) {
         show_product_type_form();
     }
     $('#type').change(function() {
@@ -1317,6 +1320,7 @@ $(document).ready(function() {
                 d.expense_for = $('select#expense_for').val();
                 d.location_id = $('select#location_id').val();
                 d.expense_category_id = $('select#expense_category_id').val();
+                d.payment_status = $('select#expense_payment_status').val();
                 d.start_date = $('input#expense_date_range')
                     .data('daterangepicker')
                     .startDate.format('YYYY-MM-DD');
@@ -1363,7 +1367,7 @@ $(document).ready(function() {
         },
     });
 
-    $('select#location_id, select#expense_for, select#expense_category_id').on(
+    $('select#location_id, select#expense_for, select#expense_category_id, select#expense_payment_status').on(
         'change',
         function() {
             expense_table.ajax.reload();
@@ -1371,9 +1375,9 @@ $(document).ready(function() {
     );
 
     //Date picker
-    $('#expense_transaction_date').datepicker({
-        autoclose: true,
-        format: datepicker_date_format,
+    $('#expense_transaction_date').datetimepicker({
+        format: moment_date_format + ' ' + moment_time_format,
+        ignoreReadonly: true,
     });
 
     $(document).on('click', 'a.delete_expense', function(e) {
@@ -1499,7 +1503,9 @@ $(document).ready(function() {
 
         var loader = __fa_awesome();
         $(
-            '.modal_opening_stock, .modal_total_transfer_shipping_charges, .modal_closing_stock, .modal_total_sell, .modal_total_purchase, .modal_total_expense, .modal_net_profit, .modal_total_adjustment, .modal_total_recovered'
+            '.modal_opening_stock, .modal_total_transfer_shipping_charges, .modal_closing_stock, \
+            .modal_total_sell, .modal_total_purchase, .modal_total_expense, .modal_net_profit, \
+            .modal_total_adjustment, .modal_total_recovered, .modal_gross_profit'
         ).html(loader);
 
         $.ajax({
@@ -1516,6 +1522,7 @@ $(document).ready(function() {
                 );
                 $('.modal_total_expense').html(__currency_trans_from_en(data.total_expense, true));
                 $('.modal_net_profit').html(__currency_trans_from_en(data.net_profit, true));
+                $('.modal_gross_profit').html(__currency_trans_from_en(data.gross_profit, true));
                 $('.modal_total_adjustment').html(
                     __currency_trans_from_en(data.total_adjustment, true)
                 );
@@ -1526,6 +1533,7 @@ $(document).ready(function() {
                     __currency_trans_from_en(data.total_transfer_shipping_charges, true)
                 );
                 __highlight(data.net_profit, $('.modal_net_profit'));
+                __highlight(data.net_profit, $('.modal_gross_profit'));
             },
         });
     });
@@ -1543,9 +1551,7 @@ $(document).ready(function() {
                 if (result.success == 1 && result.receipt.html_content != '') {
                     $('#receipt_section').html(result.receipt.html_content);
                     __currency_convert_recursively($('#receipt_section'));
-                    setTimeout(function() {
-                        window.print();
-                    }, 1000);
+                    __print_receipt('receipt_section');
                 } else {
                     toastr.error(result.msg);
                 }
@@ -1786,6 +1792,10 @@ $(document).ready(function() {
     $(document).on('keyup', 'form#unit_edit_form input#actual_name', function() {
         $('form#unit_edit_form span#unit_name').text($(this).val());
     });
+
+    $('#user_dob').datepicker({
+        autoclose: true
+    });
 });
 
 $('.quick_add_product_modal').on('shown.bs.modal', function() {
@@ -1808,7 +1818,7 @@ $('.quick_add_product_modal').on('shown.bs.modal', function() {
 discounts_table = $('#discounts_table').DataTable({
     processing: true,
     serverSide: true,
-    ajax: '/discount',
+    ajax: base_path + '/discount',
     columnDefs: [
         {
             targets: [0, 8],
@@ -1938,18 +1948,38 @@ function get_sub_categories() {
         },
     });
 }
-function show_product_type_form() {
-    var product_type = 'single';
-    if ($('#type').val() === 'variable') {
-        product_type = 'variable';
+function get_sub_units() {
+    //Add dropdown for sub units if sub unit field is visible
+    if($('#sub_unit_ids').is(':visible')){
+        var unit_id = $('#unit_id').val();
+        $.ajax({
+            method: 'GET',
+            url: '/products/get_sub_units',
+            dataType: 'html',
+            data: { unit_id: unit_id },
+            success: function(result) {
+                if (result) {
+                    $('#sub_unit_ids').html(result);
+                }
+            },
+        });
     }
+}
+function show_product_type_form() {
+
+    //Disable Stock management & Woocommmerce sync if type combo
+    if($('#type').val() == 'combo'){
+        $('#enable_stock').iCheck('uncheck');
+        $('input[name="woocommerce_disable_sync"]').iCheck('check');
+    }
+    
     var action = $('#type').attr('data-action');
     var product_id = $('#type').attr('data-product_id');
     $.ajax({
         method: 'POST',
         url: '/products/product_form_part',
         dataType: 'html',
-        data: { type: product_type, product_id: product_id, action: action },
+        data: { type: $('#type').val(), product_id: product_id, action: action },
         success: function(result) {
             if (result) {
                 $('#product_form_part').html(result);
@@ -2133,4 +2163,34 @@ $(document).on('click', 'a.load_notifications', function(e) {
             },
         });
     }
+});
+
+$(document).on('click', 'a.delete_purchase_return', function(e) {
+    e.preventDefault();
+    swal({
+        title: LANG.sure,
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then(willDelete => {
+        if (willDelete) {
+            var href = $(this).attr('href');
+            var data = $(this).serialize();
+
+            $.ajax({
+                method: 'DELETE',
+                url: href,
+                dataType: 'json',
+                data: data,
+                success: function(result) {
+                    if (result.success == true) {
+                        toastr.success(result.msg);
+                        purchase_return_table.ajax.reload();
+                    } else {
+                        toastr.error(result.msg);
+                    }
+                },
+            });
+        }
+    });
 });

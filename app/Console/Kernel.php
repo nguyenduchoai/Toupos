@@ -33,6 +33,7 @@ class Kernel extends ConsoleKernel
 
             //Schedule to create recurring invoices
             $schedule->command('pos:generateSubscriptionInvoices')->daily();
+            $schedule->command('pos:updateRewardPoints')->daily();
         }
 
         if ($env === 'demo' && !empty($email)) {

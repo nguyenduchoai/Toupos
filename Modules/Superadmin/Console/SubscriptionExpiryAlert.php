@@ -63,11 +63,10 @@ class SubscriptionExpiryAlert extends Command
                                     ->approved()
                                     ->first();
             //If next subscription is empty send alert to business owner
-            if(empty($next_subscription)){
+            if (empty($next_subscription)) {
                 $subscription->business->owner->notify(new SendSubscriptionExpiryAlert($subscription));
             }
         }
-
     }
 
     /**

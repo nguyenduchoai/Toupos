@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class SuperadminCommunicatorLog extends Model
 {
-
     protected $guarded = ['id'];
 
     /**

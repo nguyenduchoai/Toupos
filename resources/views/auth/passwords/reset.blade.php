@@ -5,71 +5,60 @@
 @section('content')
 <div class="container">
     <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="panel panel-default">
-                <div class="panel-heading">@lang('lang_v1.reset_password')</div>
-
-                <div class="panel-body">
+        <div class="col-md-12">
+            <div class="login-box" style="margin: 2% auto;">
+                <div class="login-box-body">
+                    <div class="login-logo">
+                        @if(file_exists(public_path('uploads/logo.png')))
+                            <img src="/uploads/logo.png" class="img-rounded" alt="Logo" width="150">
+                        @else
+                           {{ config('app.name', 'ultimatePOS') }}
+                        @endif
+                    </div>
+                    <!-- /.login-logo -->
                     @if (session('status'))
                         <div class="alert alert-success">
                             {{ session('status') }}
                         </div>
                     @endif
-
-                    <form class="form-horizontal" method="POST" action="{{ route('password.request') }}">
-                        {{ csrf_field() }}
+                <form method="POST" action="{{ route('password.request') }}">
+                    {{ csrf_field() }}
 
                         <input type="hidden" name="token" value="{{ $token }}">
-
-                        <div class="form-group{{ $errors->has('email') ? ' has-error' : '' }}">
-                            <label for="email" class="col-md-4 control-label">@lang('lang_v1.email_address')</label>
-
-                            <div class="col-md-6">
-                                <input id="email" type="email" class="form-control" name="email" value="{{ $email or old('email') }}" required autofocus>
-
-                                @if ($errors->has('email'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('email') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
-                            <label for="password" class="col-md-4 control-label">@lang('lang_v1.password')</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control" name="password" required>
-
-                                @if ($errors->has('password'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('password_confirmation') ? ' has-error' : '' }}">
-                            <label for="password-confirm" class="col-md-4 control-label">@lang('business.confirm_password')</label>
-                            <div class="col-md-6">
-                                <input id="password-confirm" type="password" class="form-control" name="password_confirmation" required>
-
-                                @if ($errors->has('password_confirmation'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password_confirmation') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-md-6 col-md-offset-4">
-                                <button type="submit" class="btn btn-primary">
-                                   @lang('lang_v1.reset_password')
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    <div class="form-group has-feedback {{ $errors->has('email') ? ' has-error' : '' }}">
+                        <input id="email" type="email" class="form-control" name="email" value="{{ $email or old('email') }}" required autofocus placeholder="@lang('lang_v1.email_address')">
+                        <span class="fa fa-envelope form-control-feedback"></span>
+                        @if ($errors->has('email'))
+                            <span class="help-block">
+                                <strong>{{ $errors->first('email') }}</strong>
+                            </span>
+                        @endif
+                    </div>
+                    <div class="form-group has-feedback {{ $errors->has('password') ? ' has-error' : '' }}">
+                        <input id="password" type="password" class="form-control" name="password"
+                         required placeholder="@lang('lang_v1.password')">
+                        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        @if ($errors->has('password'))
+                            <span class="help-block">
+                                <strong>{{ $errors->first('password') }}</strong>
+                            </span>
+                        @endif
+                    </div>
+                    <div class="form-group has-feedback {{ $errors->has('password_confirmation') ? ' has-error' : '' }}">
+                        <input id="password" type="password" class="form-control" name="password_confirmation" required placeholder="@lang('business.confirm_password')">
+                        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        @if ($errors->has('password_confirmation'))
+                            <span class="help-block">
+                                <strong>{{ $errors->first('password_confirmation') }}</strong>
+                            </span>
+                        @endif
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block btn-flat">@lang('lang_v1.reset_password')</button>
+                        <!-- /.col -->
+                    </div>
+                </form>
                 </div>
             </div>
         </div>

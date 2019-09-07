@@ -14,7 +14,7 @@
         <div class="col-md-12">
            @component('components.filters', ['title' => __('report.filters')])
               {!! Form::open(['url' => '#', 'method' => 'get', 'id' => 'sell_payment_report_form' ]) !!}
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('customer_id', __('contact.customer') . ':') !!}
                         <div class="input-group">
@@ -25,7 +25,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('location_id', __('purchase.business_location').':') !!}
                         <div class="input-group">
@@ -36,7 +36,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {!! Form::label('payment_types', __('lang_v1.payment_method').':') !!}
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fa fa-money"></i>
+                            </span>
+                            {!! Form::select('payment_types', $payment_types, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
                     <div class="form-group">
 
                         {!! Form::label('spr_date_filter', __('report.date_range') . ':') !!}

@@ -12,15 +12,15 @@ return [
     */
 
     'units' => 'Đơn vị',
-    'manage_your_units' => 'Quản lý đơn vị của bạn',
-    'all_your_units' => 'Tất cả các đơn vị của bạn',
+    'manage_your_units' => 'Quản lý đơn vị tính',
+    'all_your_units' => 'Tất cả các đơn vị',
     'name' => 'Tên',
-    'short_name' => 'Tên ngắn',
+    'short_name' => 'Tên viết tắt',
     'allow_decimal' => 'Cho phép thập phân',
-    'added_success' => 'Đơn vị được thêm thành công',
-    'updated_success' => 'Đơn vị được cập nhật thành công',
-    'deleted_success' => 'Đơn vị đã xóa thành công',
+    'added_success' => 'Đã thêm đơn vị thành công',
+    'updated_success' => 'Đơn vị cập nhật thành công',
+    'deleted_success' => 'Đã xóa đơn vị thành công',
     'add_unit' => 'Thêm đơn vị',
-    'edit_unit' => 'Chỉnh sửa đơn vị',
+    'edit_unit' => 'Sửa đơn vị',
 
 ];

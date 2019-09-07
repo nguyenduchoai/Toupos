@@ -50,5 +50,18 @@
                 {!! Form::text('MAIL_FROM_NAME', $default_values['MAIL_FROM_NAME'], ['class' => 'form-control','placeholder' => __('superadmin::lang.mail_from_name')]); !!}
             </div>
         </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-12">
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                    {!! Form::checkbox('allow_email_settings_to_businesses', 1,!empty($settings["allow_email_settings_to_businesses"]), 
+                    [ 'class' => 'input-icheck']); !!}
+                    @lang('superadmin::lang.allow_email_settings_to_businesses') 
+                    </label>
+                    @show_tooltip(__('superadmin::lang.allow_email_settings_tooltip'))
+                </div>
+            </div>
+        </div>
     </div>
 </div>

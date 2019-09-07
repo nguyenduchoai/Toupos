@@ -4,7 +4,7 @@
             @if(config('app.env') != 'demo')
                 <p>
                     To send <mark>subscription expiry alert</mark> & <mark>automated application backup</mark> process you must setup a cron job with this command:<br/>
-                    <code>* * * * * php {{base_path('artisan')}} schedule:run >> /dev/null 2>&1</code>
+                    <code>{{$cron_job_command}}</code>
                 </p>
                 
                 <p>

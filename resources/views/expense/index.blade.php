@@ -38,6 +38,12 @@
                         {!! Form::text('date_range', @format_date('first day of this month') . ' ~ ' . @format_date('last day of this month') , ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'expense_date_range', 'readonly']); !!}
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {!! Form::label('expense_payment_status',  __('purchase.payment_status') . ':') !!}
+                        {!! Form::select('expense_payment_status', ['paid' => __('lang_v1.paid'), 'due' => __('lang_v1.due'), 'partial' => __('lang_v1.partial')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+                    </div>
+                </div>
             @endcomponent
         </div>
     </div>

@@ -30,13 +30,13 @@ class SubscriptionController extends BaseController
 {
     protected $provider;
 
-    public function __construct(ModuleUtil $moduleUtil = null){
-
-        if ( ! defined('CURL_SSLVERSION_TLSv1_2')) {
+    public function __construct(ModuleUtil $moduleUtil = null)
+    {
+        if (! defined('CURL_SSLVERSION_TLSv1_2')) {
             define('CURL_SSLVERSION_TLSv1_2', 6);
         }
 
-        if ( ! defined('CURLOPT_SSLVERSION')) {
+        if (! defined('CURLOPT_SSLVERSION')) {
             define('CURLOPT_SSLVERSION', 6);
         }
 
@@ -72,8 +72,10 @@ class SubscriptionController extends BaseController
             }
         }
 
+        $intervals = ['days' => __('lang_v1.days'), 'months' => __('lang_v1.months'), 'years' => __('lang_v1.years')];
+
         return view('superadmin::subscription.index')
-            ->with(compact('packages', 'active', 'nexts', 'waiting', 'permission_formatted'));
+            ->with(compact('packages', 'active', 'nexts', 'waiting', 'permission_formatted', 'intervals'));
     }
 
     /**
@@ -86,7 +88,7 @@ class SubscriptionController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        try{
+        try {
             DB::beginTransaction();
 
             $business_id = request()->session()->get('user.business_id');
@@ -94,7 +96,7 @@ class SubscriptionController extends BaseController
             $package = Package::active()->find($package_id);
 
             //Check if superadmin only package
-            if($package->is_private == 1 && !auth()->user()->can('superadmin')){
+            if ($package->is_private == 1 && !auth()->user()->can('superadmin')) {
                 $output = ['success' => 0, 'msg' => __('superadmin::lang.not_allowed_for_package')];
                 return redirect()
                         ->back()
@@ -102,12 +104,12 @@ class SubscriptionController extends BaseController
             }
 
             //Check if one time only package
-            if(empty($form_register) && $package->is_one_time){
+            if (empty($form_register) && $package->is_one_time) {
                 $count_subcriptions = Subscription::where('business_id', $business_id)
                                                 ->where('package_id', $package_id)
                                                 ->count();
 
-                if($count_subcriptions > 0){
+                if ($count_subcriptions > 0) {
                     $output = ['success' => 0, 'msg' => __('superadmin::lang.maximum_subscription_limit_exceed')];
                     return redirect()
                         ->back()
@@ -116,8 +118,8 @@ class SubscriptionController extends BaseController
             }
 
             //Check for free package & subscribe it.
-            if($package->price == 0){
-                $gateway = NULL;
+            if ($package->price == 0) {
+                $gateway = null;
                 $payment_transaction_id = 'FREE';
                 $user_id = request()->session()->get('user.id');
 
@@ -125,7 +127,7 @@ class SubscriptionController extends BaseController
 
                 DB::commit();
 
-                if(empty($form_register)){
+                if (empty($form_register)) {
                     $output = ['success' => 1, 'msg' => __('lang_v1.success')];
                     return redirect()
                         ->action('\Modules\Superadmin\Http\Controllers\SubscriptionController@index')
@@ -144,7 +146,7 @@ class SubscriptionController extends BaseController
             
             DB::commit();
 
-            if(empty($form_register)){
+            if (empty($form_register)) {
                 $layout = 'layouts.app';
             } else {
                 $layout = 'layouts.auth';
@@ -154,9 +156,7 @@ class SubscriptionController extends BaseController
 
             return view('superadmin::subscription.pay')
                 ->with(compact('package', 'gateways', 'system_currency', 'layout', 'user'));
-
-        } catch(\Exception $e){
-
+        } catch (\Exception $e) {
             DB::rollBack();
 
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
@@ -182,12 +182,13 @@ class SubscriptionController extends BaseController
      * Save the payment details and add subscription details
      * @return Response
      */
-    public function confirm($package_id, Request $request){
+    public function confirm($package_id, Request $request)
+    {
         if (!auth()->user()->can('subscribe')) {
             abort(403, 'Unauthorized action.');
         }
 
-        try{
+        try {
 
             //Disable in demo
             if (config('app.env') == 'demo') {
@@ -198,7 +199,7 @@ class SubscriptionController extends BaseController
             }
         
             //Confirm for pesapal payment gateway
-            if(isset($this->_payment_gateways()['pesapal']) && (strpos($request->merchant_reference, 'PESAPAL') !== FALSE)){
+            if (isset($this->_payment_gateways()['pesapal']) && (strpos($request->merchant_reference, 'PESAPAL') !== false)) {
                 return $this->confirm_pesapal($package_id, $request);
             }
 
@@ -212,7 +213,7 @@ class SubscriptionController extends BaseController
             //Call the payment method
             $pay_function = 'pay_' . request()->gateway;
             $payment_transaction_id = null;
-            if(method_exists($this, $pay_function)){
+            if (method_exists($this, $pay_function)) {
                 $payment_transaction_id = $this->$pay_function($business_id, $business_name, $package, $request);
             }
 
@@ -221,16 +222,16 @@ class SubscriptionController extends BaseController
             DB::commit();
 
             $msg = __('lang_v1.success');
-            if(request()->gateway == 'offline'){
+            if (request()->gateway == 'offline') {
                 $msg = __('superadmin::lang.notification_sent_for_approval');
             }
             $output = ['success' => 1, 'msg' => $msg];
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
 
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            echo "File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage();exit;
+            echo "File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage();
+            exit;
             $output = ['success' => 0, 'msg' => $e->getMessage()];
         }
 
@@ -241,18 +242,18 @@ class SubscriptionController extends BaseController
 
     /**
      * Confirm for pesapal gateway
-     * when payment gateway is PesaPal payment gateway request package_id 
-     * is transaction_id & merchant_reference in session contains 
+     * when payment gateway is PesaPal payment gateway request package_id
+     * is transaction_id & merchant_reference in session contains
      * the package_id.
      *
      * @return Response
      */
-    protected function confirm_pesapal($transaction_id, $request){
+    protected function confirm_pesapal($transaction_id, $request)
+    {
         $merchant_reference = $request->merchant_reference;
         $pesapal_session = $request->session()->pull('pesapal');
 
-        if($pesapal_session['ref'] == $merchant_reference){
-
+        if ($pesapal_session['ref'] == $merchant_reference) {
             $package_id = $pesapal_session['package_id'];
 
             $business_id = request()->session()->get('user.business_id');
@@ -273,7 +274,8 @@ class SubscriptionController extends BaseController
      * Stripe payment method
      * @return Response
      */
-    protected function pay_stripe($business_id, $business_name, $package, $request){
+    protected function pay_stripe($business_id, $business_name, $package, $request)
+    {
         Stripe::setApiKey(env('STRIPE_SECRET_KEY'));
 
         $metadata = ['business_id' => $business_id, 'business_name' => $business_name, 'stripe_email' => $request->stripeEmail, 'package_name' => $package->name];
@@ -300,7 +302,8 @@ class SubscriptionController extends BaseController
      * Offline payment method
      * @return Response
      */
-    protected function pay_offline($business_id, $business_name, $package, $request){
+    protected function pay_offline($business_id, $business_name, $package, $request)
+    {
 
         //Disable in demo
         if (config('app.env') == 'demo') {
@@ -313,18 +316,23 @@ class SubscriptionController extends BaseController
         //Send notification
         $email = System::getProperty('email');
         $business = Business::find($business_id);
+
+        if(!$this->moduleUtil->IsMailConfigured()) {
+            return null;
+        }
+
         Notification::route('mail', $email)
             ->notify(new SubscriptionOfflinePaymentActivationConfirmation($business, $package));
 
-        return NULL;
+        return null;
     }
 
     /**
      * Paypal payment method
      * @return Response
      */
-    protected function pay_paypal($business_id, $business_name, $package, $request){
-
+    protected function pay_paypal($business_id, $business_name, $package, $request)
+    {
         $provider = new ExpressCheckout();
         $response = $provider->getExpressCheckoutDetails($request->token);
 
@@ -356,7 +364,7 @@ class SubscriptionController extends BaseController
         $payment_status = $provider->doExpressCheckoutPayment($data, $token, $PayerID);
         $status = isset($payment_status['PAYMENTINFO_0_PAYMENTSTATUS']) ? $payment_status['PAYMENTINFO_0_PAYMENTSTATUS'] : null;
 
-        if(!empty($status) && $status != 'Invalid'){
+        if (!empty($status) && $status != 'Invalid') {
             return $invoice_id;
         } else {
             $error = 'Something went wrong with paypal transaction';
@@ -366,10 +374,11 @@ class SubscriptionController extends BaseController
 
     /**
      * Paypal payment method - redirect to paypal url for payments
-     * 
+     *
      * @return Response
      */
-    public function paypalExpressCheckout(Request $request, $package_id){
+    public function paypalExpressCheckout(Request $request, $package_id)
+    {
 
         //Disable in demo
         if (config('app.env') == 'demo') {
@@ -396,7 +405,7 @@ class SubscriptionController extends BaseController
         $data['cancel_url'] = action('\Modules\Superadmin\Http\Controllers\SubscriptionController@pay', [$package_id]);
         $data['total'] = (float)$package->price;
 
-        // send a request to paypal 
+        // send a request to paypal
         // paypal should respond with an array of data
         // the array should contain a link to paypal's payment system
         $system_currency = System::getCurrency();
@@ -420,14 +429,14 @@ class SubscriptionController extends BaseController
      * Razor pay payment method
      * @return Response
      */
-    protected function pay_razorpay($business_id, $business_name, $package, $request){
-
+    protected function pay_razorpay($business_id, $business_name, $package, $request)
+    {
         $razorpay_payment_id = $request->razorpay_payment_id;
         $razorpay_api = new Api(env('RAZORPAY_KEY_ID'), env('RAZORPAY_KEY_SECRET'));
 
         $payment = $razorpay_api->payment->fetch($razorpay_payment_id)->capture(array('amount'=> $package->price*100)); // Captures a payment
 
-        if(empty($payment->error_code)){
+        if (empty($payment->error_code)) {
             return $payment->id;
         } else {
             $error_description = $payment->error_description;
@@ -462,12 +471,11 @@ class SubscriptionController extends BaseController
             ]);
         $system = array();
         foreach ($system_settings as $setting) {
-           $system[$setting['key']] = $setting['value'];
+            $system[$setting['key']] = $setting['value'];
         }
 
         return view('superadmin::subscription.show_subscription_modal')
             ->with(compact('subscription', 'system'));
-    
     }
 
     /**
@@ -475,8 +483,8 @@ class SubscriptionController extends BaseController
      *
      * @return \Illuminate\Http\Response
      */
-    public function allSubscriptions(){
-
+    public function allSubscriptions()
+    {
         if (!auth()->user()->can('subscribe')) {
             abort(403, 'Unauthorized action.');
         }
@@ -484,31 +492,49 @@ class SubscriptionController extends BaseController
         $business_id = request()->session()->get('user.business_id');
 
         $subscriptions = Subscription::where('subscriptions.business_id', $business_id)
-                        ->leftjoin('packages as P', 'subscriptions.package_id',
-                            '=', 'P.id')
-                        ->leftjoin('users as U', 'subscriptions.created_id',
-                            '=', 'U.id')
+                        ->leftjoin(
+                            'packages as P',
+                            'subscriptions.package_id',
+                            '=',
+                            'P.id'
+                        )
+                        ->leftjoin(
+                            'users as U',
+                            'subscriptions.created_id',
+                            '=',
+                            'U.id'
+                        )
                         ->addSelect(
                             'P.name as package_name',
                             DB::raw("CONCAT(COALESCE(U.surname, ''), ' ', COALESCE(U.first_name, ''), ' ', COALESCE(U.last_name, '')) as created_by"),
                             'subscriptions.*'
                         );
         return Datatables::of($subscriptions)
-             ->editColumn('start_date', 
-                    '@if(!empty($start_date)){{@format_date($start_date)}}@endif')
-             ->editColumn('end_date', 
-                    '@if(!empty($end_date)){{@format_date($end_date)}}@endif')
-             ->editColumn('trial_end_date', 
-                    '@if(!empty($trial_end_date)){{@format_date($trial_end_date)}}@endif')
-             ->editColumn('package_price', 
-                    '<span class="display_currency" data-currency_symbol="true">{{$package_price}}</span>')
-             ->editColumn('created_at', 
-                    '@if(!empty($created_at)){{@format_date($created_at)}}@endif')
+             ->editColumn(
+                 'start_date',
+                 '@if(!empty($start_date)){{@format_date($start_date)}}@endif'
+             )
+             ->editColumn(
+                 'end_date',
+                 '@if(!empty($end_date)){{@format_date($end_date)}}@endif'
+             )
+             ->editColumn(
+                 'trial_end_date',
+                 '@if(!empty($trial_end_date)){{@format_date($trial_end_date)}}@endif'
+             )
+             ->editColumn(
+                 'package_price',
+                 '<span class="display_currency" data-currency_symbol="true">{{$package_price}}</span>'
+             )
+             ->editColumn(
+                 'created_at',
+                 '@if(!empty($created_at)){{@format_date($created_at)}}@endif'
+             )
              ->filterColumn('created_by', function ($query, $keyword) {
-                    $query->whereRaw("CONCAT(COALESCE(U.surname, ''), ' ', COALESCE(U.first_name, ''), ' ', COALESCE(U.last_name, '')) like ?", ["%{$keyword}%"]);
-                })
-             ->addColumn('action', function($row){
-                return '<button type="button" class="btn btn-primary btn-xs btn-modal" data-container=".view_modal" data-href="' . action("\Modules\Superadmin\Http\Controllers\SubscriptionController@show", $row->id) .'" ><i class="fa fa-eye" aria-hidden="true"></i> ' . __("messages.view") . '</button>';
+                 $query->whereRaw("CONCAT(COALESCE(U.surname, ''), ' ', COALESCE(U.first_name, ''), ' ', COALESCE(U.last_name, '')) like ?", ["%{$keyword}%"]);
+             })
+             ->addColumn('action', function ($row) {
+                 return '<button type="button" class="btn btn-primary btn-xs btn-modal" data-container=".view_modal" data-href="' . action("\Modules\Superadmin\Http\Controllers\SubscriptionController@show", $row->id) .'" ><i class="fa fa-eye" aria-hidden="true"></i> ' . __("messages.view") . '</button>';
              })
              ->rawColumns(['package_price', 'action'])
              ->make(true);

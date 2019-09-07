@@ -123,7 +123,7 @@
               <td><span class="display_currency">{{ $purchase_line->discount_percent}}</span> %</td>
               <td class="no-print"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price }}</span></td>
               <td class="no-print"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->quantity * $purchase_line->purchase_price }}</span></td>
-              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->item_tax }} </span> <br/><small>@if($purchase_line->tax_id) ( {{ $taxes[$purchase_line->tax_id]}} ) </small>@endif</td>
+              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->item_tax }} </span> <br/><small>@if(!empty($taxes[$purchase_line->tax_id])) ( {{ $taxes[$purchase_line->tax_id]}} ) </small>@endif</td>
               <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price_inc_tax }}</span></td>
               @php
                 $sp = $purchase_line->variations->default_sell_price;

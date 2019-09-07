@@ -224,6 +224,7 @@ class CashRegisterUtil extends Util
         $register_details = $query->select(
             'cash_registers.created_at as open_time',
             'cash_registers.user_id',
+            'cash_registers.closing_note',
             DB::raw("SUM(IF(transaction_type='initial', amount, 0)) as cash_in_hand"),
             DB::raw("SUM(IF(transaction_type='sell', amount, IF(transaction_type='refund', -1 * amount, 0))) as total_sale"),
             DB::raw("SUM(IF(pay_method='cash', IF(transaction_type='sell', amount, 0), 0)) as total_cash"),

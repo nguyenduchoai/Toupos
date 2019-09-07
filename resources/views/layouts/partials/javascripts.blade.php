@@ -19,7 +19,9 @@
 <!-- Select2 -->
 <script src="{{ asset('AdminLTE/plugins/select2/select2.full.min.js?v=' . $asset_v) }}"></script>
 <!-- Add language file for select2 -->
-<script src="{{ asset('AdminLTE/plugins/select2/lang/' . session()->get('user.language', config('app.locale') ) . '.js?v=' . $asset_v) }}"></script>
+@if(file_exists(public_path('AdminLTE/plugins/select2/lang/' . session()->get('user.language', config('app.locale')) . '.js')))
+    <script src="{{ asset('AdminLTE/plugins/select2/lang/' . session()->get('user.language', config('app.locale') ) . '.js?v=' . $asset_v) }}"></script>
+@endif
 <!-- bootstrap datepicker -->
 <script src="{{ asset('AdminLTE/plugins/datepicker/bootstrap-datepicker.min.js?v=' . $asset_v) }}"></script>
 <!-- DataTables -->
@@ -62,7 +64,7 @@
 
 <script src="{{ asset('plugins/moment-timezone-with-data.min.js?v=' . $asset_v) }}"></script>
 @php
-    $business_date_format = session('business.date_format');
+    $business_date_format = session('business.date_format', config('constants.default_date_format'));
     $datepicker_date_format = str_replace('d', 'dd', $business_date_format);
     $datepicker_date_format = str_replace('m', 'mm', $datepicker_date_format);
     $datepicker_date_format = str_replace('Y', 'yyyy', $datepicker_date_format);
@@ -96,8 +98,10 @@
     	start: moment('{{ Session::get("financial_year.start") }}'),
     	end: moment('{{ Session::get("financial_year.end") }}'),
     }
+    @if(file_exists(public_path('AdminLTE/plugins/select2/lang/' . session()->get('user.language', config('app.locale')) . '.js')))
     //Default setting for select2
     $.fn.select2.defaults.set("language", "{{session()->get('user.language', config('app.locale'))}}");
+    @endif
 
     var datepicker_date_format = "{{$datepicker_date_format}}";
     var moment_date_format = "{{$moment_date_format}}";
@@ -125,5 +129,8 @@
 <script src="{{ asset('js/app.js?v=' . $asset_v) }}"></script>
 <script src="{{ asset('js/help-tour.js?v=' . $asset_v) }}"></script>
 <script src="{{ asset('plugins/calculator/calculator.js?v=' . $asset_v) }}"></script>
-
 @yield('javascript')
+
+@if(Module::has('Essentials'))
+  @includeIf('essentials::layouts.partials.footer_part')
+@endif

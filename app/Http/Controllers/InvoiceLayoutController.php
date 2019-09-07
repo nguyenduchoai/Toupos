@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\InvoiceLayout;
-use App\InvoiceScheme;
 
+use App\Utils\Util;
 use Illuminate\Http\Request;
 use Validator;
-use App\Utils\Util;
 
 class InvoiceLayoutController extends Controller
 {
@@ -79,7 +78,7 @@ class InvoiceLayoutController extends Controller
 
             //Set value for checkboxes
             $checkboxes = ['show_business_name', 'show_location_name', 'show_landmark', 'show_city', 'show_state', 'show_country', 'show_zip_code', 'show_mobile_number', 'show_alternate_number', 'show_email', 'show_tax_1', 'show_tax_2', 'show_logo', 'show_barcode', 'show_payments', 'show_customer', 'show_client_id',
-                'show_brand', 'show_sku', 'show_cat_code', 'show_sale_description', 'show_sales_person', 'show_expiry', 'show_lot', 'show_previous_bal'];
+                'show_brand', 'show_sku', 'show_cat_code', 'show_sale_description', 'show_sales_person', 'show_expiry', 'show_lot', 'show_previous_bal', 'show_image', 'show_reward_point'];
             foreach ($checkboxes as $name) {
                 $input[$name] = !empty($request->input($name)) ? 1 : 0;
             }
@@ -188,7 +187,7 @@ class InvoiceLayoutController extends Controller
             $business_id = $request->session()->get('user.business_id');
 
             $checkboxes = ['show_business_name', 'show_location_name', 'show_landmark', 'show_city', 'show_state', 'show_country', 'show_zip_code', 'show_mobile_number', 'show_alternate_number', 'show_email', 'show_tax_1', 'show_tax_2', 'show_logo', 'show_barcode', 'show_payments', 'show_customer', 'show_client_id',
-                'show_brand', 'show_sku', 'show_cat_code', 'show_sale_description', 'show_sales_person', 'show_expiry', 'show_lot', 'show_previous_bal'];
+                'show_brand', 'show_sku', 'show_cat_code', 'show_sale_description', 'show_sales_person', 'show_expiry', 'show_lot', 'show_previous_bal', 'show_image', 'show_reward_point'];
             foreach ($checkboxes as $name) {
                 $input[$name] = !empty($request->input($name)) ? 1 : 0;
             }

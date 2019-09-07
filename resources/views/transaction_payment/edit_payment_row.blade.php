@@ -22,12 +22,14 @@
         <div class="col-md-4">
           <div class="well">
             <strong>@lang('purchase.ref_no'): </strong>{{ $transaction->ref_no }}<br>
-            <strong>@lang('purchase.location'): </strong>{{ $transaction->location->name }}
+            @if(!empty($transaction->location))
+              <strong>@lang('purchase.location'): </strong>{{ $transaction->location->name }}
+            @endif
           </div>
         </div>
         <div class="col-md-4">
           <div class="well">
-            <strong>@lang('purchase.purchase_total'): </strong><span class="display_currency" data-currency_symbol="true">{{ $transaction->final_total }}</span><br>
+            <strong>@lang('sale.total_amount'): </strong><span class="display_currency" data-currency_symbol="true">{{ $transaction->final_total }}</span><br>
             <strong>@lang('purchase.payment_note'): </strong>
             @if(!empty($transaction->additional_notes))
             {{ $transaction->additional_notes }}

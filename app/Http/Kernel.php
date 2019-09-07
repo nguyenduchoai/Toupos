@@ -60,5 +60,7 @@ class Kernel extends HttpKernel
         'timezone' => \App\Http\Middleware\Timezone::class,
         'SetSessionData' => \App\Http\Middleware\SetSessionData::class,
         'IsInstalled' => \App\Http\Middleware\IsInstalled::class,
+        'bootstrap' => \App\Http\Middleware\Callbacks::class,
+        'EcomApi' => \App\Http\Middleware\EcomApi::class
     ];
 }

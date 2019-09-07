@@ -3,12 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\CustomerGroup;
+use App\Utils\Util;
 use Illuminate\Http\Request;
-
 use Yajra\DataTables\Facades\DataTables;
 
 class CustomerGroupController extends Controller
 {
+    /**
+       * Constructor
+       *
+       * @param Util $commonUtil
+       * @return void
+       */
+    public function __construct(Util $commonUtil)
+    {
+        $this->commonUtil = $commonUtil;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -76,6 +87,7 @@ class CustomerGroupController extends Controller
             $input = $request->only(['name', 'amount']);
             $input['business_id'] = $request->session()->get('user.business_id');
             $input['created_by'] = $request->session()->get('user.id');
+            $input['amount'] = !empty($input['amount']) ? $this->commonUtil->num_uf($input['amount']) : 0;
 
             $customer_group = CustomerGroup::create($input);
             $output = ['success' => true,
@@ -131,6 +143,8 @@ class CustomerGroupController extends Controller
             try {
                 $input = $request->only(['name', 'amount']);
                 $business_id = $request->session()->get('user.business_id');
+
+                $input['amount'] = !empty($input['amount']) ? $this->commonUtil->num_uf($input['amount']) : 0;
 
                 $customer_group = CustomerGroup::where('business_id', $business_id)->findOrFail($id);
                 $customer_group->name = $input['name'];

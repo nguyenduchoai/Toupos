@@ -16,6 +16,15 @@ class Variation extends Model
      */
     protected $guarded = ['id'];
     
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'combo_variations' => 'array',
+    ];
+    
     public function product_variation()
     {
         return $this->belongsTo(\App\ProductVariation::class);
@@ -48,5 +57,21 @@ class Variation extends Model
     public function group_prices()
     {
         return $this->hasMany(\App\VariationGroupPrice::class, 'variation_id');
+    }
+
+    public function media()
+    {
+        return $this->morphMany(\App\Media::class, 'model');
+    }
+
+    public function getFullNameAttribute()
+    {
+        $name = $this->product->name;
+        if ($this->product->type == 'variable') {
+            $name .= ' - ' . $this->product_variation->name . ' - ' . $this->name;
+        }
+        $name .= ' (' . $this->sub_sku . ')';
+
+        return $name;
     }
 }

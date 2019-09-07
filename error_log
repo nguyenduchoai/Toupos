@@ -1,0 +1,2 @@
+[04-Sep-2019 02:33:01 UTC] PHP Warning:  require_once(/home2/toupos/public_html/vendor/composer/autoload_real.php): failed to open stream: No such file or directory in /home2/toupos/public_html/vendor/autoload.php on line 5
+[04-Sep-2019 02:33:01 UTC] PHP Fatal error:  require_once(): Failed opening required '/home2/toupos/public_html/vendor/composer/autoload_real.php' (include_path='.:/opt/cpanel/ea-php72/root/usr/share/pear') in /home2/toupos/public_html/vendor/autoload.php on line 5

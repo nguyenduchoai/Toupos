@@ -2,13 +2,12 @@
 
 namespace App;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Permission\Traits\HasRoles;
-
-use App\BusinessLocation;
 use DB;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -17,14 +16,12 @@ class User extends Authenticatable
     use HasRoles;
 
     /**
-     * The attributes that are mass assignable.
+     * The attributes that aren't mass assignable.
      *
      * @var array
      */
-    protected $fillable = [
-        'surname', 'first_name', 'last_name', 'username', 'email', 'password', 'business_id', 'is_cmmsn_agnt', 'contact_no', 'address', 'cmmsn_percent', 'language', 'selected_contacts', 'status'
-    ];
-
+    protected $guarded = ['id'];
+    
     /**
      * The attributes that should be hidden for arrays.
      *
@@ -181,10 +178,11 @@ class User extends Authenticatable
      *
      * @param $business_id int
      * @param $prepend_none = true (boolean)
+     * @param $prepend_all = false (boolean)
      *
      * @return array users
      */
-    public static function allUsersDropdown($business_id, $prepend_none = true)
+    public static function allUsersDropdown($business_id, $prepend_none = true, $prepend_all = false)
     {
         $all_users = User::where('business_id', $business_id)
                         ->select('id', DB::raw("CONCAT(COALESCE(surname, ''),' ',COALESCE(first_name, ''),' ',COALESCE(last_name,'')) as full_name"));
@@ -193,7 +191,12 @@ class User extends Authenticatable
 
         //Prepend none
         if ($prepend_none) {
-            $users = $users->prepend('None', '');
+            $users = $users->prepend(__('lang_v1.none'), '');
+        }
+
+        //Prepend all
+        if ($prepend_all) {
+            $users = $users->prepend(__('lang_v1.all'), '');
         }
 
         return $users;
@@ -219,5 +222,10 @@ class User extends Authenticatable
         $user = User::findOrFail($user_id);
 
         return (boolean)$user->selected_contacts;
+    }
+
+    public function getRoleNameAttribute()
+    {
+        return explode('#', $this->getRoleNames()[0])[0];
     }
 }

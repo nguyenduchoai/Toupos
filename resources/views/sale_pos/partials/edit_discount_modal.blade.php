@@ -4,10 +4,20 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<h4 class="modal-title">@lang('sale.edit_discount')</h4>
+				<h4 class="modal-title">
+					@if($is_discount_enabled)
+						@lang('sale.discount')
+					@endif
+					@if($is_rp_enabled)
+						{{session('business.rp_name')}}
+					@endif
+				</h4>
 			</div>
 			<div class="modal-body">
-				<div class="row">
+				<div class="row @if(!$is_discount_enabled) hide @endif">
+					<div class="col-md-12">
+						<h4 class="modal-title">@lang('sale.edit_discount'):</h4>
+					</div>
 					<div class="col-md-6">
 				        <div class="form-group">
 				            {!! Form::label('discount_type_modal', __('sale.discount_type') . ':*' ) !!}
@@ -19,7 +29,6 @@
 				            </div>
 				        </div>
 				    </div>
-
 				    <div class="col-md-6">
 				        <div class="form-group">
 				            {!! Form::label('discount_amount_modal', __('sale.discount_amount') . ':*' ) !!}
@@ -31,7 +40,30 @@
 				            </div>
 				        </div>
 				    </div>
-
+				</div>
+				<br>
+				<div class="row @if(!$is_rp_enabled) hide @endif">
+					<div class="well well-sm bg-light-gray col-md-12">
+					<div class="col-md-12">
+						<h4 class="modal-title">{{session('business.rp_name')}}:</h4>
+					</div>
+					<div class="col-md-6">
+				        <div class="form-group">
+				            {!! Form::label('rp_redeemed_modal', __('lang_v1.redeemed') . ':' ) !!}
+				            <div class="input-group">
+				                <span class="input-group-addon">
+				                    <i class="fa fa-gift"></i>
+				                </span>
+				                {!! Form::number('rp_redeemed_modal', $rp_redeemed, ['class' => 'form-control', 'data-amount_per_unit_point' => session('business.redeem_amount_per_unit_rp'), 'data-max_points' => $max_available, 'min' => 0, 'data-min_order_total' => session('business.min_order_total_for_redeem') ]); !!}
+				                <input type="hidden" id="rp_name" value="{{session('business.rp_name')}}">
+				            </div>
+				        </div>
+				    </div>
+				    <div class="col-md-6">
+				    	<p><strong>@lang('lang_v1.available'):</strong> <span id="available_rp">{{$max_available}}</span></p>
+				    	<h5><strong>@lang('lang_v1.redeemed_amount'):</strong> <span id="rp_redeemed_amount_text">{{@num_format($rp_redeemed_amount)}}</span></h5>
+				    </div>
+				    </div>
 				</div>
 			</div>
 			<div class="modal-footer">

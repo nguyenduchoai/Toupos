@@ -13,8 +13,7 @@
 
 include_once('install_r.php');
 
-Route::middleware(['IsInstalled'])->group(function () {
-
+Route::middleware(['IsInstalled', 'bootstrap'])->group(function () {
     Route::get('/', function () {
         return view('welcome');
     });
@@ -31,8 +30,7 @@ Route::middleware(['IsInstalled'])->group(function () {
 });
 
 //Routes for authenticated users only
-Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezone'])->group(function () {
-
+Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezone', 'bootstrap'])->group(function () {
     Route::get('/logout', 'Auth\LoginController@logout')->name('logout');
 
     Route::get('/home', 'HomeController@index')->name('home');
@@ -57,6 +55,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::resource('units', 'UnitController');
 
+    Route::get('/contacts/ledger', 'ContactController@getLedger');
     Route::get('/contacts/import', 'ContactController@getImportContacts')->name('contacts.import');
     Route::post('/contacts/import', 'ContactController@postImportContacts');
     Route::post('/contacts/check-contact-id', 'ContactController@checkContactId');
@@ -67,6 +66,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::resource('variation-templates', 'VariationTemplateController');
 
+    Route::get('/delete-media/{media_id}', 'ProductController@deleteMedia');
     Route::post('/products/mass-deactivate', 'ProductController@massDeactivate');
     Route::get('/products/activate/{id}', 'ProductController@activate');
     Route::get('/products/view-product-group-price/{id}', 'ProductController@viewGroupPrice');
@@ -76,8 +76,12 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/products/view/{id}', 'ProductController@view');
     Route::get('/products/list', 'ProductController@getProducts');
     Route::get('/products/list-no-variation', 'ProductController@getProductsWithoutVariations');
+    Route::post('/products/bulk-edit', 'ProductController@bulkEdit');
+    Route::post('/products/bulk-update', 'ProductController@bulkUpdate');
+    Route::get('/products/get-product-to-edit/{product_id}', 'ProductController@getProductToEdit');
     
     Route::post('/products/get_sub_categories', 'ProductController@getSubCategories');
+    Route::get('/products/get_sub_units', 'ProductController@getSubUnits');
     Route::post('/products/product_form_part', 'ProductController@getProductVariationFormPart');
     Route::post('/products/get_product_variation_row', 'ProductController@getProductVariationRow');
     Route::post('/products/get_variation_template', 'ProductController@getVariationTemplate');
@@ -85,6 +89,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::post('/products/check_product_sku', 'ProductController@checkProductSku');
     Route::get('/products/quick_add', 'ProductController@quickAdd');
     Route::post('/products/save_quick_product', 'ProductController@saveQuickProduct');
+    Route::get('/products/get-combo-product-entry-row', 'ProductController@getComboProductEntryRow');
     
     Route::resource('products', 'ProductController');
 
@@ -106,6 +111,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::get('/sells/pos/get_product_row/{variation_id}/{location_id}', 'SellPosController@getProductRow');
     Route::post('/sells/pos/get_payment_row', 'SellPosController@getPaymentRow');
+    Route::post('/sells/pos/get-reward-details', 'SellPosController@getRewardDetails');
     Route::get('/sells/pos/get-recent-transactions', 'SellPosController@getRecentTransactions');
     Route::get('/sells/{transaction_id}/print', 'SellPosController@printInvoice')->name('sell.printInvoice');
     Route::get('/sells/pos/get-product-suggestion', 'SellPosController@getProductSuggestion');
@@ -127,7 +133,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     //Print Labels
     Route::get('/labels/show', 'LabelsController@show');
     Route::get('/labels/add-product-row', 'LabelsController@addProductRow');
-    Route::post('/labels/preview', 'LabelsController@preview');
+    Route::get('/labels/preview', 'LabelsController@preview');
 
     //Reports...
     Route::get('/reports/service-staff-report', 'ReportController@getServiceStaffReport');
@@ -160,6 +166,8 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/reports/sell-payment-report', 'ReportController@sellPaymentReport');
     Route::get('/reports/product-stock-details', 'ReportController@productStockDetails');
     Route::get('/reports/adjust-product-stock', 'ReportController@adjustProductStock');
+    Route::get('/reports/get-profit/{by?}', 'ReportController@getProfit');
+    Route::get('/reports/items-report', 'ReportController@itemsReport');
     
     //Business Location Settings...
     Route::prefix('business-location/{location_id}')->name('location.')->group(function () {
@@ -242,8 +250,13 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('notification/get-template/{transaction_id}/{template_for}', 'NotificationController@getTemplate');
     Route::post('notification/send', 'NotificationController@send');
 
+    Route::post('/purchase-return/update', 'CombinedPurchaseReturnController@update');
+    Route::get('/purchase-return/edit/{id}', 'CombinedPurchaseReturnController@edit');
+    Route::post('/purchase-return/save', 'CombinedPurchaseReturnController@save');
+    Route::post('/purchase-return/get_product_row', 'CombinedPurchaseReturnController@getProductRow');
+    Route::get('/purchase-return/create', 'CombinedPurchaseReturnController@create');
     Route::get('/purchase-return/add/{id}', 'PurchaseReturnController@add');
-    Route::resource('/purchase-return', 'PurchaseReturnController');
+    Route::resource('/purchase-return', 'PurchaseReturnController', ['except' => ['create']]);
 
     Route::get('/discount/activate/{id}', 'DiscountController@activate');
     Route::post('/discount/mass-deactivate', 'DiscountController@massDeactivate');
@@ -269,7 +282,6 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     //Restaurant module
     Route::group(['prefix' => 'modules'], function () {
-
         Route::resource('tables', 'Restaurant\TableController');
         Route::resource('modifiers', 'Restaurant\ModifierSetsController');
 
@@ -293,4 +305,14 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::get('bookings/get-todays-bookings', 'Restaurant\BookingController@getTodaysBookings');
     Route::resource('bookings', 'Restaurant\BookingController');
+});
+
+Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {
+    Route::get('products/{id?}', 'ProductController@getProductsApi');
+    Route::get('categories', 'CategoryController@getCategoriesApi');
+    Route::get('brands', 'BrandController@getBrandsApi');
+    Route::post('customers', 'ContactController@postCustomersApi');
+    Route::get('settings', 'BusinessController@getEcomSettings');
+    Route::get('variations', 'ProductController@getVariationsApi');
+    Route::post('orders', 'SellPosController@placeOrdersApi');
 });

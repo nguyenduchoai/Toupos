@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Datatables;
 use App\Printer;
+use Datatables;
+use Illuminate\Http\Request;
 
 class PrinterController extends Controller
 {

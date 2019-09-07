@@ -17,7 +17,7 @@
       <div class="form-group">
         {!! Form::label('amount', __( 'lang_v1.calculation_percentage' ) . ':') !!}
         @show_tooltip(__('lang_v1.tooltip_calculation_percentage'))
-        {!! Form::number('amount', null, ['class' => 'form-control','placeholder' => __( 'lang_v1.calculation_percentage'), 'max' => 100, 'min' => '-100', 'step' => 0.1]); !!}
+        {!! Form::text('amount', null, ['class' => 'form-control input_number','placeholder' => __( 'lang_v1.calculation_percentage')]); !!}
       </div>
     </div>
 

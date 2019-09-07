@@ -6,6 +6,11 @@
             <th>{{ __('lang_v1.lot_n_expiry') }}</th>
         @endif
         <th>{{ __('sale.qty') }}</th>
+        @if(!empty($pos_settings['inline_service_staff']))
+            <th>
+                @lang('restaurant.service_staff')
+            </th>
+        @endif
         <th>{{ __('sale.unit_price') }}</th>
         <th>{{ __('sale.discount') }}</th>
         <th>{{ __('sale.tax') }}</th>
@@ -43,8 +48,13 @@
             <td>
                 <span class="display_currency" data-currency_symbol="false" data-is_quantity="true">{{ $sell_line->quantity }}</span> @if(!empty($sell_line->sub_unit)) {{$sell_line->sub_unit->short_name}} @else {{$sell_line->product->unit->short_name}} @endif
             </td>
+            @if(!empty($pos_settings['inline_service_staff']))
+                <td>
+                {{ $sell_line->service_staff->user_full_name ?? '' }}
+                </td>
+            @endif
             <td>
-                <span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price }}</span>
+                <span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price_before_discount }}</span>
             </td>
             <td>
                 <span class="display_currency" data-currency_symbol="true">{{ $sell_line->get_discount_amount() }}</span> @if($sell_line->line_discount_type == 'percentage') ({{$sell_line->line_discount_amount}}%) @endif

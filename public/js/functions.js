@@ -337,3 +337,49 @@ function __sum_stock(table, class_name, label_direction = 'right') {
 
     return stock_html;
 }
+
+function __print_receipt(section_id = null) {
+    if (section_id) {
+        var imgs = document.getElementById(section_id).getElementsByTagName("img");
+    } else {
+        var imgs = document.images;
+    }
+    
+    img_len = imgs.length;
+    if (img_len) {
+        img_counter = 0;
+
+        [].forEach.call( imgs, function( img ) {
+            img.addEventListener( 'load', incrementImageCounter, false );
+        } );
+    } else {
+        setTimeout(function() {
+            window.print();
+
+            setTimeout(function() {
+                $('#receipt_section').html('');
+            }, 5000);
+            
+        }, 1000);
+    }
+}
+
+function incrementImageCounter() {
+    img_counter++;
+    if ( img_counter === img_len ) {
+        window.print();
+        
+        setTimeout(function() {
+            $('#receipt_section').html('');
+        }, 5000);
+    }
+}
+
+function __getUnitMultiplier(row){
+    multiplier = row.find('select.sub_unit').find(':selected').data('multiplier');
+    if(multiplier == undefined){
+        return 1;
+    } else {
+        return parseFloat(multiplier);
+    }
+}

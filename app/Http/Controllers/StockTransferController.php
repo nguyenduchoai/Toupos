@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\BusinessLocation;
+
+use App\PurchaseLine;
 use App\Transaction;
 use App\TransactionSellLinesPurchaseLines;
-use App\PurchaseLine;
+use App\Utils\ModuleUtil;
 
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
-use App\Utils\ModuleUtil;
-
 use Datatables;
+
 use DB;
+use Illuminate\Http\Request;
 
 class StockTransferController extends Controller
 {
@@ -108,7 +108,7 @@ class StockTransferController extends Controller
                     'shipping_charges',
                     '<span class="display_currency" data-currency_symbol="true">{{$shipping_charges}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                 ->rawColumns(['final_total', 'action', 'shipping_charges'])
                 ->make(true);
         }
@@ -172,7 +172,7 @@ class StockTransferController extends Controller
             $input_data['type'] = 'sell_transfer';
             $input_data['business_id'] = $business_id;
             $input_data['created_by'] = $user_id;
-            $input_data['transaction_date'] = $this->productUtil->uf_date($input_data['transaction_date']);
+            $input_data['transaction_date'] = $this->productUtil->uf_date($input_data['transaction_date'], true);
             $input_data['shipping_charges'] = $this->productUtil->num_uf($input_data['shipping_charges']);
             $input_data['status'] = 'final';
             $input_data['payment_status'] = 'paid';

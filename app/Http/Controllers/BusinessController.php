@@ -2,26 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
 use App\Business;
-use App\TaxRate;
 use App\Currency;
+use App\System;
+use App\TaxRate;
 use App\Unit;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Illuminate\Support\Facades\Auth;
-
-use DateTimeZone;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-
+use App\User;
 use App\Utils\BusinessUtil;
-use App\Utils\RestaurantUtil;
 
 use App\Utils\ModuleUtil;
+use App\Utils\RestaurantUtil;
+use Carbon\Carbon;
+use DateTimeZone;
 
-use App\System;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Support\Facades\DB;
+
+use Spatie\Permission\Models\Permission;
 
 class BusinessController extends Controller
 {
@@ -70,7 +69,8 @@ class BusinessController extends Controller
                 'name' => __('restaurant.kitchen_for_restaurant')
             ],
             'account' => ['name' => __('lang_v1.account')],
-            'subscription' => ['name' => __('lang_v1.enable_subscription')]
+            'subscription' => ['name' => __('lang_v1.enable_subscription')],
+            'booking' => ['name' => __('lang_v1.enable_booking')]
         ];
         
         $this->theme_colors = [
@@ -198,7 +198,7 @@ class BusinessController extends Controller
             //Create the business
             $business_details['owner_id'] = $user->id;
             if (!empty($business_details['start_date'])) {
-                $business_details['start_date'] = Carbon::createFromFormat('m/d/Y', $business_details['start_date'])->toDateString();
+                $business_details['start_date'] = Carbon::createFromFormat(config('constants.default_date_format'), $business_details['start_date'])->toDateString();
             }
             
             //upload logo
@@ -344,7 +344,9 @@ class BusinessController extends Controller
 
         $mail_drivers = $this->mailDrivers;
 
-        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers'));
+        $allow_superadmin_email_settings = System::getProperty('allow_email_settings_to_businesses');
+
+        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings'));
     }
 
     /**
@@ -361,7 +363,28 @@ class BusinessController extends Controller
         
         try {
             $business_details = $request->only(['name', 'start_date', 'currency_id', 'tax_label_1', 'tax_number_1', 'tax_label_2', 'tax_number_2', 'default_profit_percent', 'default_sales_tax', 'default_sales_discount', 'sell_price_tax', 'sku_prefix', 'time_zone', 'fy_start_month', 'accounting_method', 'transaction_edit_days', 'sales_cmsn_agnt', 'item_addition_method', 'currency_symbol_placement', 'on_product_expiry',
-                'stop_selling_before', 'default_unit', 'expiry_type', 'date_format', 'time_format', 'ref_no_prefixes', 'theme_color', 'email_settings', 'sms_settings']);
+                'stop_selling_before', 'default_unit', 'expiry_type', 'date_format',
+                'time_format', 'ref_no_prefixes', 'theme_color', 'email_settings',
+                'sms_settings', 'rp_name', 'amount_for_unit_rp',
+                'min_order_total_for_rp', 'max_rp_per_order',
+                'redeem_amount_per_unit_rp', 'min_order_total_for_redeem',
+                'min_redeem_point', 'max_redeem_point', 'rp_expiry_period',
+                'rp_expiry_type']);
+
+            if (!empty($request->input('enable_rp')) &&  $request->input('enable_rp') == 1) {
+                $business_details['enable_rp'] = 1;
+            } else {
+                $business_details['enable_rp'] = 0;
+            }
+
+            $business_details['amount_for_unit_rp'] = !empty($business_details['amount_for_unit_rp']) ? $this->businessUtil->num_uf($business_details['amount_for_unit_rp']) : 1;
+            $business_details['min_order_total_for_rp'] = !empty($business_details['min_order_total_for_rp']) ? $this->businessUtil->num_uf($business_details['min_order_total_for_rp']) : 1;
+            $business_details['redeem_amount_per_unit_rp'] = !empty($business_details['redeem_amount_per_unit_rp']) ? $this->businessUtil->num_uf($business_details['redeem_amount_per_unit_rp']) : 1;
+            $business_details['min_order_total_for_redeem'] = !empty($business_details['min_order_total_for_redeem']) ? $this->businessUtil->num_uf($business_details['min_order_total_for_redeem']) : 1;
+
+            $business_details['default_profit_percent'] = !empty($business_details['default_profit_percent']) ? $this->businessUtil->num_uf($business_details['default_profit_percent']) : 0;
+
+            $business_details['default_sales_discount'] = !empty($business_details['default_sales_discount']) ? $this->businessUtil->num_uf($business_details['default_sales_discount']) : 0;
 
             if (!empty($business_details['start_date'])) {
                 $business_details['start_date'] = Carbon::createFromFormat('m/d/Y', $business_details['start_date'])->toDateString();
@@ -397,9 +420,10 @@ class BusinessController extends Controller
                 $business_details['logo'] = $logo_name;
             }
 
-            $checkboxes = ['enable_editing_product_from_purchase', 'enable_inline_tax',
+            $checkboxes = ['enable_editing_product_from_purchase',
+                'enable_inline_tax',
                 'enable_brand', 'enable_category', 'enable_sub_category', 'enable_price_tax', 'enable_purchase_status',
-                'enable_lot_number', 'enable_racks', 'enable_row', 'enable_position'];
+                'enable_lot_number', 'enable_racks', 'enable_row', 'enable_position', 'enable_sub_units'];
             foreach ($checkboxes as $value) {
                 $business_details[$value] = !empty($request->input($value)) &&  $request->input($value) == 1 ? 1 : 0;
             }
@@ -489,5 +513,30 @@ class BusinessController extends Controller
             echo "false";
             exit;
         }
+    }
+
+    public function getEcomSettings()
+    {
+        try {
+            $api_token = request()->header('API-TOKEN');
+            $api_settings = $this->moduleUtil->getApiSettings($api_token);
+
+            $settings = Business::where('id', $api_settings->business_id)
+                        ->value('ecom_settings');
+
+            $settings_array = !empty($settings) ? json_decode($settings, true) : [];
+
+            if (!empty($settings_array['slides'])) {
+                foreach ($settings_array['slides'] as $key => $value) {
+                    $settings_array['slides'][$key]['image_url'] = !empty($value['image']) ? url('uploads/img/' . $value['image']) : '';
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            return $this->respondWentWrong($e);
+        }
+
+        return $this->respond($settings_array);
     }
 }

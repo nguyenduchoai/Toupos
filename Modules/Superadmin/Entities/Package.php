@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Package extends Model
 {
-	use SoftDeletes;
+    use SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -36,7 +36,7 @@ class Package extends Model
         $packages = Package::active()
                         ->orderby('sort_order');
 
-        if($exlude_private){
+        if ($exlude_private) {
             $packages->notPrivate();
         }
 

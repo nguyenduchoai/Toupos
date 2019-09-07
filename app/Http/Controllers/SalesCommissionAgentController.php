@@ -2,15 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\User;
-
-use DB;
+use App\Utils\Util;
 use DataTables;
+use DB;
+use Illuminate\Http\Request;
 
 class SalesCommissionAgentController extends Controller
 {
+    /**
+       * Constructor
+       *
+       * @param Util $commonUtil
+       * @return void
+       */
+    public function __construct(Util $commonUtil)
+    {
+        $this->commonUtil = $commonUtil;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -81,6 +91,7 @@ class SalesCommissionAgentController extends Controller
 
         try {
             $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent']);
+            $input['cmmsn_percent'] = $this->commonUtil->num_uf($input['cmmsn_percent']);
             $business_id = $request->session()->get('user.business_id');
             $input['business_id'] = $business_id;
             $input['username'] = uniqid();
@@ -137,6 +148,7 @@ class SalesCommissionAgentController extends Controller
         if (request()->ajax()) {
             try {
                 $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'address', 'contact_no', 'cmmsn_percent']);
+                $input['cmmsn_percent'] = $this->commonUtil->num_uf($input['cmmsn_percent']);
                 $business_id = $request->session()->get('user.business_id');
 
                 $user = User::where('id', $id)

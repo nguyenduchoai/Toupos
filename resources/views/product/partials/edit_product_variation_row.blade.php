@@ -46,6 +46,7 @@
                 <br/>
                 <small><i><span class="dsp_label"></span></i></small>
                 </th>
+                <th>@lang('lang_v1.variation_images')</th>
                 <th><button type="button" class="btn btn-success btn-xs add_variation_value_row">+</button></th>
             </tr>
             </thead>
@@ -86,6 +87,22 @@
                         {!! Form::text($array_name . '[' . $row_index .'][' . $variation_array_name . '][' . $variation_row_index . '][default_sell_price]', @num_format($variation->default_sell_price), ['class' => 'form-control input-sm variable_dsp input_number', 'placeholder' => __('product.exc_of_tax'), 'required']); !!}
 
                         {!! Form::text($array_name . '[' . $row_index .'][' . $variation_array_name . '][' . $variation_row_index . '][sell_price_inc_tax]', @num_format($variation->sell_price_inc_tax), ['class' => 'form-control input-sm variable_dsp_inc_tax input_number', 'placeholder' => __('product.inc_of_tax'), 'required']); !!}
+                    </td>
+                    <td>
+                        @php 
+                            $action = !empty($action) ? $action : '';
+                        @endphp
+                        @if($action !== 'duplicate')
+                            @foreach($variation->media as $media)
+                                <div class="img-thumbnail">
+                                    <span class="badge bg-red delete-media" data-href="{{ action('ProductController@deleteMedia', ['media_id' => $media->id])}}"><i class="fa fa-close"></i></span>
+                                    {!! $media->thumbnail() !!}
+                                </div>
+                            @endforeach
+                            {!! Form::file('edit_variation_images_' . $row_index . '_' . $variation_row_index . '[]', ['class' => 'variation_images', 'accept' => 'image/*', 'multiple']); !!}
+                        @else
+                            {!! Form::file('edit_variation_images_' . $row_index . '_' . $variation_row_index . '[]', ['class' => 'variation_images', 'accept' => 'image/*', 'multiple']); !!}
+                        @endif
                     </td>
                     <td>
                         <button type="button" class="btn btn-danger btn-xs remove_variation_value_row">-</button>

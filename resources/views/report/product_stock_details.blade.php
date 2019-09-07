@@ -90,6 +90,12 @@
                                         {{ __('lang_v1.total_stock_transfered_from_the_location') }}
                                     </th>
                                     <th>
+                                        Total Manufactured
+                                    </th>
+                                    <th>
+                                        Total Used For Production
+                                    </th>
+                                    <th>
                                         Correct Stock
                                         <small>({{ __('lang_v1.total_stock_calculated') }})</small>
                                     </th>
@@ -143,6 +149,12 @@
                                     </td>
                                     <td>
                                         {{$row->total_sell_transfered}}
+                                    </td>
+                                    <td>
+                                        {{$row->total_manufactured}}
+                                    </td>
+                                    <td>
+                                        {{$row->total_ingredients_used}}
                                     </td>
                                     <td>
                                         {{$row->total_stock_calculated}}

@@ -145,10 +145,16 @@
       @include('cash_register.register_product_details')
       
       <div class="row">
-        <div class="col-sm-12">
+        <div class="col-xs-6">
           <b>@lang('report.user'):</b> {{ $register_details->user_name}}<br>
           <b>Email:</b> {{ $register_details->email}}
         </div>
+        @if(!empty($register_details->closing_note))
+          <div class="col-xs-6">
+            <strong>@lang('cash_register.closing_note'):</strong><br>
+            {{$register_details->closing_note}}
+          </div>
+        @endif
       </div>
     </div>
 

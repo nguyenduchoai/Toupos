@@ -2,8 +2,7 @@
 
 Route::get('/pricing', 'Modules\Superadmin\Http\Controllers\PricingController@index')->name('pricing');
 
-Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadmin', 'namespace' => 'Modules\Superadmin\Http\Controllers'], function()
-{
+Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadmin', 'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
     Route::get('/install', 'InstallController@index');
     Route::get('/install/update', 'InstallController@update');
 
@@ -28,21 +27,22 @@ Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadm
     Route::get('/communicator/get-history', 'CommunicatorController@getHistory');
 });
 
-Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone'], 
-    'namespace' => 'Modules\Superadmin\Http\Controllers'], function()
-{
-	//Routes related to paypal checkout
-	Route::get('/subscription/{package_id}/paypal-express-checkout', 
-		'SubscriptionController@paypalExpressCheckout');
+Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone'],
+    'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
+        //Routes related to paypal checkout
+        Route::get(
+        '/subscription/{package_id}/paypal-express-checkout',
+        'SubscriptionController@paypalExpressCheckout'
+    );
 
-    //Routes related to pesapal checkout
-    Route::get('/subscription/{package_id}/pesapal-callback', ['as' => 'pesapalCallback', 'uses'=>'SubscriptionController@pesapalCallback']);
+        //Routes related to pesapal checkout
+        Route::get('/subscription/{package_id}/pesapal-callback', ['as' => 'pesapalCallback', 'uses'=>'SubscriptionController@pesapalCallback']);
 
-	Route::get('/subscription/{package_id}/pay', 'SubscriptionController@pay');
-	Route::any('/subscription/{package_id}/confirm', 'SubscriptionController@confirm')->name('subscription-confirm');
-    Route::get('/all-subscriptions', 'SubscriptionController@allSubscriptions');
+        Route::get('/subscription/{package_id}/pay', 'SubscriptionController@pay');
+        Route::any('/subscription/{package_id}/confirm', 'SubscriptionController@confirm')->name('subscription-confirm');
+        Route::get('/all-subscriptions', 'SubscriptionController@allSubscriptions');
 
-    Route::get('/subscription/{package_id}/register-pay', 'SubscriptionController@registerPay')->name('register-pay');
+        Route::get('/subscription/{package_id}/register-pay', 'SubscriptionController@registerPay')->name('register-pay');
 
-    Route::resource('/subscription', 'SubscriptionController');    
-});
+        Route::resource('/subscription', 'SubscriptionController');
+    });

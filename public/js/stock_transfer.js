@@ -96,9 +96,9 @@ $(document).ready(function() {
     });
 
     //Date picker
-    $('#transaction_date').datepicker({
-        autoclose: true,
-        format: datepicker_date_format,
+    $('#transaction_date').datetimepicker({
+        format: moment_date_format + ' ' + moment_time_format,
+        ignoreReadonly: true,
     });
 
     jQuery.validator.addMethod(

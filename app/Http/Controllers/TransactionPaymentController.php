@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Utils\TransactionUtil;
-use App\Utils\ModuleUtil;
-
-use App\TransactionPayment;
 use App\Contact;
-use App\Transaction;
-use App\Account;
-
-use DB;
-use Datatables;
 
 use App\Events\TransactionPaymentAdded;
-use App\Events\TransactionPaymentUpdated;
 use App\Events\TransactionPaymentDeleted;
+
+use App\Events\TransactionPaymentUpdated;
+use App\Transaction;
+use App\TransactionPayment;
+
+use App\Utils\ModuleUtil;
+use App\Utils\TransactionUtil;
+
+use Datatables;
+use DB;
+use Illuminate\Http\Request;
 
 class TransactionPaymentController extends Controller
 {
@@ -150,7 +149,7 @@ class TransactionPaymentController extends Controller
 
         if (request()->ajax()) {
             $transaction = Transaction::where('id', $id)
-                                        ->with(['contact', 'business'])
+                                        ->with(['contact', 'business', 'transaction_for'])
                                         ->first();
             $payments_query = TransactionPayment::where('transaction_id', $id);
 
@@ -403,19 +402,19 @@ class TransactionPaymentController extends Controller
                             ->join('transactions AS t', 'contacts.id', '=', 't.contact_id');
             if ($due_payment_type == 'purchase') {
                 $query->select(
-                        DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
-                        DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
-                        'contacts.name',
-                        'contacts.supplier_business_name',
-                        'contacts.id as contact_id'
+                    DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
+                    DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
+                    'contacts.name',
+                    'contacts.supplier_business_name',
+                    'contacts.id as contact_id'
                     );
             } elseif ($due_payment_type == 'purchase_return') {
                 $query->select(
-                        DB::raw("SUM(IF(t.type = 'purchase_return', final_total, 0)) as total_purchase_return"),
-                        DB::raw("SUM(IF(t.type = 'purchase_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_return_paid"),
-                        'contacts.name',
-                        'contacts.supplier_business_name',
-                        'contacts.id as contact_id'
+                    DB::raw("SUM(IF(t.type = 'purchase_return', final_total, 0)) as total_purchase_return"),
+                    DB::raw("SUM(IF(t.type = 'purchase_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_return_paid"),
+                    'contacts.name',
+                    'contacts.supplier_business_name',
+                    'contacts.id as contact_id'
                     );
             } elseif ($due_payment_type == 'sell') {
                 $query->select(
@@ -427,11 +426,11 @@ class TransactionPaymentController extends Controller
                 );
             } elseif ($due_payment_type == 'sell_return') {
                 $query->select(
-                        DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
-                        DB::raw("SUM(IF(t.type = 'sell_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_return_paid"),
-                        'contacts.name',
-                        'contacts.supplier_business_name',
-                        'contacts.id as contact_id'
+                    DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
+                    DB::raw("SUM(IF(t.type = 'sell_return', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_return_paid"),
+                    'contacts.name',
+                    'contacts.supplier_business_name',
+                    'contacts.id as contact_id'
                     );
             }
 
@@ -583,13 +582,13 @@ class TransactionPaymentController extends Controller
             $transaction = null;
             if (!empty($single_payment_line->transaction_id)) {
                 $transaction = Transaction::where('id', $single_payment_line->transaction_id)
-                                            ->with(['contact', 'location'])
-                                            ->first();
+                                ->with(['contact', 'location', 'transaction_for'])
+                                ->first();
             } else {
                 $child_payment = TransactionPayment::where('business_id', $business_id)
-                                                    ->where('parent_id', $payment_id)
-                                                    ->with(['transaction', 'transaction.contact', 'transaction.location'])
-                                                    ->first();
+                        ->where('parent_id', $payment_id)
+                        ->with(['transaction', 'transaction.contact', 'transaction.location', 'transaction.transaction_for'])
+                        ->first();
                 $transaction = $child_payment->transaction;
             }
 

@@ -2,6 +2,7 @@
 
 namespace App;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -37,12 +38,13 @@ class Unit extends Model
             $query->whereNull('base_unit_id');
         }
 
-        $units = $query->pluck('actual_name', 'id');
+        $units = $query->select(DB::raw('CONCAT(actual_name, " (", short_name, ")") as name'), 'id')->get();
+        $dropdown = $units->pluck('name', 'id');
         if ($show_none) {
-            $units->prepend(__('messages.please_select'), '');
+            $dropdown->prepend(__('messages.please_select'), '');
         }
         
-        return $units;
+        return $dropdown;
     }
 
     public function sub_units()

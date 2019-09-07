@@ -4,29 +4,38 @@
 		<div class="table-responsive">
 			<table class="table bg-gray">
 				<tr class="bg-green">
-					<th>@lang('product.default_purchase_price') (@lang('product.exc_of_tax'))</th>
-					<th>@lang('product.default_purchase_price') (@lang('product.inc_of_tax'))</th>
+					@can('view_purchase_price')
+						<th>@lang('product.default_purchase_price') (@lang('product.exc_of_tax'))</th>
+						<th>@lang('product.default_purchase_price') (@lang('product.inc_of_tax'))</th>
+					@endcan
 					@can('access_default_selling_price')
-				        <th>@lang('product.profit_percent')</th>
+						@can('view_purchase_price')
+				        	<th>@lang('product.profit_percent')</th>
+				        @endcan
 				        <th>@lang('product.default_selling_price') (@lang('product.exc_of_tax'))</th>
 				        <th>@lang('product.default_selling_price') (@lang('product.inc_of_tax'))</th>
 				    @endcan
 				    @if(!empty($allowed_group_prices))
 			        	<th>@lang('lang_v1.group_prices')</th>
 			        @endif
+			        <th>@lang('lang_v1.variation_images')</th>
 				</tr>
 				@foreach($product->variations as $variation)
 				<tr>
+					@can('view_purchase_price')
 					<td>
 						<span class="display_currency" data-currency_symbol="true">{{ $variation->default_purchase_price }}</span>
 					</td>
 					<td>
 						<span class="display_currency" data-currency_symbol="true">{{ $variation->dpp_inc_tax }}</span>
 					</td>
+					@endcan
 					@can('access_default_selling_price')
+						@can('view_purchase_price')
 						<td>
 							{{ $variation->profit_percent }}
 						</td>
+						@endcan
 						<td>
 							<span class="display_currency" data-currency_symbol="true">{{ $variation->default_sell_price }}</span>
 						</td>
@@ -46,6 +55,11 @@
 			        		@endforeach
 			        	</td>
 			        @endif
+			        <td>
+			        	@foreach($variation->media as $media)
+			        		{!! $media->thumbnail([60, 60], 'img-thumbnail') !!}
+			        	@endforeach
+			        </td>
 				</tr>
 				@endforeach
 			</table>

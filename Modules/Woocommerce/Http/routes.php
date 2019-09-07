@@ -1,5 +1,22 @@
 <?php
 
+Route::post(
+    '/webhook/order-created/{business_id}',
+    'Modules\Woocommerce\Http\Controllers\WoocommerceWebhookController@orderCreated'
+);
+Route::post(
+    '/webhook/order-updated/{business_id}',
+    'Modules\Woocommerce\Http\Controllers\WoocommerceWebhookController@orderUpdated'
+);
+Route::post(
+    '/webhook/order-deleted/{business_id}',
+    'Modules\Woocommerce\Http\Controllers\WoocommerceWebhookController@orderDeleted'
+);
+Route::post(
+    '/webhook/order-restored/{business_id}',
+    'Modules\Woocommerce\Http\Controllers\WoocommerceWebhookController@orderRestored'
+);
+
 Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone'], 'prefix' => 'woocommerce', 'namespace' => 'Modules\Woocommerce\Http\Controllers'], function () {
     Route::get('/install', 'InstallController@index');
     Route::get('/install/update', 'InstallController@update');

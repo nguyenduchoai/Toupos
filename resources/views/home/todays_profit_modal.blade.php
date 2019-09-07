@@ -67,6 +67,9 @@
             </td>
           </tr>
         </table>
+        <h3 class="text-center">{{ __('lang_v1.gross_profit') }}: <span class="modal_gross_profit">
+                    <i class="fa fa-refresh fa-spin fa-fw"></i>
+                </span></h3>
         <h3 class="text-center">{{ __('report.net_profit') }}: <span class="modal_net_profit">
                     <i class="fa fa-refresh fa-spin fa-fw"></i>
                 </span></h3>

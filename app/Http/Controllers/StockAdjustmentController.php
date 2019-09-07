@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Transaction;
-
-use Illuminate\Http\Request;
-
 use App\BusinessLocation;
+
 use App\PurchaseLine;
+
+use App\Transaction;
+use App\Utils\ModuleUtil;
 
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
-use App\Utils\ModuleUtil;
-
 use Datatables;
+
 use DB;
+use Illuminate\Http\Request;
 
 class StockAdjustmentController extends Controller
 {
@@ -102,7 +102,7 @@ class StockAdjustmentController extends Controller
                     'total_amount_recovered',
                     '<span class="display_currency" data-currency_symbol="true">{{$total_amount_recovered}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                 ->editColumn('adjustment_type', function ($row) {
                     return __('stock_adjustment.' . $row->adjustment_type);
                 })
@@ -165,7 +165,7 @@ class StockAdjustmentController extends Controller
             $input_data['type'] = 'stock_adjustment';
             $input_data['business_id'] = $business_id;
             $input_data['created_by'] = $user_id;
-            $input_data['transaction_date'] = $this->productUtil->uf_date($input_data['transaction_date']);
+            $input_data['transaction_date'] = $this->productUtil->uf_date($input_data['transaction_date'], true);
             $input_data['total_amount_recovered'] = $this->productUtil->num_uf($input_data['total_amount_recovered']);
 
             //Update reference count

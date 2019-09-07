@@ -71,17 +71,19 @@
 				@endif
 				
 				<h3 class="text-center">
-
+				@php
+					$interval_type = !empty($intervals[$package->interval]) ? $intervals[$package->interval] : ucfirst($package->interval);
+				@endphp
 					@if($package->price != 0)
 						<span class="display_currency" data-currency_symbol="true">
 							{{$package->price}}
 						</span>
 
 						<small>
-							/ {{$package->interval_count}} {{ucfirst($package->interval)}}
+							/ {{$package->interval_count}} {{$interval_type}}
 						</small>
 					@else
-						@lang('superadmin::lang.free_for_duration', ['duration' => $package->interval_count . ' ' . ucfirst($package->interval)])
+						@lang('superadmin::lang.free_for_duration', ['duration' => $package->interval_count . ' ' . $interval_type])
 					@endif
 				</h3>
 			</div>

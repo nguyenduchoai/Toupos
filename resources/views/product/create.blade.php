@@ -14,8 +14,11 @@
 
 <!-- Main content -->
 <section class="content">
+@php
+  $form_class = empty($duplicate_product) ? 'create' : '';
+@endphp
 {!! Form::open(['url' => action('ProductController@store'), 'method' => 'post', 
-    'id' => 'product_add_form','class' => 'product_form', 'files' => true ]) !!}
+    'id' => 'product_add_form','class' => 'product_form ' . $form_class, 'files' => true ]) !!}
     @component('components.widget', ['class' => 'box-primary'])
         <div class="row">
         <div class="col-sm-4">
@@ -25,17 +28,22 @@
               'placeholder' => __('product.product_name')]); !!}
           </div>
         </div>
-        <div class="col-sm-4 @if(!session('business.enable_brand')) hide @endif">
+
+        <div class="col-sm-4">
           <div class="form-group">
-            {!! Form::label('brand_id', __('product.brand') . ':') !!}
-            <div class="input-group">
-              {!! Form::select('brand_id', $brands, !empty($duplicate_product->brand_id) ? $duplicate_product->brand_id : null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
-            <span class="input-group-btn">
-                <button type="button" @if(!auth()->user()->can('brand.create')) disabled @endif class="btn btn-default bg-white btn-flat btn-modal" data-href="{{action('BrandController@create', ['quick_add' => true])}}" title="@lang('brand.add_brand')" data-container=".view_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
-              </span>
-            </div>
+            {!! Form::label('sku', __('product.sku') . ':') !!} @show_tooltip(__('tooltip.sku'))
+            {!! Form::text('sku', null, ['class' => 'form-control',
+              'placeholder' => __('product.sku')]); !!}
           </div>
         </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('barcode_type', __('product.barcode_type') . ':*') !!}
+              {!! Form::select('barcode_type', $barcode_types, !empty($duplicate_product->barcode_type) ? $duplicate_product->barcode_type : $barcode_default, ['class' => 'form-control select2', 'required']); !!}
+          </div>
+        </div>
+
+      <div class="clearfix"></div>
         <div class="col-sm-4">
           <div class="form-group">
             {!! Form::label('unit_id', __('product.unit') . ':*') !!}
@@ -45,7 +53,26 @@
                 <button type="button" @if(!auth()->user()->can('unit.create')) disabled @endif class="btn btn-default bg-white btn-flat btn-modal" data-href="{{action('UnitController@create', ['quick_add' => true])}}" title="@lang('unit.add_unit')" data-container=".view_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
               </span>
             </div>
-              
+          </div>
+        </div>
+        
+        <div class="col-sm-4 @if(!session('business.enable_sub_units')) hide @endif">
+          <div class="form-group">
+            {!! Form::label('sub_unit_ids', __('lang_v1.related_sub_units') . ':') !!} @show_tooltip(__('lang_v1.sub_units_tooltip'))
+
+            {!! Form::select('sub_unit_ids[]', [], !empty($duplicate_product->sub_unit_ids) ? $duplicate_product->sub_unit_ids : null, ['class' => 'form-control select2', 'multiple', 'id' => 'sub_unit_ids']); !!}
+          </div>
+        </div>
+
+        <div class="col-sm-4 @if(!session('business.enable_brand')) hide @endif">
+          <div class="form-group">
+            {!! Form::label('brand_id', __('product.brand') . ':') !!}
+            <div class="input-group">
+              {!! Form::select('brand_id', $brands, !empty($duplicate_product->brand_id) ? $duplicate_product->brand_id : null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
+            <span class="input-group-btn">
+                <button type="button" @if(!auth()->user()->can('brand.create')) disabled @endif class="btn btn-default bg-white btn-flat btn-modal" data-href="{{action('BrandController@create', ['quick_add' => true])}}" title="@lang('brand.add_brand')" data-container=".view_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
+              </span>
+            </div>
           </div>
         </div>
 
@@ -65,20 +92,9 @@
           </div>
         </div>
 
-        <div class="col-sm-4">
-          <div class="form-group">
-            {!! Form::label('sku', __('product.sku') . ':') !!} @show_tooltip(__('tooltip.sku'))
-            {!! Form::text('sku', null, ['class' => 'form-control',
-              'placeholder' => __('product.sku')]); !!}
-          </div>
-        </div>
+        
         <div class="clearfix"></div>
-        <div class="col-sm-4">
-          <div class="form-group">
-            {!! Form::label('barcode_type', __('product.barcode_type') . ':*') !!}
-              {!! Form::select('barcode_type', $barcode_types, !empty($duplicate_product->barcode_type) ? $duplicate_product->barcode_type : $barcode_default, ['class' => 'form-control select2', 'required']); !!}
-          </div>
-        </div>
+        
         <div class="col-sm-4">
           <div class="form-group">
           <br>
@@ -140,10 +156,19 @@
 
         <div class="col-sm-4">
           <div class="form-group">
-          <br>
+            <br>
             <label>
               {!! Form::checkbox('enable_sr_no', 1, !(empty($duplicate_product)) ? $duplicate_product->enable_sr_no : false, ['class' => 'input-icheck']); !!} <strong>@lang('lang_v1.enable_imei_or_sr_no')</strong>
             </label> @show_tooltip(__('lang_v1.tooltip_sr_no'))
+          </div>
+        </div>
+
+        <div class="col-sm-4">
+          <div class="form-group">
+            <br>
+            <label>
+              {!! Form::checkbox('not_for_selling', 1, !(empty($duplicate_product)) ? $duplicate_product->not_for_selling : false, ['class' => 'input-icheck']); !!} <strong>@lang('lang_v1.not_for_selling')</strong>
+            </label> @show_tooltip(__('lang_v1.tooltip_not_for_selling'))
           </div>
         </div>
 
@@ -242,12 +267,14 @@
         <div class="col-sm-4">
           <div class="form-group">
             {!! Form::label('type', __('product.product_type') . ':*') !!} @show_tooltip(__('tooltip.product_type'))
-            {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], !empty($duplicate_product->type) ? $duplicate_product->type : null, ['class' => 'form-control select2',
+            {!! Form::select('type', $product_types, !empty($duplicate_product->type) ? $duplicate_product->type : null, ['class' => 'form-control select2',
             'required', 'data-action' => !empty($duplicate_product) ? 'duplicate' : 'add', 'data-product_id' => !empty($duplicate_product) ? $duplicate_product->id : '0']); !!}
           </div>
         </div>
 
-        <div class="form-group col-sm-11 col-sm-offset-1" id="product_form_part"></div>
+        <div class="form-group col-sm-12" id="product_form_part">
+          @include('product.partials.single_product_form_part', ['profit_percent' => $default_profit_percent])
+        </div>
 
         <input type="hidden" id="variation_counter" value="1">
         <input type="hidden" id="default_profit_percent" 

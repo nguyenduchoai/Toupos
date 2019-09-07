@@ -16,25 +16,7 @@
               {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], 'single', ['class' => 'hide', 'id' => 'type']); !!}
           </div>
         </div>
-        <div class="col-sm-4">
-          <div class="form-group">
-            {!! Form::label('brand_id', __('product.brand') . ':') !!}
-              {!! Form::select('brand_id', $brands, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
-          </div>
-        </div>
-        <div class="col-sm-4">
-          <div class="form-group">
-            {!! Form::label('unit_id', __('product.unit') . ':*') !!}
-              {!! Form::select('unit_id', $units, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
-          </div>
-        </div>
-        <div class="clearfix"></div>
-        <div class="col-sm-4">
-          <div class="form-group">
-            {!! Form::label('category_id', __('product.category') . ':') !!}
-              {!! Form::select('category_id', $categories, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
-          </div>
-        </div>
+
         <div class="col-sm-4">
           <div class="form-group">
             {!! Form::label('sku', __('product.sku') . ':') !!} @show_tooltip(__('tooltip.sku'))
@@ -49,6 +31,37 @@
           </div>
         </div>
         <div class="clearfix"></div>
+
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('unit_id', __('product.unit') . ':*') !!}
+              {!! Form::select('unit_id', $units, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2', 'required']); !!}
+          </div>
+        </div>
+
+        <div class="col-sm-4 @if(!session('business.enable_sub_units')) hide @endif">
+          <div class="form-group">
+            {!! Form::label('sub_unit_ids', __('lang_v1.related_sub_units') . ':') !!} @show_tooltip(__('lang_v1.sub_units_tooltip'))
+
+            {!! Form::select('sub_unit_ids[]', [], null, ['class' => 'form-control select2', 'multiple', 'id' => 'sub_unit_ids']); !!}
+          </div>
+        </div>
+
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('brand_id', __('product.brand') . ':') !!}
+              {!! Form::select('brand_id', $brands, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
+          </div>
+        </div>
+        
+        <div class="clearfix"></div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('category_id', __('product.category') . ':') !!}
+              {!! Form::select('category_id', $categories, null, ['placeholder' => __('messages.please_select'), 'class' => 'form-control select2']); !!}
+          </div>
+        </div>
+
         <div class="col-sm-4">
           <div class="form-group">
           <br>
@@ -64,6 +77,7 @@
             'placeholder' => __('product.alert_quantity'), 'min' => '0']); !!}
           </div>
         </div>
+        <div class="clearfix"></div>
         @if(session('business.enable_product_expiry'))
           @if(session('business.expiry_type') == 'add_expiry')
               @php
@@ -117,6 +131,16 @@
           </div>
         </div>
         <div class="clearfix"></div>
+
+        <div class="col-sm-4">
+          <div class="form-group">
+            <br>
+            <label>
+              {!! Form::checkbox('not_for_selling', 1, false, ['class' => 'input-icheck']); !!} <strong>@lang('lang_v1.not_for_selling')</strong>
+            </label> @show_tooltip(__('lang_v1.tooltip_not_for_selling'))
+          </div>
+        </div>
+
         @if(!empty($module_form_parts))
           @foreach($module_form_parts as $key => $value)
             @if(!empty($value['template_path']))
@@ -130,7 +154,7 @@
       </div>
       <div class="row">
         <div class="form-group col-sm-11 col-sm-offset-1">
-          @include('product.partials.single_product_form_part', ['profit_percent' => $default_profit_percent])
+          @include('product.partials.single_product_form_part', ['profit_percent' => $default_profit_percent, 'quick_add' => true ])
         </div>
       </div>
       @if(!empty($product_for) && $product_for == 'pos')

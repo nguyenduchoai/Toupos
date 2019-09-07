@@ -68,17 +68,18 @@
                 ['class' => 'form-control input-sm purchase_quantity input_number mousetrap', 'required', 'data-rule-abs_digit' => $check_decimal, 'data-msg-abs_digit' => __('lang_v1.decimal_value_not_allowed')]); !!} 
 
                 <input type="hidden" class="base_unit_cost" value="{{$purchase_line->variations->default_purchase_price}}">
-                @if(count($purchase_line->product->unit->sub_units) > 0)
+                @if(!empty($purchase_line->sub_units_options))
                     <br>
-                    <select name="purchases[{{$loop->index}}][sub_unit_id]" value="{{$purchase_line->sub_unit_id}}" class="form-control input-sm sub_unit">
-                            <option value="{{$purchase_line->product->unit->id}}" data-multiplier="1">{{$purchase_line->product->unit->short_name}}</option>
-                        @foreach($purchase_line->product->unit->sub_units as $sub_unit)
-                            <option value="{{$sub_unit->id}}" data-multiplier="{{$sub_unit->base_unit_multiplier}}" @if($sub_unit->id == $purchase_line->sub_unit_id) selected @endif >
-                                {{$sub_unit->short_name}}
+                    <select name="purchases[{{$loop->index}}][sub_unit_id]" class="form-control input-sm sub_unit">
+                        @foreach($purchase_line->sub_units_options as $sub_units_key => $sub_units_value)
+                            <option value="{{$sub_units_key}}" 
+                                data-multiplier="{{$sub_units_value['multiplier']}}"
+                                @if($sub_units_key == $purchase_line->sub_unit_id) selected @endif>
+                                {{$sub_units_value['name']}}
                             </option>
                         @endforeach
                     </select>
-                @else 
+                @else
                     {{ $purchase_line->product->unit->short_name }}
                 @endif
 
@@ -163,9 +164,12 @@
 
             @if(session('business.enable_product_expiry'))
                 <td style="text-align: left;">
-                    @if(!empty($purchase_line->product->expiry_period_type))
+                    @php
+                        $expiry_period_type = !empty($purchase_line->product->expiry_period_type) ? $purchase_line->product->expiry_period_type : 'month';
+                    @endphp
+                    @if(!empty($expiry_period_type))
                     <input type="hidden" class="row_product_expiry" value="{{ $purchase_line->product->expiry_period }}">
-                    <input type="hidden" class="row_product_expiry_type" value="{{ $purchase_line->product->expiry_period_type }}">
+                    <input type="hidden" class="row_product_expiry_type" value="{{ $expiry_period_type }}">
 
                     @if(session('business.expiry_type') == 'add_manufacturing')
                         @php

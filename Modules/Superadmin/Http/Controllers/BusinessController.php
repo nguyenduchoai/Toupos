@@ -2,12 +2,12 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
-use App\Business,
-    App\User,
-    App\Product,
-    App\VariationLocationDetails,
-    App\Transaction,
-    Spatie\Permission\Models\Permission;
+use App\Business;
+use App\User;
+use App\Product;
+use App\VariationLocationDetails;
+use App\Transaction;
+use Spatie\Permission\Models\Permission;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -18,7 +18,6 @@ use App\Utils\BusinessUtil;
 
 class BusinessController extends BaseController
 {
-
     protected $businessUtil;
 
     /**
@@ -45,14 +44,14 @@ class BusinessController extends BaseController
         $date_today = \Carbon::today();
 
         $businesses = Business::orderby('name')
-                    ->with(['subscriptions' => function($query) use($date_today) {
+                    ->with(['subscriptions' => function ($query) use ($date_today) {
                         $query->whereDate('start_date', '<=', $date_today)
                             ->whereDate('end_date', '>=', $date_today);
                     }, 'locations', 'owner'])
                     ->paginate(21);
         
         $business_id = request()->session()->get('user.business_id');
-        return view ('superadmin::business.index')
+        return view('superadmin::business.index')
             ->with(compact('businesses', 'business_id'));
     }
 
@@ -72,15 +71,20 @@ class BusinessController extends BaseController
         $accounting_methods = $this->businessUtil->allAccountingMethods();
 
         $months = array();
-        for ($i=1; $i<=12 ; $i++) { 
-            $months[$i] = __( 'business.months.' . $i );
+        for ($i=1; $i<=12 ; $i++) {
+            $months[$i] = __('business.months.' . $i);
         }
 
         $is_admin = true;
 
         return view('superadmin::business.create')
-            ->with(compact('currencies', 'timezone_list', 'accounting_methods', 
-                'months', 'is_admin'));
+            ->with(compact(
+                'currencies',
+                'timezone_list',
+                'accounting_methods',
+                'months',
+                'is_admin'
+            ));
     }
 
     /**
@@ -112,9 +116,9 @@ class BusinessController extends BaseController
             }
                 
             //upload logo
-            if ($request->hasFile('business_logo') && $request->file('business_logo')->isValid()) {
-                $path = $request->business_logo->store('public/business_logos');
-                $business_details['logo'] = str_replace('public/business_logos/', '', $path);
+            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos');
+            if (!empty($logo_name)) {
+                $business_details['logo'] = $logo_name;
             }
                 
             $business = $this->businessUtil->createNewBusiness($business_details);
@@ -131,19 +135,18 @@ class BusinessController extends BaseController
 
             DB::commit();
 
-            $output = array('success' => 1, 
+            $output = array('success' => 1,
                             'msg' => __('business.business_created_succesfully')
                         );
 
             return redirect()
                 ->action('\Modules\Superadmin\Http\Controllers\BusinessController@index')
                 ->with('status', $output);
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
-            $output = array('success' => 0, 
+            $output = array('success' => 0,
                             'msg' => __('messages.something_went_wrong')
                         );
 
@@ -165,10 +168,7 @@ class BusinessController extends BaseController
         
         $created_id = $business->created_by;
 
-        if(!empty($created_id))
-        {
-            $created_by = User::find($created_id);
-        }
+        $created_by = !empty($created_id) ? User::find($created_id) : null;
 
         return view('superadmin::business.show')
             ->with(compact('business', 'created_by'));
@@ -203,15 +203,14 @@ class BusinessController extends BaseController
         }
 
         try {
-            
             $notAllowed = $this->businessUtil->notAllowedInDemo();
-            if(!empty($notAllowed)){
+            if (!empty($notAllowed)) {
                 return $notAllowed;
             }
 
             //Check if logged in busines id is same as deleted business then not allowed.
             $business_id = request()->session()->get('user.business_id');
-            if($business_id == $id){
+            if ($business_id == $id) {
                 $output = ['success' => 0, 'msg' => __('superadmin.lang.cannot_delete_current_business')];
                 return back()->with('status', $output);
             }
@@ -220,7 +219,7 @@ class BusinessController extends BaseController
 
             //Delete related products & transactions.
             $products_id = Product::where('business_id', $id)->pluck('id')->toArray();
-            if(!empty($products_id)){
+            if (!empty($products_id)) {
                 VariationLocationDetails::whereIn('product_id', $products_id)->delete();
             }
             Transaction::where('business_id', $id)->delete();
@@ -234,12 +233,11 @@ class BusinessController extends BaseController
             return redirect()
                 ->action('\Modules\Superadmin\Http\Controllers\BusinessController@index')
                 ->with('status', $output);
-        
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
-            $output = array('success' => 0, 
+            $output = array('success' => 0,
                             'msg' => __('messages.something_went_wrong')
                         );
 
@@ -251,21 +249,21 @@ class BusinessController extends BaseController
      * Changes the activation status of a business.
      * @return Response
      */
-    public function toggleActive(Request $request, $business_id, $is_active){
-        
+    public function toggleActive(Request $request, $business_id, $is_active)
+    {
         if (!auth()->user()->can('superadmin')) {
             abort(403, 'Unauthorized action.');
         }
 
         $notAllowed = $this->businessUtil->notAllowedInDemo();
-        if(!empty($notAllowed)){
+        if (!empty($notAllowed)) {
             return $notAllowed;
         }
             
         Business::where('id', $business_id)
             ->update(['is_active' => $is_active]);
 
-        $output = ['success' => 1, 
+        $output = ['success' => 1,
                     'msg' => __('lang_v1.success')
                 ];
         return back()->with('status', $output);

@@ -108,6 +108,17 @@
             </div>
         </div>
 
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                  <label>
+                    {!! Form::checkbox('enable_sub_units', 1, $business->enable_sub_units, [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.enable_sub_units' ) }}
+                  </label>
+                  @show_tooltip(__('lang_v1.sub_units_tooltip'))
+                </div>
+            </div>
+        </div>
+
         <div class="clearfix"></div>
 
         <div class="col-sm-4">

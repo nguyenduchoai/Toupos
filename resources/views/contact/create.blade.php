@@ -214,7 +214,7 @@
             </div>
         </div>
       </div>
-      <div class="@if(isset($quick_add)) hide @endif"> 
+      <div> 
       <div class="clearfix"></div>
       <div class="col-md-12">
         <hr/>

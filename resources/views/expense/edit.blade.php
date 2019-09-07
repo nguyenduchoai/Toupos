@@ -39,7 +39,7 @@
               <span class="input-group-addon">
                 <i class="fa fa-calendar"></i>
               </span>
-              {!! Form::text('transaction_date', date('m/d/Y', strtotime($expense->transaction_date)), ['class' => 'form-control', 'readonly', 'required', 'id' => 'expense_transaction_date']); !!}
+              {!! Form::text('transaction_date', @format_datetime($expense->transaction_date), ['class' => 'form-control', 'readonly', 'required', 'id' => 'expense_transaction_date']); !!}
             </div>
           </div>
         </div>

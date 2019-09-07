@@ -87,6 +87,9 @@ function add_selected_modifiers(selected, index) {
                     return false;
                 }
             });
+
+        //Update total price.
+        pos_total_row();
     }
 }
 

@@ -2,27 +2,27 @@
 
 namespace Modules\Woocommerce\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-
 use App\Business;
 use App\BusinessLocation;
-use App\TaxRate;
-use App\SellingPriceGroup;
 use App\Category;
 use App\Product;
+use App\SellingPriceGroup;
 use App\System;
+use App\TaxRate;
+use App\Utils\ModuleUtil;
 use App\Variation;
+use App\VariationTemplate;
+use DB;
+use Illuminate\Http\Request;
 
+use Illuminate\Http\Response;
+
+use Illuminate\Routing\Controller;
 use Modules\Woocommerce\Entities\WoocommerceSyncLog;
 
 use Modules\Woocommerce\Utils\WoocommerceUtil;
-use App\Utils\ModuleUtil;
 
 use Yajra\DataTables\Facades\DataTables;
-
-use DB;
 
 class WoocommerceController extends Controller
 {
@@ -89,6 +89,7 @@ class WoocommerceController extends Controller
             $not_synced_product_count = Product::where('business_id', $business_id)
                                         ->whereIn('type', ['single', 'variable'])
                                         ->whereNull('woocommerce_product_id')
+                                        ->where('woocommerce_disable_sync', 0)
                                         ->count();
 
             if (!empty($not_synced_product_count)) {
@@ -175,7 +176,7 @@ class WoocommerceController extends Controller
         $cron_job_command = $this->moduleUtil->getCronJobCommand();
 
         return view('woocommerce::woocommerce.api_settings')
-                ->with(compact('default_settings', 'locations', 'price_groups', 'module_version', 'cron_job_command'));
+                ->with(compact('default_settings', 'locations', 'price_groups', 'module_version', 'cron_job_command', 'business'));
     }
 
     /**
@@ -203,6 +204,10 @@ class WoocommerceController extends Controller
 
             $business = Business::find($business_id);
             $business->woocommerce_api_settings = json_encode($input);
+            $business->woocommerce_wh_oc_secret = $input['woocommerce_wh_oc_secret'];
+            $business->woocommerce_wh_ou_secret = $input['woocommerce_wh_ou_secret'];
+            $business->woocommerce_wh_od_secret = $input['woocommerce_wh_od_secret'];
+            $business->woocommerce_wh_or_secret = $input['woocommerce_wh_or_secret'];
             $business->save();
 
             $output = ['success' => 1,
@@ -282,6 +287,9 @@ class WoocommerceController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        ini_set('memory_limit', '-1');
+        set_time_limit(0);
+
         try {
             $user_id = request()->session()->get('user.id');
             $sync_type = request()->input('type');
@@ -306,7 +314,7 @@ class WoocommerceController extends Controller
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
                 $output = ['success' => 0,
-                            'msg' => __("messages.something_went_wrong"),
+                            'msg' => __("messages.something_went_wrong")
                         ];
             }
         }
@@ -596,6 +604,12 @@ class WoocommerceController extends Controller
                         ->update([
                             'woocommerce_variation_id' => null
                         ]);
+
+                //Update variation templates
+                VariationTemplate::where('business_id', $business_id)
+                                ->update([
+                                    'woocommerce_attr_id' => null
+                                ]);
 
                 $user_id = request()->session()->get('user.id');
                 $this->woocommerceUtil->createSyncLog($business_id, $user_id, 'all_products', 'reset', null);

@@ -70,6 +70,34 @@
                                 {{ $contact->alternate_number }}
                             </p>
                         @endif
+
+                        @if(!empty($contact->custom_field1))
+                            <strong>@lang('lang_v1.custom_field', ['number' => 1])</strong>
+                            <p class="text-muted">
+                                {{ $contact->custom_field1 }}
+                            </p>
+                        @endif
+
+                        @if(!empty($contact->custom_field2))
+                            <strong>@lang('lang_v1.custom_field', ['number' => 2])</strong>
+                            <p class="text-muted">
+                                {{ $contact->custom_field2 }}
+                            </p>
+                        @endif
+
+                        @if(!empty($contact->custom_field3))
+                            <strong>@lang('lang_v1.custom_field', ['number' => 3])</strong>
+                            <p class="text-muted">
+                                {{ $contact->custom_field3 }}
+                            </p>
+                        @endif
+
+                        @if(!empty($contact->custom_field4))
+                            <strong>@lang('lang_v1.custom_field', ['number' => 4])</strong>
+                            <p class="text-muted">
+                                {{ $contact->custom_field4 }}
+                            </p>
+                        @endif
                     </div>
                 </div>
                 @if( $contact->type != 'customer')
@@ -144,6 +172,20 @@
                     @endif
                     </div>
                 </div>
+                @if($reward_enabled)
+                    <div class="clearfix"></div>
+                    <div class="col-md-3">
+                        <div class="info-box bg-yellow">
+                            <span class="info-box-icon"><i class="fa fa-gift"></i></span>
+
+                            <div class="info-box-content">
+                              <span class="info-box-text">{{session('business.rp_name')}}</span>
+                              <span class="info-box-number">{{$contact->total_rp ?? 0}}</span>
+                            </div>
+                            <!-- /.info-box-content -->
+                        </div>
+                    </div>
+                @endif
                 @if( $contact->type == 'supplier' || $contact->type == 'both')
                     <div class="clearfix"></div>
                     <div class="col-sm-12">
@@ -156,109 +198,78 @@
         </div>
     </div>
     <!-- list purchases -->
-    @if( in_array($contact->type, ['supplier', 'both']) )
-        <div class="box">
-            <div class="box-header">
-                <h3 class="box-title">
-                    <i class="fa fa-money margin-r-5"></i>
-                    @lang( 'contact.all_purchases_linked_to_this_contact')
-                </h3>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="form-group">
-                            <div class="input-group">
-                              <button type="button" class="btn btn-primary" id="daterange-btn">
-                                <span>
-                                  <i class="fa fa-calendar"></i> {{ __("messages.filter_by_date") }}
-                                </span>
-                                <i class="fa fa-caret-down"></i>
-                              </button>
-                            </div>
-                          </div>
-                    </div>
-                    <div class="col-sm-12">
-                        <table class="table table-bordered table-striped ajax_view" id="purchase_table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Ref No.</th>
-                                    <th>Supplier</th>
-                                    <th>Purchase Status</th>
-                                    <th>Payment Status</th>
-                                    <th>Grand Total</th>
-                                    <th>@lang('purchase.payment_due') &nbsp;&nbsp;<i class="fa fa-info-circle text-info" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{{ __('messages.purchase_due_tooltip')}}" aria-hidden="true"></i></th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
 
-    <!-- list sales -->
-    @if( in_array($contact->type, ['customer', 'both']) )
-        <div class="box">
-            <div class="box-header">
-                <h3 class="box-title">
-                    <i class="fa fa-money margin-r-5"></i>
-                    @lang( 'contact.all_sells_linked_to_this_contact')
-                </h3>
-            </div>
-            <div class="box-body">
-                <div class="row">
-                    <div class="col-sm-12">
+    @php
+        $transaction_types = [];
+        if(in_array($contact->type, ['both', 'supplier'])){
+            $transaction_types['purchase'] = __('lang_v1.purchase');
+            $transaction_types['purchase_return'] = __('lang_v1.purchase_return');
+        }
+
+        if(in_array($contact->type, ['both', 'customer'])){
+            $transaction_types['sell'] = __('sale.sale');
+            $transaction_types['sell_return'] = __('lang_v1.sell_return');
+        }
+
+        $transaction_types['opening_balance'] = __('lang_v1.opening_balance');
+    @endphp
+
+    @component('components.widget', ['class' => 'box-primary', 'title' => __('lang_v1.ledger')])
+        <div class="row">
+            <div class="col-md-12">
+                @foreach($transaction_types as $key => $value)
+                    <div class="col-md-3">
                         <div class="form-group">
-                            <div class="input-group">
-                              <button type="button" class="btn btn-primary" id="sells-daterange-btn">
-                                <span>
-                                  <i class="fa fa-calendar"></i> {{ __("messages.filter_by_date") }}
-                                </span>
-                                <i class="fa fa-caret-down"></i>
-                              </button>
+                            <div class="checkbox">
+                                <label>
+                                  {!! Form::checkbox('transaction_types[]', $key, true, 
+                                  [ 'class' => 'input-icheck transaction_types']); !!} {{$value}}
+                                </label>
                             </div>
-                          </div>
+                        </div>
                     </div>
-                    <div class="col-sm-12">
-                        <table class="table table-bordered table-striped ajax_view" id="sell_table">
-                            <thead>
-                                <tr>
-                                    <th>@lang('messages.date')</th>
-                                    <th>@lang('sale.invoice_no')</th>
-                                    <th>@lang('sale.customer_name')</th>
-                                    <th>@lang('sale.payment_status')</th>
-                                    <th>@lang('sale.total_amount')</th>
-                                    <th>@lang('sale.total_paid')</th>
-                                    <th>@lang('sale.total_remaining')</th>
-                                    <th>@lang('messages.action')</th>
-                                </tr>
-                            </thead>
-                        </table>
+                @endforeach
+                
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label>
+                              {!! Form::checkbox('show_payments', 1, true, 
+                              [ 'class' => 'input-icheck', 'id' => 'show_payments']); !!} @lang('lang_v1.show_payments')
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {!! Form::label('ledger_date_range', __('report.date_range') . ':') !!}
+                        {!! Form::text('ledger_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
                     </div>
                 </div>
             </div>
-        </div>
-    @endif
-    @if(auth()->user()->can('purchase.payments') || auth()->user()->can('sell.payments'))
-    @component('components.widget', ['class' => 'box-primary', 'title' => __('lang_v1.opening_balance_payments')])
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped" 
-            id="ob_payment_table">
-                <thead>
-                    <tr>
-                        <th>@lang('purchase.ref_no')</th>
-                        <th>@lang('lang_v1.paid_on')</th>
-                        <th>@lang('sale.amount')</th>
-                        <th>@lang('lang_v1.payment_method')</th>
-                        <th>@lang('messages.action')</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="col-md-12">
+                <div id="contact_ledger_div"></div>
+            </div>
         </div>
     @endcomponent
+
+    @if( in_array($contact->type, ['customer', 'both']) && session('business.enable_rp'))
+        @component('components.widget', ['class' => 'box-primary', 'title' => session('business.rp_name')])
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" 
+                id="rp_log_table">
+                    <thead>
+                        <tr>
+                            <th>@lang('messages.date')</th>
+                            <th>@lang('sale.invoice_no')</th>
+                            <th>@lang('lang_v1.earned')</th>
+                            <th>@lang('lang_v1.redeemed')</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        @endcomponent
     @endif
 </section>
 <!-- /.content -->
@@ -274,133 +285,61 @@
 @section('javascript')
 <script type="text/javascript">
 $(document).ready( function(){
-    //Purchase table
-    purchase_table = $('#purchase_table').DataTable({
-        processing: true,
-        serverSide: true,
-        aaSorting: [[0, 'desc']],
-        ajax: '/purchases?supplier_id={{ $contact->id }}',
-        columnDefs: [ {
-            "targets": 6,
-            "orderable": false,
-            "searchable": false
-        } ],
-        columns: [
-            { data: 'transaction_date', name: 'transaction_date'  },
-            { data: 'ref_no', name: 'ref_no'},
-            { data: 'name', name: 'contacts.name'},
-            { data: 'status', name: 'status'},
-            { data: 'payment_status', name: 'payment_status'},
-            { data: 'final_total', name: 'final_total'},
-            { data: 'payment_due', name: 'payment_due'},
-            { data: 'action', name: 'action'}
-        ],
-        "fnDrawCallback": function (oSettings) {
-            __currency_convert_recursively($('#purchase_table'));
-        },
-        createdRow: function( row, data, dataIndex ) {
-            $( row ).find('td:eq(4)').attr('class', 'clickable_td');
-        }
-    });
-    //Date range as a button
-    $('#daterange-btn').daterangepicker(
+    $('#ledger_date_range').daterangepicker(
         dateRangeSettings,
         function (start, end) {
-            $('#daterange-btn span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'));
-            purchase_table.ajax.url( '/purchases?supplier_id={{ $contact->id }}&start_date=' + start.format('YYYY-MM-DD') +
-                '&end_date=' + end.format('YYYY-MM-DD') ).load();
+            $('#ledger_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
         }
     );
-    $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-        purchase_table.ajax.url( '/purchases?supplier_id={{ $contact->id }}').load();
-        $('#daterange-btn span').html('<i class="fa fa-calendar"></i> {{ __("messages.filter_by_date") }}');
+    $('#ledger_date_range').change( function(){
+        get_contact_ledger();
     });
+    get_contact_ledger();
 
-    sell_table = $('#sell_table').DataTable({
+    rp_log_table = $('#rp_log_table').DataTable({
         processing: true,
         serverSide: true,
         aaSorting: [[0, 'desc']],
-        ajax: '/sells?customer_id={{ $contact->id }}',
-        columnDefs: [ {
-            "targets": 7,
-            "orderable": false,
-            "searchable": false
-        } ],
+        ajax: '/sells?customer_id={{ $contact->id }}&rewards_only=true',
         columns: [
-            { data: 'transaction_date', name: 'transaction_date'  },
-            { data: 'invoice_no', name: 'invoice_no'},
-            { data: 'name', name: 'contacts.name'},
-            { data: 'payment_status', name: 'payment_status'},
-            { data: 'final_total', name: 'final_total'},
-            { data: 'total_paid', searchable: false},
-            { data: 'total_remaining', name: 'total_remaining'},
-            { data: 'action', name: 'action'}
-        ],
-        "fnDrawCallback": function (oSettings) {
-            __currency_convert_recursively($('#sell_table'));
-        },
-        createdRow: function( row, data, dataIndex ) {
-            $( row ).find('td:eq(3)').attr('class', 'clickable_td');
-        }
-    });
-    $('#sells-daterange-btn').daterangepicker(
-        dateRangeSettings,
-        function (start, end) {
-            $('#sells-daterange-btn span').html(start.format('DD/MM/YYYY') + ' - ' + end.format('DD/MM/YYYY'));
-            sell_table.ajax.url( '/sells?customer_id={{ $contact->id }}&start_date=' + start.format('YYYY-MM-DD') +
-                '&end_date=' + end.format('YYYY-MM-DD') ).load();
-        }
-    );
-    $('#sells-daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-        sell_table.ajax.url( '/sells?customer_id={{ $contact->id }}').load();
-        $('#daterange-btn span').html('<i class="fa fa-calendar"></i> {{ __("messages.filter_by_date") }}');
-    });
-
-    //Opening balance payment
-    ob_payment_table = $('#ob_payment_table').DataTable({
-        processing: true,
-        serverSide: true,
-        aaSorting: [[0, 'desc']],
-        ajax: '{{action("TransactionPaymentController@getOpeningBalancePayments", $contact->id)}}',
-        columns: [
-            { data: 'payment_ref_no', name: 'payment_ref_no'  },
-            { data: 'paid_on', name: 'paid_on'  },
-            { data: 'amount', name: 'transaction_payments.amount'  },
-            { data: 'method', name: 'method' },
-            { data: 'action', "orderable": false, "searchable": false },
-        ],
-        "fnDrawCallback": function (oSettings) {
-            __currency_convert_recursively($('#ob_payment_table'));
-        }
+            { data: 'transaction_date', name: 'transactions.transaction_date'  },
+            { data: 'invoice_no', name: 'transactions.invoice_no'},
+            { data: 'rp_earned', name: 'transactions.rp_earned'},
+            { data: 'rp_redeemed', name: 'transactions.rp_redeemed'},
+        ]
     });
 });
 
-$('table#purchase_table').on('click', 'a.delete-purchase', function(e){
-    e.preventDefault();
-    swal({
-      title: LANG.sure,
-      icon: "warning",
-      buttons: true,
-      dangerMode: true,
-    }).then((willDelete) => {
-        if (willDelete) {
-            var href = $(this).attr('href');
-            $.ajax({
-                method: "DELETE",
-                url: href,
-                dataType: "json",
-                success: function(result){
-                    if(result.success == true){
-                        toastr.success(result.msg);
-                        purchase_table.ajax.reload();
-                    } else {
-                        toastr.error(result.msg);
-                    }
-                }
+$("input.transaction_types, input#show_payments").on('ifChanged', function (e) {
+    get_contact_ledger();
+});
+
+function get_contact_ledger() {
+
+    var start_date = '';
+    var end_date = '';
+    var transaction_types = $('input.transaction_types:checked').map(function(i, e) {return e.value}).toArray();
+    var show_payments = $('input#show_payments').is(':checked');
+
+    if($('#ledger_date_range').val()) {
+        start_date = $('#ledger_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
+        end_date = $('#ledger_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
+    }
+    $.ajax({
+        url: '/contacts/ledger?contact_id={{$contact->id}}&start_date=' + start_date + '&transaction_types=' + transaction_types + '&show_payments=' + show_payments + '&end_date=' + end_date,
+        dataType: 'html',
+        success: function(result) {
+            $('#contact_ledger_div')
+                .html(result);
+            __currency_convert_recursively($('#ledger_table'));
+
+            $('#ledger_table').DataTable({
+                searchable: false,
+                ordering:false
             });
-        }
+        },
     });
-});
+}
 </script>
 <script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>
 

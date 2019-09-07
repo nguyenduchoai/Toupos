@@ -38,7 +38,8 @@ return [
     'alert_quantity' => "Get alert when product stock reaches or goes below the specified quantity.<br><br><small class='text-muted'>Products with low stock will be displayed in dashboard - Product Stock Alert section.</small>",
 
     'product_type' => '<b>Single product</b>: Product with no variations.
-    <br><b>Variable product</b>: Product with variations such as size, color etc.',
+    <br><b>Variable product</b>: Product with variations such as size, color etc.
+    <br><b>Combo product</b>: A combination of multiple products, also called bundle product',
 
     'profit_percent' => "Default profit margin for the product. <br><small class='text-muted'>(<i>You can manage default profit margin in Business Settings.</i>)</small>",
 
@@ -90,7 +91,7 @@ return [
 
     'print_receipt_on_invoice' => 'Enable or Disable auto-printing of invoice on finalizing',
 
-    'receipt_printer_type' => "<i>Browser Based Printing</i>: Show print dialogue box in browser with preview of invoice <br/><br/> <i>Use Configured Receipt Printer</i>: Select a configured receipt/thermal printer for printing",
+    'receipt_printer_type' => "<i>Impressão Baseada em Navegador</i>: Mostrar caixa de diálogo de impressão no navegador com visualização da fatura <br/> <br/> <i> Usar Impressora de Recibos Configurada </i>: Selecionar um recibo configurado / impressora térmica para impressão",
 
     'adjustment_type' => '<i>Normal</i>: Adjustment for normal reasons like Leakage, Damage etc. <br/><br/> <i>Abnormal</i>: Adjustment for reasons like Fire, Accident etc.',
 

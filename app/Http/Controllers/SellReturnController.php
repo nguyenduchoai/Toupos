@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
 use App\BusinessLocation;
 use App\Transaction;
-use App\TaxRate;
 
+use App\Utils\BusinessUtil;
+use App\Utils\ContactUtil;
+
+use App\Utils\ModuleUtil;
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
-use App\Utils\ContactUtil;
-use App\Utils\BusinessUtil;
-use App\Utils\ModuleUtil;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use Yajra\DataTables\Facades\DataTables;
 
@@ -316,6 +315,18 @@ class SellReturnController extends Controller
                     $sell_return->update($sell_return_data);
                 }
 
+                if ($request->session()->get('business.enable_rp') == 1 && !empty($sell->rp_earned)) {
+                    $is_reward_expired = $this->transactionUtil->isRewardExpired($sell->transaction_date, $business_id);
+                    if (!$is_reward_expired) {
+                        $diff = $sell->final_total - $sell_return->final_total;
+                        $new_reward_point = $this->transactionUtil->calculateRewardPoints($business_id, $diff);
+                        $this->transactionUtil->updateCustomerRewardPoints($sell->contact_id, $new_reward_point, $sell->rp_earned);
+
+                        $sell->rp_earned = $new_reward_point;
+                        $sell->save();
+                    }
+                }
+
                 //Update payment status
                 $this->transactionUtil->updatePaymentStatus($sell_return->id, $sell_return->final_total);
 
@@ -422,9 +433,14 @@ class SellReturnController extends Controller
         if ($sell->return_parent->discount_type == 'fixed') {
             $total_discount = $sell->return_parent->discount_amount;
         } elseif ($sell->return_parent->discount_type == 'percentage') {
-            $total_after_discount = $sell->return_parent->final_total - $sell->return_parent->tax_amount;
-            $total_before_discount = $total_after_discount * 100 / (100 - $sell->return_parent->discount_amount);
-            $total_discount = $total_before_discount - $total_after_discount;
+            $discount_percent = $sell->return_parent->discount_amount;
+            if ($discount_percent == 100) {
+                $total_discount = $sell->return_parent->total_before_tax;
+            } else {
+                $total_after_discount = $sell->return_parent->final_total - $sell->return_parent->tax_amount;
+                $total_before_discount = $total_after_discount * 100 / (100 - $discount_percent);
+                $total_discount = $total_before_discount - $total_after_discount;
+            }
         }
         
         return view('sell_return.show')

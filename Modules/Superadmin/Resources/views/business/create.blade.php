@@ -45,7 +45,16 @@
                 rules: {
                     name: "required",
                     email: {
-                        email: true
+                        email: true,
+                        remote: {
+                            url: "/business/register/check-email",
+                            type: "post",
+                            data: {
+                                email: function() {
+                                    return $( "#email" ).val();
+                                }
+                            }
+                        }
                     },
                     password: {
                         required: true,
@@ -78,6 +87,9 @@
                     },
                     username: {
                         remote: LANG.invalid_username
+                    },
+                    email: {
+                        remote: '{{ __("validation.unique", ["attribute" => __("business.email")]) }}'
                     }
                 }
             });

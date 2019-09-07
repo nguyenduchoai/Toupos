@@ -44,6 +44,19 @@
                         {!! Form::select('unit', $units, null, ['placeholder' => __('messages.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
                     </div>
                 </div>
+                @if(Module::has('Manufacturing'))
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <br>
+                            <div class="checkbox">
+                                <label>
+                                  {!! Form::checkbox('only_mfg', 1, false, 
+                                  [ 'class' => 'input-icheck', 'id' => 'only_mfg_products']); !!} {{ __('manufacturing::lang.only_mfg_products') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 {!! Form::close() !!}
             @endcomponent
         </div>

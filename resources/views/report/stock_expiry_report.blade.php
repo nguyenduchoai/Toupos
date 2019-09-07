@@ -50,6 +50,19 @@
                         {!! Form::select('view_stock_filter', $view_stock_filter, null, ['placeholder' => __('messages.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
                     </div>
                 </div>
+                @if(Module::has('Manufacturing'))
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <br>
+                            <div class="checkbox">
+                                <label>
+                                  {!! Form::checkbox('only_mfg', 1, false, 
+                                  [ 'class' => 'input-icheck', 'id' => 'only_mfg_products']); !!} {{ __('manufacturing::lang.only_mfg_products') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                @endif
                 {!! Form::close() !!}
             @endcomponent
         </div>
@@ -63,20 +76,20 @@
                         <tr>
                             <th>@lang('business.product')</th>
                             <th>SKU</th>
-                            <th>@lang('purchase.ref_no')</th>
+                            <!-- <th>@lang('purchase.ref_no')</th> -->
                             <th>@lang('business.location')</th>
                             <th>@lang('report.stock_left')</th>
                             <th>@lang('lang_v1.lot_number')</th>
                             <th>@lang('product.exp_date')</th>
                             <th>@lang('product.mfg_date')</th>
-                            <th>@lang('messages.edit')</th>
+                           <!--  <th>@lang('messages.edit')</th> -->
                         </tr>
                     </thead>
                     <tfoot>
                         <tr class="bg-gray font-17 text-center footer-total">
-                            <td colspan="4"><strong>@lang('sale.total'):</strong></td>
+                            <td colspan="3"><strong>@lang('sale.total'):</strong></td>
                             <td id="footer_total_stock_left"></td>
-                            <td colspan="4"></td>
+                            <td colspan="3"></td>
                         </tr>
                     </tfoot>
                 </table>

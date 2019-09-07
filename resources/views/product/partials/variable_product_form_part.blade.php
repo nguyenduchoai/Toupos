@@ -7,8 +7,8 @@
     <table class="table table-bordered add-product-price-table table-condensed" id="product_variation_form_part">
         <thead>
           <tr>
-            <th class="col-sm-3">@lang('lang_v1.variation')</th>
-            <th class="col-sm-9">@lang('product.variation_values')</th>
+            <th class="col-sm-2">@lang('lang_v1.variation')</th>
+            <th class="col-sm-10">@lang('product.variation_values')</th>
           </tr>
         </thead>
         <tbody>

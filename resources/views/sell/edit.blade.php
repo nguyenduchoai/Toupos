@@ -9,6 +9,12 @@
 </section>
 <!-- Main content -->
 <section class="content">
+@if(!empty($pos_settings['allow_overselling']))
+	<input type="hidden" id="is_overselling_allowed">
+@endif
+@if(session('business.enable_rp') == 1)
+    <input type="hidden" id="reward_point_enabled">
+@endif
 <input type="hidden" id="item_addition_method" value="{{$business_details->item_addition_method}}">
 	{!! Form::open(['url' => action('SellPosController@update', ['id' => $transaction->id ]), 'method' => 'put', 'id' => 'edit_sell_form' ]) !!}
 
@@ -115,6 +121,22 @@
 						{!! Form::select('status', ['final' => __('sale.final'), 'draft' => __('sale.draft'), 'quotation' => __('lang_v1.quotation')], $status, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
 					</div>
 				</div>
+				@if($transaction->status == 'draft')
+				<div class="col-sm-3">
+					<div class="form-group">
+						{!! Form::label('invoice_scheme_id', __('invoice.invoice_scheme') . ':') !!}
+						{!! Form::select('invoice_scheme_id', $invoice_schemes, $default_invoice_schemes->id, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select')]); !!}
+					</div>
+				</div>
+				@endif
+				<div class="clearfix"></div>
+				<!-- Call restaurant module if defined -->
+		        @if(in_array('tables' ,$enabled_modules) || in_array('service_staff' ,$enabled_modules))
+		        	<span id="restaurant_module_span" 
+		        		data-transaction_id="{{$transaction->id}}">
+		          		<div class="col-md-3"></div>
+		        	</span>
+		        @endif
 			@endcomponent
 			
 			@component('components.widget', ['class' => 'box-primary'])
@@ -127,6 +149,9 @@
 							{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'),
 							'autofocus' => true,
 							]); !!}
+							<span class="input-group-btn">
+								<button type="button" class="btn btn-default bg-white btn-flat pos_add_quick_product" data-href="{{action('ProductController@quickAdd')}}" data-container=".quick_add_product_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
+							</span>
 						</div>
 					</div>
 				</div>
@@ -154,6 +179,11 @@
 								<th class="text-center">
 									@lang('sale.qty')
 								</th>
+								@if(!empty($pos_settings['inline_service_staff']))
+									<th class="text-center">
+										@lang('restaurant.service_staff')
+									</th>
+								@endif
 								<th class="text-center {{$hide_tax}}">
 									@lang('sale.price_inc_tax')
 								</th>
@@ -210,6 +240,30 @@
 			    <div class="col-md-4"><br>
 			    	<b>@lang( 'sale.discount_amount' ):</b>(-) 
 					<span class="display_currency" id="total_discount">0</span>
+			    </div>
+			    <div class="clearfix"></div>
+			    <div class="col-md-12 well well-sm bg-light-gray @if(session('business.enable_rp') != 1) hide @endif">
+			    	<input type="hidden" name="rp_redeemed" id="rp_redeemed" value="{{$transaction->rp_redeemed}}">
+			    	<input type="hidden" name="rp_redeemed_amount" id="rp_redeemed_amount" value="{{$transaction->rp_redeemed_amount}}">
+			    	<div class="col-md-12"><h4>{{session('business.rp_name')}}</h4></div>
+			    	<div class="col-md-4">
+				        <div class="form-group">
+				            {!! Form::label('rp_redeemed_modal', __('lang_v1.redeemed') . ':' ) !!}
+				            <div class="input-group">
+				                <span class="input-group-addon">
+				                    <i class="fa fa-gift"></i>
+				                </span>
+				                {!! Form::number('rp_redeemed_modal', $transaction->rp_redeemed, ['class' => 'form-control direct_sell_rp_input', 'data-amount_per_unit_point' => session('business.redeem_amount_per_unit_rp'), 'min' => 0, 'data-max_points' => !empty($redeem_details['points']) ? $redeem_details['points'] : 0, 'data-min_order_total' => session('business.min_order_total_for_redeem') ]); !!}
+				                <input type="hidden" id="rp_name" value="{{session('business.rp_name')}}">
+				            </div>
+				        </div>
+				    </div>
+				    <div class="col-md-4">
+				    	<p><strong>@lang('lang_v1.available'):</strong> <span id="available_rp">{{$redeem_details['points'] ?? 0}}</span></p>
+				    </div>
+				    <div class="col-md-4">
+				    	<p><strong>@lang('lang_v1.redeemed_amount'):</strong> (-)<span id="rp_redeemed_amount_text">{{@num_format($transaction->rp_redeemed_amount)}}</span></p>
+				    </div>
 			    </div>
 			    <div class="clearfix"></div>
 			    <div class="col-md-4">
@@ -289,9 +343,17 @@
 <div class="modal fade close_register_modal" tabindex="-1" role="dialog" 
 	aria-labelledby="gridSystemModalLabel">
 </div>
+<!-- quick product modal -->
+<div class="modal fade quick_add_product_modal" tabindex="-1" role="dialog" aria-labelledby="modalTitle"></div>
 
 @stop
 
 @section('javascript')
 	<script src="{{ asset('js/pos.js?v=' . $asset_v) }}"></script>
+	<script src="{{ asset('js/product.js?v=' . $asset_v) }}"></script>
+	<script src="{{ asset('js/opening_stock.js?v=' . $asset_v) }}"></script>
+	<!-- Call restaurant module if defined -->
+    @if(in_array('tables' ,$enabled_modules) || in_array('modifiers' ,$enabled_modules) || in_array('service_staff' ,$enabled_modules))
+    	<script src="{{ asset('js/restaurant.js?v=' . $asset_v) }}"></script>
+    @endif
 @endsection

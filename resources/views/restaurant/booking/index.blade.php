@@ -107,7 +107,7 @@
 @section('javascript')
     <script src="{{ asset('plugins/fullcalendar/fullcalendar.min.js?v=' . $asset_v) }}"></script>
 
-    @php
+@php
     $fullcalendar_lang_file = session()->get('user.language', config('app.locale') ) . '.js';
 @endphp
 @if(file_exists(public_path() . '/plugins/fullcalendar/locale/' . $fullcalendar_lang_file))
@@ -157,7 +157,9 @@
                 getLocationTables($('select#booking_location_id').val());
                 $(this).find('select').each( function(){
                     if(!($(this).hasClass('select2'))){
-                        $(this).select2();
+                        $(this).select2({
+                            dropdownParent: $('#add_booking_modal')
+                        });
                     }
                 });
                 booking_form_validator = $('form#add_booking_form').validate({

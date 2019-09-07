@@ -5,90 +5,87 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="panel panel-default">
-                <div class="panel-heading">@lang('lang_v1.login')</div>
-                <div class="panel-body">
-                    <form class="form-horizontal" method="POST" action="{{ route('login') }}">
-                        {{ csrf_field() }}
+        <div class="col-md-12">
+            <div class="login-box" style="margin: 2% auto;">
+                
+                <div class="login-box-body">
 
-                        <div class="form-group{{ $errors->has('username') ? ' has-error' : '' }}">
-                            <label for="username" class="col-md-4 control-label">@lang('lang_v1.username')</label>
-
-                            <div class="col-md-6">
-                                @php
-                                    $username = old('username');
-                                    $password = null;
-                                    if(config('app.env') == 'demo'){
-                                        $username = 'admin';
-                                        $password = '123456';
-
-                                        $demo_types = array(
-                                            'all_in_one' => 'admin',
-                                            'super_market' => 'admin',
-                                            'pharmacy' => 'admin-pharmacy',
-                                            'electronics' => 'admin-electronics',
-                                            'services' => 'admin-services',
-                                            'restaurant' => 'admin-restaurant',
-                                            'superadmin' => 'superadmin',
-                                            'woocommerce' => 'woocommerce_user',
-                                            'essentials' => 'admin-essentials'
-                                        );
-                                        if( !empty($_GET['demo_type']) && array_key_exists($_GET['demo_type'], $demo_types) ){
-                                            $username = $demo_types[$_GET['demo_type']];
-                                        }
-                                    }
-                                @endphp
-                                <input id="username" type="text" class="form-control" name="username" value="{{ $username }}" required autofocus>
-
-                                @if ($errors->has('username'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('username') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group{{ $errors->has('password') ? ' has-error' : '' }}">
-                            <label for="password" class="col-md-4 control-label">@lang('lang_v1.password')</label>
-
-                            <div class="col-md-6">
-                                <input id="password" type="password" class="form-control" name="password"
-                                value="{{ $password }}" required>
-
-                                @if ($errors->has('password'))
-                                    <span class="help-block">
-                                        <strong>{{ $errors->first('password') }}</strong>
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-md-6 col-md-offset-4">
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> @lang('lang_v1.remember_me')
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-md-8 col-md-offset-4">
-                                <button type="submit" class="btn btn-primary">
-                                    @lang('lang_v1.login')
-                                </button>
-                                @if(config('app.env') != 'demo')
-                                <a class="btn btn-link" href="{{ route('password.request') }}">
-                                    @lang('lang_v1.forgot_your_password')
-                                </a>
-                                @endif
-                            </div>
-                        </div>
-                    </form>
+                <div class="login-logo">
+                    @if(file_exists(public_path('uploads/logo.png')))
+                        <img src="/uploads/logo.png" class="img-rounded" alt="Logo" width="150">
+                    @else
+                       {{ config('app.name', 'ultimatePOS') }}
+                    @endif
                 </div>
+                <!-- /.login-logo -->
+
+                <form method="POST" action="{{ route('login') }}">
+                    {{ csrf_field() }}
+                    <div class="form-group has-feedback {{ $errors->has('username') ? ' has-error' : '' }}">
+                        @php
+                            $username = old('username');
+                            $password = null;
+                            if(config('app.env') == 'demo'){
+                                $username = 'admin';
+                                $password = '123456';
+
+                                $demo_types = array(
+                                    'all_in_one' => 'admin',
+                                    'super_market' => 'admin',
+                                    'pharmacy' => 'admin-pharmacy',
+                                    'electronics' => 'admin-electronics',
+                                    'services' => 'admin-services',
+                                    'restaurant' => 'admin-restaurant',
+                                    'superadmin' => 'superadmin',
+                                    'woocommerce' => 'woocommerce_user',
+                                    'essentials' => 'admin-essentials',
+                                    'manufacturing' => 'manufacturer-demo',
+                                );
+
+                                if( !empty($_GET['demo_type']) && array_key_exists($_GET['demo_type'], $demo_types) ){
+                                    $username = $demo_types[$_GET['demo_type']];
+                                }
+                            }
+                        @endphp
+                        <input id="username" type="text" class="form-control" name="username" value="{{ $username }}" required autofocus placeholder="@lang('lang_v1.username')">
+                        <span class="fa fa-user form-control-feedback"></span>
+                        @if ($errors->has('username'))
+                            <span class="help-block">
+                                <strong>{{ $errors->first('username') }}</strong>
+                            </span>
+                        @endif
+                    </div>
+                    <div class="form-group has-feedback {{ $errors->has('password') ? ' has-error' : '' }}">
+                        <input id="password" type="password" class="form-control" name="password"
+                        value="{{ $password }}" required placeholder="@lang('lang_v1.password')">
+                        <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+                        @if ($errors->has('password'))
+                            <span class="help-block">
+                                <strong>{{ $errors->first('password') }}</strong>
+                            </span>
+                        @endif
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox icheck">
+                            <label>
+                                <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}> @lang('lang_v1.remember_me')
+                            </label>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block btn-flat">@lang('lang_v1.login')</button>
+                    </div>
+                </form>
+                @if(config('app.env') != 'demo')
+                    <a href="{{ route('password.request') }}">
+                        @lang('lang_v1.forgot_your_password')
+                    </a>
+                @endif
+                </div>
+                <!-- /.login-box-body -->
             </div>
+            <!-- /.login-box -->
         </div>
     </div>
     @if(config('app.env') == 'demo')
@@ -136,9 +133,14 @@
                             <i class="fa fa-wordpress"></i>
                             WooCommerce</a>
 
-                        <a href="?demo_type=essentials" class="btn bg-navy btn-app" data-toggle="tooltip" title="Essentials Module Demo" style="color:white !important">
+                        <a href="?demo_type=essentials" class="btn bg-navy btn-app" data-toggle="tooltip" title="Essentials & HRM (human resource management) Module Demo" style="color:white !important">
                             <i class="fa fa-check-circle-o"></i>
-                            Essentials</a>
+                            Essentials & HRM</a>
+
+                        <a href="?demo_type=manufacturing" class="btn bg-orange btn-app" data-toggle="tooltip" title="Manufacturing module demo" style="color:white !important">
+                            <i class="fa fa-industry"></i>
+                            Manufacturing Module</a>
+
                     </div>
                 </div>
             </div>

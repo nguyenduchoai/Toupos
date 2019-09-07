@@ -35,6 +35,7 @@
                 <small><i><span class="dsp_label"></span></i></small>
                     <!-- &nbsp;&nbsp;<b><i class="fa fa-info-circle" aria-hidden="true" data-toggle="popover" data-html="true" data-trigger="hover" data-content="<p class='text-primary'>Drag the mouse over the table cells to copy input values</p>" data-placement="top"></i></b> -->
                 </th>
+                <th>@lang('lang_v1.variation_images')</th>
                 <th><button type="button" class="btn btn-success btn-xs add_variation_value_row">+</button></th>
             </tr>
             </thead>
@@ -64,6 +65,7 @@
 
                      {!! Form::text('product_variation[' . $row_index .'][variations][0][sell_price_inc_tax]', $default, ['class' => 'form-control input-sm variable_dsp_inc_tax input_number', 'placeholder' => __('product.inc_of_tax'), 'required']); !!}
                 </td>
+                <td>{!! Form::file('variation_images_' . $row_index .'_0[]', ['class' => 'variation_images', 'accept' => 'image/*', 'multiple']); !!}</td>
                 <td>
                     <button type="button" class="btn btn-danger btn-xs remove_variation_value_row">-</button>
                     <input type="hidden" class="variation_row_index" value="0">

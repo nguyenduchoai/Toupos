@@ -35,12 +35,12 @@
 
         <!-- Call superadmin module if defined -->
         @if(Module::has('Superadmin'))
-          @include('superadmin::layouts.partials.sidebar')
+          @includeIf('superadmin::layouts.partials.sidebar')
         @endif
 
         <!-- Call ecommerce module if defined -->
         @if(Module::has('Ecommerce'))
-          @include('ecommerce::layouts.partials.sidebar')
+          @includeIf('ecommerce::layouts.partials.sidebar')
         @endif
         <!-- <li class="header">HEADER</li> -->
         <li class="{{ $request->segment(1) == 'home' ? 'active' : '' }}">
@@ -175,6 +175,9 @@
             </ul>
           </li>
         @endif
+        @if(Module::has('Manufacturing'))
+          @includeIf('manufacturing::layouts.partials.sidebar')
+        @endif
         @if(auth()->user()->can('purchase.view') || auth()->user()->can('purchase.create') || auth()->user()->can('purchase.update') )
         <li class="treeview {{in_array($request->segment(1), ['purchases', 'purchase-return']) ? 'active active-sub' : '' }}" id="tour_step6">
           <a href="#" id="tour_step6_menu"><i class="fa fa-arrow-circle-down"></i> <span>@lang('purchase.purchases')</span>
@@ -196,7 +199,7 @@
         </li>
         @endif
 
-        @if(auth()->user()->can('sell.view') || auth()->user()->can('sell.create') || auth()->user()->can('direct_sell.access') )
+        @if(auth()->user()->can('sell.view') || auth()->user()->can('sell.create') || auth()->user()->can('direct_sell.access') ||  auth()->user()->can('view_own_sell_only'))
           <li class="treeview {{  in_array( $request->segment(1), ['sells', 'pos', 'sell-return', 'ecommerce', 'discount']) ? 'active active-sub' : '' }}" id="tour_step7">
             <a href="#" id="tour_step7_menu"><i class="fa fa-arrow-circle-up"></i> <span>@lang('sale.sale')</span>
               <span class="pull-right-container">
@@ -204,12 +207,12 @@
               </span>
             </a>
             <ul class="treeview-menu">
-              @can('direct_sell.access')
+              @if(auth()->user()->can('direct_sell.access') ||  auth()->user()->can('view_own_sell_only'))
                 <li class="{{ $request->segment(1) == 'sells' && $request->segment(2) == null ? 'active' : '' }}" ><a href="{{action('SellController@index')}}"><i class="fa fa-list"></i>@lang('lang_v1.all_sales')</a></li>
-              @endcan
+              @endif
               <!-- Call superadmin module if defined -->
               @if(Module::has('Ecommerce'))
-                @include('ecommerce::layouts.partials.sell_sidebar')
+                @includeIf('ecommerce::layouts.partials.sell_sidebar')
               @endif
               @can('direct_sell.access')
                 <li class="{{ $request->segment(1) == 'sells' && $request->segment(2) == 'create' ? 'active' : '' }}"><a href="{{action('SellController@create')}}"><i class="fa fa-plus-circle"></i>@lang('sale.add_sale')</a></li>
@@ -226,13 +229,12 @@
               @can('sell.view')
                 <li class="{{ $request->segment(1) == 'sell-return' && $request->segment(2) == null ? 'active' : '' }}" ><a href="{{action('SellReturnController@index')}}"><i class="fa fa-undo"></i>@lang('lang_v1.list_sell_return')</a></li>
               @endcan
-              {{-- 
+              
               @can('discount.access')
                 <li class="{{ $request->segment(1) == 'discount' ? 'active' : '' }}" ><a href="{{action('DiscountController@index')}}"><i class="fa fa-percent"></i>@lang('lang_v1.discounts')</a></li>
               @endcan
-              --}}
-
-              @if(in_array('subscription', $enabled_modules))
+              
+              @if(in_array('subscription', $enabled_modules) && auth()->user()->can('direct_sell.access'))
                 <li class="{{ $request->segment(1) == 'subscriptions'? 'active' : '' }}" ><a href="{{action('SellPosController@listSubscriptions')}}"><i class="fa fa-recycle"></i>@lang('lang_v1.subscriptions')</a></li>
               @endif
             </ul>
@@ -240,7 +242,7 @@
         @endif
 
         @if(Module::has('Repair'))
-          @include('repair::layouts.partials.sidebar')
+          @includeIf('repair::layouts.partials.sidebar')
         @endif
 
         @if(auth()->user()->can('purchase.view') || auth()->user()->can('purchase.create') )
@@ -375,6 +377,9 @@
               @endcan
 
               @can('purchase_n_sell_report.view')
+
+                <li class="{{ $request->segment(2) == 'items-report' ? 'active' : '' }}" ><a href="{{action('ReportController@itemsReport')}}"><i class="fa fa-tasks"></i>@lang('lang_v1.items_report')</a></li>
+
                 <li class="{{ $request->segment(2) == 'product-purchase-report' ? 'active' : '' }}" ><a href="{{action('ReportController@getproductPurchaseReport')}}"><i class="fa fa-arrow-circle-down"></i>@lang('lang_v1.product_purchase_report')</a></li>
 
                 <li class="{{ $request->segment(2) == 'product-sell-report' ? 'active' : '' }}" ><a href="{{action('ReportController@getproductSellReport')}}"><i class="fa fa-arrow-circle-up"></i>@lang('lang_v1.product_sell_report')</a></li>
@@ -419,7 +424,7 @@
         @endrole
 
         <!-- Call restaurant module if defined -->
-        @if(in_array('tables', $enabled_modules) && in_array('service_staff', $enabled_modules) )
+        @if(in_array('booking', $enabled_modules))
           @if(auth()->user()->can('crud_all_bookings') || auth()->user()->can('crud_own_bookings') )
           <li class="treeview {{ $request->segment(1) == 'bookings'? 'active active-sub' : '' }}">
               <a href="{{action('Restaurant\BookingController@index')}}"><i class="fa fa-calendar-check-o"></i> <span>@lang('restaurant.bookings')</span></a>
@@ -507,7 +512,7 @@
             @endif
 
             @if(Module::has('Superadmin'))
-              @include('superadmin::layouts.partials.subscription')
+              @includeIf('superadmin::layouts.partials.subscription')
             @endif
 
           </ul>
@@ -515,11 +520,12 @@
         @endif
         <!-- call Essentials module if defined -->
         @if(Module::has('Essentials'))
-          @include('essentials::layouts.partials.sidebar')
+          @includeIf('essentials::layouts.partials.sidebar_hrm')
+          @includeIf('essentials::layouts.partials.sidebar')
         @endif
         
         @if(Module::has('Woocommerce'))
-          @include('woocommerce::layouts.partials.sidebar')
+          @includeIf('woocommerce::layouts.partials.sidebar')
         @endif
       </ul>
 

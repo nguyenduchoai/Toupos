@@ -5,10 +5,11 @@ namespace Modules\Superadmin\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-use App\Business, App\User;
+use App\Business;
+use App\User;
 
-use Modules\Superadmin\Notifications\SuperadminCommunicator,
-    Modules\Superadmin\Entities\SuperadminCommunicatorLog;
+use Modules\Superadmin\Notifications\SuperadminCommunicator;
+use Modules\Superadmin\Entities\SuperadminCommunicatorLog;
 
 use Yajra\DataTables\Facades\DataTables;
 
@@ -69,19 +70,22 @@ class CommunicatorController extends BaseController
             'message' => $input['message']
         ]);
 
-        $output = ['success' => 1, 
+        $output = ['success' => 1,
                     'msg' => __('lang_v1.success')
                 ];
                 
         return back()->with('status', $output);
     }
 
-    public function getHistory(){
+    public function getHistory()
+    {
         $history = SuperadminCommunicatorLog::select('subject', 'message', 'created_at');
 
         return Datatables::of($history)
-                         ->editColumn('created_at', 
-                                '{{@format_date($created_at)}} {{@format_time($created_at)}}')
+                         ->editColumn(
+                             'created_at',
+                             '{{@format_date($created_at)}} {{@format_time($created_at)}}'
+                         )
                          ->make(false);
     }
 }

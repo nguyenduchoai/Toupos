@@ -32,6 +32,10 @@
             <strong><i class="fa fa-pause-circle-o fa-lg"></i></strong>
       </button>
 
+      @if(Module::has('Repair'))
+        @include('repair::layouts.partials.pos_header')
+      @endif
+
     </div>
 
     <div class="col-md-2">

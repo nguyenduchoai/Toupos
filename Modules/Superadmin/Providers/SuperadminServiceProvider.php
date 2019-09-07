@@ -34,11 +34,11 @@ class SuperadminServiceProvider extends ServiceProvider
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
-        view::composer('superadmin::layouts.partials.active_subscription', function($view){
+        view::composer('superadmin::layouts.partials.active_subscription', function ($view) {
             $business_id = session()->get('user.business_id');
             $module_util = new \App\Utils\ModuleUtil();
             $is_installed = $module_util->isSuperadminInstalled();
-            if($is_installed){
+            if ($is_installed) {
                 $__subscription = Subscription::active_subscription($business_id);
             } else {
                 $__subscription = null;
@@ -48,7 +48,7 @@ class SuperadminServiceProvider extends ServiceProvider
         });
 
         //Set superadmin currency
-        view::composer(['superadmin::layouts.partials.currency'], function($view){
+        view::composer(['superadmin::layouts.partials.currency'], function ($view) {
             $__system_currency = System::getCurrency();
             $view->with(compact('__system_currency'));
         });
@@ -89,7 +89,8 @@ class SuperadminServiceProvider extends ServiceProvider
             __DIR__.'/../Config/config.php' => config_path('superadmin.php'),
         ], 'config');
         $this->mergeConfigFrom(
-            __DIR__.'/../Config/config.php', 'superadmin'
+            __DIR__.'/../Config/config.php',
+            'superadmin'
         );
     }
 
@@ -106,7 +107,7 @@ class SuperadminServiceProvider extends ServiceProvider
 
         $this->publishes([
             $sourcePath => $viewPath
-        ],'views');
+        ], 'views');
 
         $this->loadViewsFrom(array_merge(array_map(function ($path) {
             return $path . '/modules/superadmin';
@@ -131,7 +132,7 @@ class SuperadminServiceProvider extends ServiceProvider
 
     /**
      * Register an additional directory of factories.
-     * 
+     *
      * @return void
      */
     public function registerFactories()

@@ -2,11 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Utils\NotificationUtil;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Config;
+
+use Illuminate\Notifications\Notification;
 
 class SupplierNotification extends Notification
 {
@@ -22,18 +22,9 @@ class SupplierNotification extends Notification
     public function __construct($notificationInfo)
     {
         $this->notificationInfo = $notificationInfo;
-        $email_settings = $notificationInfo['email_settings'];
-        $mail_driver = !empty($email_settings['mail_driver']) ? $email_settings['mail_driver'] : 'smtp';
-        
-        Config::set('mail.driver', $mail_driver);
-        Config::set('mail.host', $email_settings['mail_host']);
-        Config::set('mail.port', $email_settings['mail_port']);
-        Config::set('mail.username', $email_settings['mail_username']);
-        Config::set('mail.password', $email_settings['mail_password']);
-        Config::set('mail.encryption', $email_settings['mail_encryption']);
 
-        Config::set('mail.from.address', $email_settings['mail_from_address']);
-        Config::set('mail.from.name', $email_settings['mail_from_name']);
+        $notificationUtil = new NotificationUtil();
+        $notificationUtil->configureEmail($notificationInfo);
     }
 
     /**

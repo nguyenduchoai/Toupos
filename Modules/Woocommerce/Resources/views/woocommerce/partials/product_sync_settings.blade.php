@@ -24,46 +24,52 @@
         <div class="col-xs-12">
             <div class="form-group">
                 <label for="#">@lang('woocommerce::lang.product_fields_to_be_synced_for_create'):</label><br>
-                    <label class="checkbox-inline">
-                      {!! Form::checkbox('product_fields_for_create[]', 'name', true, ['class' => 'input-icheck', 'disabled'] ); !!}
-                      @lang('product.product_name'),
-                    </label>
-                    <label class="checkbox-inline">
-                      {!! Form::checkbox('product_fields_for_create[]', 'price', true, ['class' => 'input-icheck', 'disabled'] ); !!}
-                      @lang('woocommerce::lang.price'),
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_create[]', 'category', in_array('category', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('product.category'),
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_create[]', 'quantity', in_array('quantity', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('sale.qty')
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_create[]', 'weight', in_array('weight', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('lang_v1.weight')
-                    </label>
+                <label class="checkbox-inline">
+                  {!! Form::checkbox('product_fields_for_create[]', 'name', true, ['class' => 'input-icheck', 'disabled'] ); !!}
+                  @lang('product.product_name'),
+                </label>
+                <label class="checkbox-inline">
+                  {!! Form::checkbox('product_fields_for_create[]', 'price', true, ['class' => 'input-icheck', 'disabled'] ); !!}
+                  @lang('woocommerce::lang.price'),
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_create[]', 'category', in_array('category', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('product.category'),
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_create[]', 'quantity', in_array('quantity', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('sale.qty')
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_create[]', 'weight', in_array('weight', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('lang_v1.weight')
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_create[]', 'image', in_array('image', $default_settings['product_fields_for_create']), ['class' => 'input-icheck'] ); !!} @lang('woocommerce::lang.images')
+                </label>
             </div>
         </div>
         <div class="col-xs-12">
             <br/>
             <div class="form-group">
                 <label for="#">@lang('woocommerce::lang.product_fields_to_be_synced_for_update'):</label><br>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_update[]', 'name', in_array('name', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!}
-                      @lang('product.product_name'),
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_update[]', 'price', in_array('price', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!}
-                      @lang('woocommerce::lang.price'),
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_update[]', 'category', in_array('category', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('product.category'),
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_update[]', 'quantity', in_array('quantity', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('sale.qty')
-                    </label>
-                    <label class="checkbox-inline">
-                        {!! Form::checkbox('product_fields_for_update[]', 'weight', in_array('weight', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('lang_v1.weight')
-                    </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'name', in_array('name', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!}
+                  @lang('product.product_name'),
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'price', in_array('price', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!}
+                  @lang('woocommerce::lang.price'),
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'category', in_array('category', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('product.category'),
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'quantity', in_array('quantity', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('sale.qty')
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'weight', in_array('weight', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('lang_v1.weight')
+                </label>
+                <label class="checkbox-inline">
+                    {!! Form::checkbox('product_fields_for_update[]', 'image', in_array('image', $default_settings['product_fields_for_update']), ['class' => 'input-icheck'] ); !!} @lang('woocommerce::lang.images')
+                </label>
             </div>
             <br>
         </div>

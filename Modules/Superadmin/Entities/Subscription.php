@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class Subscription extends Model
 {
-	use SoftDeletes;
+    use SoftDeletes;
 
     protected $guarded = ['id'];
 
@@ -28,8 +28,8 @@ class Subscription extends Model
      * @var array
      */
     protected $dates = [
-    	'start_date',
-    	'end_date',
+        'start_date',
+        'end_date',
         'created_at',
         'updated_at',
         'deleted_at'
@@ -69,49 +69,50 @@ class Subscription extends Model
      * Returns the active subscription details for a business
      *
      * @param $business_id int
-     * 
+     *
      * @return Response
      */
-    public static function active_subscription($business_id){
-
-    	$date_today = \Carbon::today()->toDateString();
-    	
-    	$subscription = Subscription::where('business_id', $business_id)
-				    		->whereDate('start_date', '<=', $date_today)
-				    		->whereDate('end_date', '>=', $date_today)
+    public static function active_subscription($business_id)
+    {
+        $date_today = \Carbon::today()->toDateString();
+        
+        $subscription = Subscription::where('business_id', $business_id)
+                            ->whereDate('start_date', '<=', $date_today)
+                            ->whereDate('end_date', '>=', $date_today)
                             ->approved()
-				    		->first();
+                            ->first();
 
-		return $subscription;
+        return $subscription;
     }
 
     /**
      * Returns the upcoming subscription details for a business
      *
      * @param $business_id int
-     * 
+     *
      * @return Response
      */
-    public static function upcoming_subscriptions($business_id){
-
-    	$date_today = \Carbon::today();
-    	
-    	$subscription = Subscription::where('business_id', $business_id)
-				    		->whereDate('start_date', '>', $date_today)
+    public static function upcoming_subscriptions($business_id)
+    {
+        $date_today = \Carbon::today();
+        
+        $subscription = Subscription::where('business_id', $business_id)
+                            ->whereDate('start_date', '>', $date_today)
                             ->approved()
-				    		->get();
+                            ->get();
 
-		return $subscription;
+        return $subscription;
     }
 
     /**
      * Returns the subscriptions waiting for approval for superadmin
      *
      * @param $business_id int
-     * 
+     *
      * @return Response
      */
-    public static function waiting_approval($business_id){
+    public static function waiting_approval($business_id)
+    {
         $subscriptions = Subscription::where('business_id', $business_id)
                             ->whereNull('start_date')
                             ->waiting()
@@ -120,19 +121,20 @@ class Subscription extends Model
         return $subscriptions;
     }
 
-    public static function end_date($business_id){
-    	$date_today = \Carbon::today();
+    public static function end_date($business_id)
+    {
+        $date_today = \Carbon::today();
 
-    	$subscription = Subscription::where('business_id', $business_id)
+        $subscription = Subscription::where('business_id', $business_id)
                             ->approved()
-				    		->select(DB::raw("MAX(end_date) as end_date"))
-				    		->first();
+                            ->select(DB::raw("MAX(end_date) as end_date"))
+                            ->first();
 
-		if(empty($subscription->end_date)){
-			return $date_today;
-		} else {
-			return $subscription->end_date->addDay();
-		}
+        if (empty($subscription->end_date)) {
+            return $date_today;
+        } else {
+            return $subscription->end_date->addDay();
+        }
     }
 
     /**
@@ -140,7 +142,8 @@ class Subscription extends Model
      *
      * @return array
      */
-    public static function package_subscription_status(){
+    public static function package_subscription_status()
+    {
         return ['approved' => trans("superadmin::lang.approved"), 'declined' => trans("superadmin::lang.declined"), 'waiting' => trans("superadmin::lang.waiting")];
     }
 

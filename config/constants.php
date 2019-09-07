@@ -10,16 +10,18 @@ return [
     */
 
     'langs' => [
-        'en' => ['full_name' => 'English', 'short_name' => 'English'],
         'vi' => ['full_name' => 'Tiếng Việt', 'short_name' => 'Tiếng Việt'],
+        'en' => ['full_name' => 'English', 'short_name' => 'English'],
+
+        
     ],
     'langs_rtl' => ['ar'],
-    'non_utf8_languages' => ['ar', 'hi'],
+    'non_utf8_languages' => ['ar', 'hi', 'ps'],
     
     'document_size_limit' => '1000000', //in Bytes,
     'image_size_limit' => '500000', //in Bytes
 
-    'asset_version' => 35,
+    'asset_version' => 42,
 
     'disable_expiry' => false,
 
@@ -38,5 +40,7 @@ return [
 
     'enable_sell_in_diff_currency' => false,
     'currency_exchange_rate' => 1,
-    'orders_refresh_interval' => 600 //Auto refresh interval on Kitchen and Orders page in seconds
+    'orders_refresh_interval' => 600, //Auto refresh interval on Kitchen and Orders page in seconds,
+
+    'default_date_format' => 'd/m/Y' //Default date format to be used if session is not set. All valid formats can be found on https://www.php.net/manual/en/function.date.php
 ];

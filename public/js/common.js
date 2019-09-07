@@ -25,6 +25,8 @@ $(document).ready(function() {
         $.fn.select2.defaults.set('dir', 'rtl');
     }
     $.fn.datepicker.defaults.todayHighlight = true;
+    $.fn.datepicker.defaults.autoclose = true;
+    $.fn.datepicker.defaults.format = datepicker_date_format;
 
     //Toastr setting
     toastr.options.preventDuplicates = true;
@@ -60,6 +62,8 @@ $(document).ready(function() {
                 error.insertAfter(element.parent());
             } else if (element.parent().hasClass('multi-input')) {
                 error.insertAfter(element.closest('.multi-input'));
+            } else if (element.parent().hasClass('input_inline')) {
+                error.insertAfter(element.parent());
             } else {
                 error.insertAfter(element);
             }

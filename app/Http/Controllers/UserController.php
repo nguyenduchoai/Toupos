@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\User;
 
+use App\Utils\ModuleUtil;
+
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +20,23 @@ class UserController extends Controller
     | This controller handles the manipualtion of user
     |
     */
+
+    /**
+     * All Utils instance.
+     *
+     */
+    protected $moduleUtil;
+
+    /**
+     * Constructor
+     *
+     * @param ProductUtils $product
+     * @return void
+     */
+    public function __construct(ModuleUtil $moduleUtil)
+    {
+        $this->moduleUtil = $moduleUtil;
+    }
 
     /**
      * Shows profile of logged in user
@@ -55,8 +74,21 @@ class UserController extends Controller
 
         try {
             $user_id = $request->session()->get('user.id');
-            $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'language']);
-            $user = User::where('id', $user_id)->update($input);
+            $input = $request->only(['surname', 'first_name', 'last_name', 'email', 'language', 'marital_status',
+                'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
+                'social_media_2', 'permanent_address', 'current_address',
+                'guardian_name', 'custom_field_1', 'custom_field_2',
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number']);
+
+            if (!empty($request->input('dob'))) {
+                $input['dob'] = $this->moduleUtil->uf_date($request->input('dob'));
+            }
+            if (!empty($request->input('bank_details'))) {
+                $input['bank_details'] = json_encode($request->input('bank_details'));
+            }
+
+            $user = User::find($user_id);
+            $user->update($input);
 
             //update session
             $input['id'] = $user_id;

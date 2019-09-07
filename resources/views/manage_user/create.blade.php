@@ -11,9 +11,10 @@
 
 <!-- Main content -->
 <section class="content">
-  @component('components.widget', ['class' => 'box-primary'])
-    <div class="row">
-    {!! Form::open(['url' => action('ManageUserController@store'), 'method' => 'post', 'id' => 'user_add_form' ]) !!}
+{!! Form::open(['url' => action('ManageUserController@store'), 'method' => 'post', 'id' => 'user_add_form' ]) !!}
+  <div class="row">
+    <div class="col-md-12">
+  @component('components.widget')
       <div class="col-md-2">
         <div class="form-group">
           {!! Form::label('surname', __( 'business.prefix' ) . ':') !!}
@@ -75,7 +76,7 @@
       <div class="col-md-4">
         <div class="form-group">
           {!! Form::label('cmmsn_percent', __( 'lang_v1.cmmsn_percent' ) . ':') !!} @show_tooltip(__('lang_v1.commsn_percent_help'))
-            {!! Form::number('cmmsn_percent', null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.cmmsn_percent' ), 'step' => 0.01 ]); !!}
+            {!! Form::text('cmmsn_percent', null, ['class' => 'form-control input_number', 'placeholder' => __( 'lang_v1.cmmsn_percent' ) ]); !!}
         </div>
       </div>
       
@@ -85,9 +86,9 @@
             <br/>
               <label>
                 {!! Form::checkbox('selected_contacts', 1, false, 
-                [ 'class' => 'input-icheck', 'id' => 'selected_contacts']); !!} {{ __( 'lang_v1.enable_selected_contacts' ) }}
+                [ 'class' => 'input-icheck', 'id' => 'selected_contacts']); !!} {{ __( 'lang_v1.allow_selected_contacts' ) }}
               </label>
-              @show_tooltip(__('lang_v1.tooltip_enable_selected_contacts'))
+              @show_tooltip(__('lang_v1.allow_selected_contacts_tooltip'))
             </div>
         </div>
       </div>
@@ -112,15 +113,16 @@
           </div>
         </div>
       </div>
-
-    <div class="clearfix"></div>
-     <div class="col-md-12">
-      <button type="submit" class="btn btn-primary pull-right" id="submit_user_button">@lang( 'messages.save' )</button>
-      </div>
-    {!! Form::close() !!}
-
-  </div>
   @endcomponent
+  </div>
+  </div>
+    @include('user.edit_profile_form_part')
+  <div class="row">
+    <div class="col-md-12">
+      <button type="submit" class="btn btn-primary pull-right" id="submit_user_button">@lang( 'messages.save' )</button>
+    </div>
+  </div>
+{!! Form::close() !!}
   @stop
 @section('javascript')
 <script type="text/javascript">

@@ -44,12 +44,15 @@
               @lang('business.business'):
               <address>
                 <strong>{{ $transaction->business->name }}</strong>
-                {{ $transaction->location->name }}
-                @if(!empty($transaction->location->landmark))
-                  <br>{{$transaction->location->landmark}}
-                @endif
-                @if(!empty($transaction->location->city) || !empty($transaction->location->state) || !empty($transaction->location->country))
-                  <br>{{implode(',', array_filter([$transaction->location->city, $transaction->location->state, $transaction->location->country]))}}
+
+                @if(!empty($transaction->location))
+                  {{ $transaction->location->name }}
+                  @if(!empty($transaction->location->landmark))
+                    <br>{{$transaction->location->landmark}}
+                  @endif
+                  @if(!empty($transaction->location->city) || !empty($transaction->location->state) || !empty($transaction->location->country))
+                    <br>{{implode(',', array_filter([$transaction->location->city, $transaction->location->state, $transaction->location->country]))}}
+                  @endif
                 @endif
                 
                 @if(!empty($transaction->business->tax_number_1))
@@ -60,47 +63,67 @@
                   <br>{{$transaction->business->tax_label_2}}: {{$transaction->business->tax_number_2}}
                 @endif
 
-                @if(!empty($transaction->location->mobile))
-                  <br>@lang('contact.mobile'): {{$transaction->location->mobile}}
-                @endif
-                @if(!empty($transaction->location->email))
-                  <br>@lang('business.email'): {{$transaction->location->email}}
+                @if(!empty($transaction->location))
+                  @if(!empty($transaction->location->mobile))
+                    <br>@lang('contact.mobile'): {{$transaction->location->mobile}}
+                  @endif
+                  @if(!empty($transaction->location->email))
+                    <br>@lang('business.email'): {{$transaction->location->email}}
+                  @endif
                 @endif
               </address>
             </div>
         @else
           <div class="col-xs-6">
-             @lang('contact.customer'):
-            <address>
-              <strong>{{ $transaction->contact->name ?? '' }}</strong>
-             
-              @if(!empty($transaction->contact->landmark))
-                <br>{{$transaction->contact->landmark}}
-              @endif
-              @if(!empty($transaction->contact->city) || !empty($transaction->contact->state) || !empty($transaction->contact->country))
-                <br>{{implode(',', array_filter([$transaction->contact->city, $transaction->contact->state, $transaction->contact->country]))}}
-              @endif
-              @if(!empty($transaction->contact->tax_number))
-                <br>@lang('contact.tax_no'): {{$transaction->contact->tax_number}}
-              @endif
-              @if(!empty($transaction->contact->mobile))
-                <br>@lang('contact.mobile'): {{$transaction->contact->mobile}}
-              @endif
-              @if(!empty($transaction->contact->email))
-                <br>Email: {{$transaction->contact->email}}
-              @endif
-            </address>
+            @if($transaction->type != 'payroll')
+              @lang('contact.customer'):
+              <address>
+                <strong>{{ $transaction->contact->name ?? '' }}</strong>
+               
+                @if(!empty($transaction->contact->landmark))
+                  <br>{{$transaction->contact->landmark}}
+                @endif
+                @if(!empty($transaction->contact->city) || !empty($transaction->contact->state) || !empty($transaction->contact->country))
+                  <br>{{implode(',', array_filter([$transaction->contact->city, $transaction->contact->state, $transaction->contact->country]))}}
+                @endif
+                @if(!empty($transaction->contact->tax_number))
+                  <br>@lang('contact.tax_no'): {{$transaction->contact->tax_number}}
+                @endif
+                @if(!empty($transaction->contact->mobile))
+                  <br>@lang('contact.mobile'): {{$transaction->contact->mobile}}
+                @endif
+                @if(!empty($transaction->contact->email))
+                  <br>Email: {{$transaction->contact->email}}
+                @endif
+              </address>
+            @else
+              @lang('essentials::lang.payroll_for'):
+              <address>
+                  <strong>{{ $transaction->transaction_for->user_full_name }}</strong>
+                  @if(!empty($transaction->transaction_for->address))
+                      <br>{{$transaction->transaction_for->address}}
+                  @endif
+                  @if(!empty($transaction->transaction_for->contact_number))
+                      <br>@lang('contact.mobile'): {{$transaction->transaction_for->contact_number}}
+                  @endif
+                  @if(!empty($transaction->transaction_for->email))
+                      <br>Email: {{$transaction->transaction_for->email}}
+                  @endif
+              </address>
+            @endif
           </div>
           <div class="col-xs-6">
             @lang('business.business'):
             <address>
               <strong>{{ $transaction->business->name }}</strong>
-              {{ $transaction->location->name }}
-              @if(!empty($transaction->location->landmark))
-                <br>{{$transaction->location->landmark}}
-              @endif
-              @if(!empty($transaction->location->city) || !empty($transaction->location->state) || !empty($transaction->location->country))
-                <br>{{implode(',', array_filter([$transaction->location->city, $transaction->location->state, $transaction->location->country]))}}
+              @if(!empty($transaction->location))
+                {{ $transaction->location->name }}
+                @if(!empty($transaction->location->landmark))
+                  <br>{{$transaction->location->landmark}}
+                @endif
+                @if(!empty($transaction->location->city) || !empty($transaction->location->state) || !empty($transaction->location->country))
+                  <br>{{implode(',', array_filter([$transaction->location->city, $transaction->location->state, $transaction->location->country]))}}
+                @endif
               @endif
               
               @if(!empty($transaction->business->tax_number_1))
@@ -111,11 +134,13 @@
                 <br>{{$transaction->business->tax_label_2}}: {{$transaction->business->tax_number_2}}
               @endif
 
-              @if(!empty($transaction->location->mobile))
-                <br>@lang('contact.mobile'): {{$transaction->location->mobile}}
-              @endif
-              @if(!empty($transaction->location->email))
-                <br>@lang('business.email'): {{$transaction->location->email}}
+              @if(!empty($transaction->location))
+                @if(!empty($transaction->location->mobile))
+                  <br>@lang('contact.mobile'): {{$transaction->location->mobile}}
+                @endif
+                @if(!empty($transaction->location->email))
+                  <br>@lang('business.email'): {{$transaction->location->email}}
+                @endif
               @endif
             </address>
           </div>

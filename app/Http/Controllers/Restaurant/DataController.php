@@ -2,18 +2,14 @@
 
 namespace App\Http\Controllers\Restaurant;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-use Yajra\DataTables\Facades\DataTables;
-
 use App\Restaurant\ResTable;
-
-use App\BusinessLocation;
 use App\Transaction;
-use App\User;
 
 use App\Utils\Util;
+
+use Illuminate\Http\Request;
+
+use Illuminate\Routing\Controller;
 
 class DataController extends Controller
 {
@@ -49,15 +45,13 @@ class DataController extends Controller
                     $view_data = ['res_table_id' => null, 'res_waiter_id' => null];
                 }
 
-                
-
                 $waiters_enabled = false;
                 $tables_enabled = false;
                 $waiters = null;
                 $tables = null;
                 if ($this->commonUtil->isModuleEnabled('service_staff')) {
                     $waiters_enabled = true;
-                    $waiters = $this->commonUtil->serviceStaffDropdown($business_id);
+                    $waiters = $this->commonUtil->serviceStaffDropdown($business_id, $location_id);
                 }
                 if ($this->commonUtil->isModuleEnabled('tables')) {
                     $tables_enabled = true;
@@ -73,8 +67,12 @@ class DataController extends Controller
                 $view_data = ['res_table_id' => null, 'res_waiter_id' => null];
             }
 
+            $pos_settings = json_decode($request->session()->get('business.pos_settings'), true);
+
+            $is_service_staff_required = (!empty($pos_settings['is_service_staff_required']) && $pos_settings['is_service_staff_required'] == 1) ? true : false;
+
             return view('restaurant.partials.pos_table_dropdown')
-                    ->with(compact('tables', 'waiters', 'view_data', 'waiters_enabled', 'tables_enabled'));
+                    ->with(compact('tables', 'waiters', 'view_data', 'waiters_enabled', 'tables_enabled', 'is_service_staff_required'));
         }
     }
 

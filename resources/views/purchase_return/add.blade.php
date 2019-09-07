@@ -34,6 +34,8 @@
 					{!! Form::text('ref_no', !empty($purchase->return_parent->ref_no) ? $purchase->return_parent->ref_no : null, ['class' => 'form-control']); !!}
 				</div>
 			</div>
+			<div class="clearfix"></div>
+			<hr>
 			<div class="col-sm-12">
 				<table class="table bg-gray" id="purchase_return_table">
 		          	<thead>

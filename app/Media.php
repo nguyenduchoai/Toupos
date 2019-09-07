@@ -44,6 +44,35 @@ class Media extends Model
     }
 
     /**
+     * Get display path for the media
+     */
+    public function getDisplayPathAttribute()
+    {
+        $path = public_path('uploads/media') . '/' . $this->file_name;
+
+        return $path;
+    }
+
+    /**
+     * Get display link for the media
+     */
+    public function thumbnail($size = [60, 60], $class = null)
+    {
+        $html = '<img';
+        $html .= ' src="' . $this->display_url . '"';
+        $html .= ' width="' . $size[0] . '"';
+        $html .= ' height="' . $size[1] . '"';
+
+        if (!empty($class)) {
+            $html .= ' class="' . $class . '"';
+        }
+
+        $html .= '>';
+
+        return $html;
+    }
+
+    /**
      * Uploads files from the request and add's medias to the supplied model.
      *
      * @param  int $business_id, obj $model, $obj $request, string $file_name
@@ -94,7 +123,7 @@ class Media extends Model
     {
         $file_name = null;
         if ($file->getSize() <= config('constants.document_size_limit')) {
-            $new_file_name = time() . '_' . $file->getClientOriginalName();
+            $new_file_name = time() . '_' . mt_rand() . '_' . $file->getClientOriginalName();
             if ($file->storeAs('/media', $new_file_name)) {
                 $file_name = $new_file_name;
             }

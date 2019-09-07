@@ -269,6 +269,14 @@
             'placeholder' => __('lang_v1.client_tax_label') ]); !!}
           </div>
         </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('show_reward_point', 1, $invoice_layout->show_reward_point, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_reward_point')</label>
+              </div>
+          </div>
+        </div>
         <div class="clearfix"></div>
         <div class="col-sm-3">
         <div class="form-group">
@@ -570,6 +578,15 @@
             </div>
           </div>
         @endif
+
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('show_image', 1, !empty($invoice_layout->show_image), ['class' => 'input-icheck']); !!} @lang('lang_v1.show_product_image')</label>
+              </div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -703,6 +720,10 @@
 
 <!-- Call restaurant module if defined -->
 @include('restaurant.partials.invoice_layout', ['module_info' => $invoice_layout->module_info, 'edit_il' => true])
+
+@if(Module::has('Repair'))
+  @include('repair::layouts.partials.invoice_layout_settings', ['module_info' => $invoice_layout->module_info, 'edit_il' => true])
+@endif
 
 
 <div class="box box-solid">

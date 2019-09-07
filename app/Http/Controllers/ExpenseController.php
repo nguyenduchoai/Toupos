@@ -2,22 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Transaction;
-use App\ExpenseCategory;
-use App\BusinessLocation;
-use App\User;
 use App\AccountTransaction;
-    
-use Validator;
 
-use Yajra\DataTables\Facades\DataTables;
+use App\BusinessLocation;
+use App\ExpenseCategory;
+use App\Transaction;
+use App\User;
+use App\Utils\ModuleUtil;
+    
 
 use App\Utils\TransactionUtil;
-use App\Utils\ModuleUtil;
 
 use DB;
+use Illuminate\Http\Request;
+
+use Yajra\DataTables\Facades\DataTables;
 
 class ExpenseController extends Controller
 {
@@ -122,6 +121,14 @@ class ExpenseController extends Controller
             if ($permitted_locations != 'all') {
                 $expenses->whereIn('transactions.location_id', $permitted_locations);
             }
+
+            //Add condition for payment status for the list of expense
+            if (request()->has('payment_status')) {
+                $payment_status = request()->get('payment_status');
+                if (!empty($payment_status)) {
+                    $expenses->where('transactions.payment_status', $payment_status);
+                }
+            }
             
             return Datatables::of($expenses)
                 ->addColumn(
@@ -154,7 +161,7 @@ class ExpenseController extends Controller
                     'final_total',
                     '<span class="display_currency final-total" data-currency_symbol="true" data-orig-value="{{$final_total}}">{{$final_total}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                 ->editColumn(
                     'payment_status',
                     '<a href="{{ action("TransactionPaymentController@show", [$id])}}" class="view_payment_modal payment-status no-print" data-orig-value="{{$payment_status}}" data-status-name="{{__(\'lang_v1.\' . $payment_status)}}"><span class="label @payment_status($payment_status)">{{__(\'lang_v1.\' . $payment_status)}}
@@ -242,7 +249,7 @@ class ExpenseController extends Controller
             $transaction_data['type'] = 'expense';
             $transaction_data['status'] = 'final';
             $transaction_data['payment_status'] = 'due';
-            $transaction_data['transaction_date'] = $this->transactionUtil->uf_date($transaction_data['transaction_date']);
+            $transaction_data['transaction_date'] = $this->transactionUtil->uf_date($transaction_data['transaction_date'], true);
             $transaction_data['final_total'] = $this->transactionUtil->num_uf(
                 $transaction_data['final_total']
             );
@@ -350,10 +357,7 @@ class ExpenseController extends Controller
                 return $this->moduleUtil->expiredResponse(action('ExpenseController@index'));
             }
         
-            $transaction_data['transaction_date'] = \Carbon::createFromFormat(
-                'm/d/Y',
-                $transaction_data['transaction_date']
-            )->toDateString();
+            $transaction_data['transaction_date'] = $this->transactionUtil->uf_date($transaction_data['transaction_date'], true);
             $transaction_data['final_total'] = $this->transactionUtil->num_uf(
                 $transaction_data['final_total']
             );

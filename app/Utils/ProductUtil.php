@@ -2,50 +2,27 @@
 
 namespace App\Utils;
 
-use Illuminate\Support\Facades\DB;
-
-use App\Product;
-use App\Variation;
-use App\TaxRate;
-use App\ProductVariation;
 use App\Business;
-use App\Transaction;
-use App\VariationLocationDetails;
+use App\BusinessLocation;
+use App\Discount;
+use App\Media;
+use App\Product;
 use App\ProductRack;
+use App\ProductVariation;
+use App\PurchaseLine;
+use App\TaxRate;
+use App\Transaction;
+use App\TransactionSellLinesPurchaseLines;
+use App\Unit;
+use App\Variation;
 use App\VariationGroupPrice;
+use App\VariationLocationDetails;
 use App\VariationTemplate;
 use App\VariationValueTemplate;
-use App\BusinessLocation;
-use App\PurchaseLine;
-use App\Unit;
-use App\TransactionSellLinesPurchaseLines;
-use App\Discount;
+use Illuminate\Support\Facades\DB;
 
 class ProductUtil extends Util
 {
-
-    /**
-     * Returns the list of barcode types
-     *
-     * @return array
-     */
-    public function barcode_types()
-    {
-        $types = [ 'C128' => 'Code 128 (C128)', 'C39' => 'Code 39 (C39)', 'EAN13' => 'EAN-13', 'EAN8' => 'EAN-8', 'UPCA' => 'UPC-A', 'UPCE' => 'UPC-E'];
-
-        return $types;
-    }
-
-    /**
-     * Returns the default barcode.
-     *
-     * @return string
-     */
-    public function barcode_default()
-    {
-        return 'C128';
-    }
-
     /**
      * Create single type product variation
      *
@@ -55,10 +32,11 @@ class ProductUtil extends Util
      * @param $dpp_inc_tax (default purchase pric including tax)
      * @param $profit_percent
      * @param $selling_price
+     * @param $combo_variations = []
      *
      * @return boolean
      */
-    public function createSingleProductVariation($product, $sku, $purchase_price, $dpp_inc_tax, $profit_percent, $selling_price, $selling_price_inc_tax)
+    public function createSingleProductVariation($product, $sku, $purchase_price, $dpp_inc_tax, $profit_percent, $selling_price, $selling_price_inc_tax, $combo_variations = [])
     {
         if (!is_object($product)) {
             $product = Product::find($product);
@@ -80,9 +58,12 @@ class ProductUtil extends Util
                 'dpp_inc_tax' => $this->num_uf($dpp_inc_tax),
                 'profit_percent' => $this->num_uf($profit_percent),
                 'default_sell_price' => $this->num_uf($selling_price),
-                'sell_price_inc_tax' => $this->num_uf($selling_price_inc_tax)
+                'sell_price_inc_tax' => $this->num_uf($selling_price_inc_tax),
+                'combo_variations' => $combo_variations
             ];
-        $product_variation->variations()->create($variation_data);
+        $variation = $product_variation->variations()->create($variation_data);
+
+        Media::uploadMedia($product->business_id, $variation, request(), 'variation_images');
 
         return true;
     }
@@ -103,6 +84,7 @@ class ProductUtil extends Util
 
         //create product variations
         foreach ($input_variations as $key => $value) {
+            $images = [];
             $variation_template_name = !empty($value['name']) ? $value['name'] : null;
             $variation_template_id = !empty($value['variation_template_id']) ? $value['variation_template_id'] : null;
 
@@ -183,8 +165,15 @@ class ProductUtil extends Util
                       'sell_price_inc_tax' => $this->num_uf($v['sell_price_inc_tax'])
                     ];
                     $c++;
+                    $images[] = 'variation_images_' . $key . '_' . $k;
                 }
-                $product_variation->variations()->createMany($variation_data);
+                $variations = $product_variation->variations()->createMany($variation_data);
+
+                $i = 0;
+                foreach ($variations as $variation) {
+                    Media::uploadMedia($product->business_id, $variation, request(), $images[$i]);
+                    $i++;
+                }
             }
         }
     }
@@ -225,9 +214,13 @@ class ProductUtil extends Util
                     if (!empty($v['sub_sku'])) {
                         $data['sub_sku'] = $v['sub_sku'];
                     }
-                    Variation::where('id', $k)
-                        ->where('product_variation_id', $key)
-                        ->update($data);
+                    $variation = Variation::where('id', $k)
+                            ->where('product_variation_id', $key)
+                            ->first();
+
+                    $variation->update($data);
+
+                    Media::uploadMedia($product->business_id, $variation, request(), 'edit_variation_images_' . $key . '_' . $k);
 
                     $variations_ids[] = $k;
                 }
@@ -242,7 +235,7 @@ class ProductUtil extends Util
                 $c = Variation::withTrashed()
                                 ->where('product_id', $product->id)
                                 ->count()+1;
-
+                $media = [];
                 foreach ($value['variations'] as $k => $v) {
                     $sub_sku = empty($v['sub_sku'])? $this->generateSubSku($product->sku, $c, $product->barcode_type) :$v['sub_sku'];
 
@@ -275,8 +268,15 @@ class ProductUtil extends Util
                       'sell_price_inc_tax' => $this->num_uf($v['sell_price_inc_tax'])
                     ];
                     $c++;
+                    $media[] = 'variation_images_' . $key . '_' . $k;
                 }
-                $product_variation->variations()->createMany($variation_data);
+                $new_variations = $product_variation->variations()->createMany($variation_data);
+
+                $i = 0;
+                foreach ($new_variations as $new_variation) {
+                    Media::uploadMedia($product->business_id, $new_variation, request(), $media[$i]);
+                    $i++;
+                }
             }
         }
 
@@ -306,7 +306,6 @@ class ProductUtil extends Util
         } else {
             $qty_difference = $new_quantity - $old_quantity;
         }
-        
 
         $product = Product::find($product_id);
 
@@ -318,11 +317,11 @@ class ProductUtil extends Util
             
             //Add quantity in VariationLocationDetails
             $variation_location_d = VariationLocationDetails
-                                    ::where('variation_id', $variation->id)
-                                    ->where('product_id', $product_id)
-                                    ->where('product_variation_id', $variation->product_variation_id)
-                                    ->where('location_id', $location_id)
-                                    ->first();
+                          ::where('variation_id', $variation->id)
+                          ->where('product_id', $product_id)
+                          ->where('product_variation_id', $variation->product_variation_id)
+                          ->where('location_id', $location_id)
+                          ->first();
 
             if (empty($variation_location_d)) {
                 $variation_location_d = new VariationLocationDetails();
@@ -335,10 +334,6 @@ class ProductUtil extends Util
 
             $variation_location_d->qty_available += $qty_difference;
             $variation_location_d->save();
-
-            //TODO: Add quantity in products table
-            // Product::where('id', $product_id)
-            //     ->increment('total_qty_available', $qty_difference);
         }
         
         return true;
@@ -364,22 +359,47 @@ class ProductUtil extends Util
         //Check if stock is enabled or not.
         if ($product->enable_stock == 1) {
             //Decrement Quantity in variations location table
-            VariationLocationDetails::where('variation_id', $variation_id)
+            $details = VariationLocationDetails::where('variation_id', $variation_id)
                 ->where('product_id', $product_id)
                 ->where('location_id', $location_id)
-                ->decrement('qty_available', $qty_difference);
+                ->first();
 
+            //If location details not exists create new one
+            if (empty($details)) {
+                $variation = Variation::find($variation_id);
+                $details = VariationLocationDetails::create([
+                            'product_id' => $product_id,
+                            'location_id' => $location_id,
+                            'variation_id' => $variation_id,
+                            'product_variation_id' => $variation->product_variation_id
+                          ]);
+            }
             
-            // Variation::where('id', $variation_id)
-            //     ->where('product_id', $product_id)
-            //     ->decrement('qty_available', $qty_difference);
-
-            //TODO: Decrement quantity in products table
-            // Product::where('id', $product_id)
-            //     ->decrement('total_qty_available', $qty_difference);
+            $details->decrement('qty_available', $qty_difference);
         }
 
         return true;
+    }
+
+    /**
+     * Decrease the product quantity of combo sub-products
+     *
+     * @param $variation_id
+     * @param $location_id
+     * @param $decrease_qty (factor by which qty will be decreased)
+     *
+     * @return boolean
+     */
+    public function decreaseProductQuantityCombo($combo_details, $location_id)
+    {
+        foreach ($combo_details as $details) {
+            $this->decreaseProductQuantity(
+                $details['product_id'],
+                $details['variation_id'],
+                $location_id,
+                $details['quantity']
+            );
+        }
     }
 
     /**
@@ -413,7 +433,7 @@ class ProductUtil extends Util
             });
         }
         
-        if (!empty($location_id)) {
+        if (!empty($location_id) && $check_qty) {
             //Check for enable stock, if enabled check for location id.
             $query->where(function ($query) use ($location_id) {
                 $query->where('p.enable_stock', '!=', 1)
@@ -421,7 +441,7 @@ class ProductUtil extends Util
             });
         }
         
-        $products = $query->select(
+        $product = $query->select(
             DB::raw("IF(pv.is_dummy = 0, CONCAT(p.name, 
                     ' (', pv.name, ':',variations.name, ')'), p.name) AS product_name"),
             'p.id as product_id',
@@ -430,6 +450,7 @@ class ProductUtil extends Util
             'p.tax as tax_id',
             'p.enable_stock',
             'p.enable_sr_no',
+            'p.type as product_type',
             'p.name as product_actual_name',
             'pv.name as product_variation_name',
             'pv.is_dummy as is_dummy',
@@ -440,6 +461,7 @@ class ProductUtil extends Util
             'variations.default_sell_price',
             'variations.sell_price_inc_tax',
             'variations.id as variation_id',
+            'variations.combo_variations',  //Used in combo products
             'units.short_name as unit',
             'units.id as unit_id',
             'units.allow_decimal as unit_allow_decimal',
@@ -447,9 +469,82 @@ class ProductUtil extends Util
             DB::raw("(SELECT purchase_price_inc_tax FROM purchase_lines WHERE 
                         variation_id=variations.id ORDER BY id DESC LIMIT 1) as last_purchased_price")
         )
-                ->first();
+        ->first();
 
-        return $products;
+        if ($product->product_type == 'combo') {
+            if ($check_qty) {
+                $product->qty_available = $this->calculateComboQuantity($location_id, $product->combo_variations);
+            }
+
+            $product->combo_products = $this->calculateComboDetails($location_id, $product->combo_variations);
+        }
+        
+        return $product;
+    }
+
+    /**
+     * Calculates the quantity of combo products based on
+     * the quantity of variation items used.
+     *
+     * @param int $location_id
+     * @param array $combo_variations
+     *
+     * @return int
+     */
+    public function calculateComboQuantity($location_id, $combo_variations)
+    {
+
+      //get stock of the items and calcuate accordingly.
+        $combo_qty = 0;
+        foreach ($combo_variations as $key => $value) {
+            $vld = VariationLocationDetails::where('variation_id', $value['variation_id'])
+              ->where('location_id', $location_id)
+              ->first();
+            $product = Product::find($vld->product_id);
+
+            $variation_qty = !empty($vld) ? $vld->qty_available : 0;
+            $multiplier = $this->getMultiplierOf2Units($product->unit_id, $value['unit_id']);
+
+            if ($key == 0) {
+                $combo_qty = ($variation_qty/$multiplier) / $combo_variations[$key]['quantity'];
+            } else {
+                $combo_qty = min($combo_qty, ($variation_qty/$multiplier) / $combo_variations[$key]['quantity']);
+            }
+        }
+
+        return floor($combo_qty);
+    }
+
+    /**
+     * Calculates the quantity of combo products based on
+     * the quantity of variation items used.
+     *
+     * @param int $location_id
+     * @param array $combo_variations
+     *
+     * @return int
+     */
+    public function calculateComboDetails($location_id, $combo_variations)
+    {
+        $details = [];
+
+        foreach ($combo_variations as $key => $value) {
+            $vld = VariationLocationDetails::where('variation_id', $value['variation_id'])
+              ->where('location_id', $location_id)
+              ->first();
+            $product = Product::find($vld->product_id);
+
+            $variation_qty = !empty($vld) ? $vld->qty_available : 0;
+            $multiplier = $this->getMultiplierOf2Units($product->unit_id, $value['unit_id']);
+
+            $details[] = [
+              'variation_id' => $value['variation_id'],
+              'product_id' => $vld->product_id,
+              'qty_required' => $value['quantity'] * $multiplier
+            ];
+        }
+
+        return $details;
     }
 
     /**
@@ -642,17 +737,35 @@ class ProductUtil extends Util
             foreach ($input['products'] as $product) {
                 if (!empty($product['transaction_sell_lines_id'])) {
                     $this->updateProductQuantity($input['location_id'], $product['product_id'], $product['variation_id'], $product['quantity'], 0, null, false);
+
+                    //Adjust quantity for combo items.
+                    if (isset($product['product_type']) && $product['product_type'] == 'combo') {
+                        //Giving quantity in minus will increase the qty
+                        foreach ($product['combo'] as $value) {
+                            $this->updateProductQuantity($input['location_id'], $value['product_id'], $value['variation_id'], $value['quantity'], 0, null, false);
+                        }
+                      
+                        // $this->updateEditedSellLineCombo($product['combo'], $input['location_id']);
+                    }
                 }
             }
         } elseif ($status_before == 'draft' && $transaction->status == 'final') {
             foreach ($input['products'] as $product) {
                 $uf_quantity = $uf_data ? $this->num_uf($product['quantity']) : $product['quantity'];
+
                 $this->decreaseProductQuantity(
                     $product['product_id'],
                     $product['variation_id'],
                     $input['location_id'],
                     $uf_quantity
                 );
+
+                //Adjust quantity for combo items.
+                if (isset($product['product_type']) && $product['product_type'] == 'combo') {
+                    $this->decreaseProductQuantityCombo($product['combo'], $input['location_id']);
+
+                    //$this->decreaseProductQuantityCombo($product['variation_id'], $input['location_id'], $uf_quantity);
+                }
             }
         } elseif ($status_before == 'final' && $transaction->status == 'final') {
             foreach ($input['products'] as $product) {
@@ -664,6 +777,13 @@ class ProductUtil extends Util
                         $input['location_id'],
                         $uf_quantity
                     );
+
+                    //Adjust quantity for combo items.
+                    if (isset($product['product_type']) && $product['product_type'] == 'combo') {
+                        $this->decreaseProductQuantityCombo($product['combo'], $input['location_id']);
+
+                        //$this->decreaseProductQuantityCombo($product['variation_id'], $input['location_id'], $uf_quantity);
+                    }
                 }
             }
         }
@@ -929,7 +1049,7 @@ class ProductUtil extends Util
                 //create transaction & purchase lines
                 if (!empty($purchase_lines)) {
                     $transaction = Transaction::create(
-                  [
+                        [
                   'type' => 'opening_stock',
                   'opening_stock_product_id' => $product->id,
                   'status' => 'received',
@@ -963,8 +1083,8 @@ class ProductUtil extends Util
     {
         $updated_purchase_lines = [];
         $updated_purchase_line_ids = [0];
-        $exchange_rate = $transaction->exchange_rate;
-
+        $exchange_rate = !empty($transaction->exchange_rate) ? $transaction->exchange_rate : 1;
+        
         foreach ($input_data as $data) {
             $multiplier = 1;
             if (isset($data['sub_unit_id']) && $data['sub_unit_id'] == $data['product_unit_id']) {
@@ -1051,10 +1171,10 @@ class ProductUtil extends Util
                     //decrease deleted only if previous status was received
                     if ($before_status == 'received') {
                         $this->decreaseProductQuantity(
-                        $delete_purchase_line->product_id,
-                        $delete_purchase_line->variation_id,
-                        $transaction->location_id,
-                        $delete_purchase_line->quantity
+                            $delete_purchase_line->product_id,
+                            $delete_purchase_line->variation_id,
+                            $transaction->location_id,
+                            $delete_purchase_line->quantity
                     );
                     }
                 }
@@ -1076,12 +1196,12 @@ class ProductUtil extends Util
     /**
      * Recalculates purchase line data according to subunit data
      *
+     * @param integer $purchase_line
      * @param integer $business_id
-     * @param integer $unit_id
      *
      * @return array
      */
-    public function changePurchaseLineUnit($purchase_line)
+    public function changePurchaseLineUnit($purchase_line, $business_id)
     {
         $base_unit = $purchase_line->product->unit;
         $sub_units = $base_unit->sub_units;
@@ -1104,6 +1224,9 @@ class ProductUtil extends Util
             $purchase_line->quantity_adjusted = $purchase_line->quantity_adjusted / $multiplier;
         }
 
+        //SubUnits
+        $purchase_line->sub_units_options = $this->getSubUnits($business_id, $base_unit->id, false, $purchase_line->product_id);
+
         return $purchase_line;
     }
 
@@ -1116,7 +1239,7 @@ class ProductUtil extends Util
      */
     public function changeSellLineUnit($business_id, $sell_line)
     {
-        $unit_details = $this->getSubUnits($business_id, $sell_line->unit_id);
+        $unit_details = $this->getSubUnits($business_id, $sell_line->unit_id, false, $sell_line->product_id);
 
         $sub_unit = null;
         $sub_unit_id = $sell_line->sub_unit_id;

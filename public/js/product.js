@@ -580,3 +580,29 @@ $(document).on('submit', 'form#quick_add_brand_form', function(e) {
         },
     });
 });
+
+$(document).on('click', '.delete-media', function () {
+    swal({
+        title: LANG.sure,
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then(willDelete => {
+        if (willDelete) {
+            var url = $(this).data('href');
+            var thumbnail = $(this).closest('.img-thumbnail');
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success == true) {
+                        thumbnail.remove();
+                        toastr.success(result.msg);
+                    } else {
+                        toastr.error(result.msg);
+                    }
+                },
+            });
+        }
+    });
+})

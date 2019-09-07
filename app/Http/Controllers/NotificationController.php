@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Transaction;
-use App\NotificationTemplate;
-use App\Restaurant\Booking;
-
 use \Notification;
 
 use App\Notifications\CustomerNotification;
 use App\Notifications\SupplierNotification;
+use App\NotificationTemplate;
 
-use App\Utils\Util;
+use App\Restaurant\Booking;
+
+use App\Transaction;
 use App\Utils\NotificationUtil;
+
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {

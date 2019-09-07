@@ -87,48 +87,43 @@ class LabelsController extends Controller
      */
     public function preview(Request $request)
     {
-        if ($request->ajax()) {
-            try {
-                $products = $request->get('products');
-                $print = $request->get('print');
-                $barcode_setting = $request->get('barcode_setting');
-                $business_id = $request->session()->get('user.business_id');
+        try {
+            $products = $request->get('products');
+            $print = $request->get('print');
+            $barcode_setting = $request->get('barcode_setting');
+            $business_id = $request->session()->get('user.business_id');
 
-                $barcode_details = Barcode::find($barcode_setting);
-                //print_r($barcode_details);exit;
-                $business_name = $request->session()->get('business.name');
+            $barcode_details = Barcode::find($barcode_setting);
+            //print_r($barcode_details);exit;
+            $business_name = $request->session()->get('business.name');
 
-                $product_details = [];
-                $total_qty = 0;
-                foreach ($products as $value) {
-                    $details = $this->productUtil->getDetailsFromVariation($value['variation_id'], $business_id, null, false);
-                    $product_details[] = ['details' => $details, 'qty' => $value['quantity']];
-                    $total_qty += $value['quantity'];
-                }
-
-                $page_height = null;
-                if ($barcode_details->is_continuous) {
-                    $rows = ceil($total_qty/$barcode_details->stickers_in_one_row) + 0.4;
-                    $barcode_details->paper_height = $barcode_details->top_margin + ($rows*$barcode_details->height) + ($rows*$barcode_details->row_distance);
-                }
-
-                $html = view('labels.partials.preview')
-                    ->with(compact('print', 'product_details', 'business_name', 'barcode_details', 'page_height'))->render();
-
-                $output = ['html' => $html,
-                                'success' => true,
-                                'msg' => ''
-                            ];
-            } catch (\Exception $e) {
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-
-                $output = ['html' => '',
-                        'success' => false,
-                        'msg' =>  __('lang_v1.barcode_label_error')
-                    ];
+            $product_details = [];
+            $total_qty = 0;
+            foreach ($products as $value) {
+                $details = $this->productUtil->getDetailsFromVariation($value['variation_id'], $business_id, null, false);
+                $product_details[] = ['details' => $details, 'qty' => $value['quantity']];
+                $total_qty += $value['quantity'];
             }
 
-            return $output;
+            $page_height = null;
+            if ($barcode_details->is_continuous) {
+                $rows = ceil($total_qty/$barcode_details->stickers_in_one_row) + 0.4;
+                $barcode_details->paper_height = $barcode_details->top_margin + ($rows*$barcode_details->height) + ($rows*$barcode_details->row_distance);
+            }
+
+            $output = view('labels.partials.preview')
+                ->with(compact('print', 'product_details', 'business_name', 'barcode_details', 'page_height'))->render();
+
+            // $output = ['html' => $html,
+            //                 'success' => true,
+            //                 'msg' => ''
+            //             ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+
+            $output = __('lang_v1.barcode_label_error');
         }
+
+        return $output;
     }
 }

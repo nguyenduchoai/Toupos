@@ -14,7 +14,8 @@ class AddRowsToSystemTable extends Migration
      */
     public function up()
     {
-        DB::table('system')->insert([
+        DB::table('system')->insert(
+            [
                 ['key'=>'superadmin_version', 'value' => config('superadmin.module_version')],
                 ['key'=>'app_currency_id', 'value' => 2],
                 ['key'=>'invoice_business_name', 'value' => env('APP_NAME')],
@@ -36,7 +37,6 @@ class AddRowsToSystemTable extends Migration
     public function down()
     {
         Schema::table('system', function (Blueprint $table) {
-
         });
     }
 }

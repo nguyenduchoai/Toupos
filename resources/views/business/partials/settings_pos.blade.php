@@ -218,5 +218,18 @@
             </div>
         </div>
 
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                <br>
+                  <label>
+                    {!! Form::checkbox('pos_settings[is_service_staff_required]', 1,  
+                    empty($pos_settings['is_service_staff_required']) ? 0 : 1 , 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.is_service_staff_required' ) }}
+                  </label>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>

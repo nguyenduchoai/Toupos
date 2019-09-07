@@ -5,8 +5,8 @@ namespace Modules\Superadmin\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
-use Modules\Superadmin\Entities\Subscription, 
-    Modules\Superadmin\Entities\Package;
+use Modules\Superadmin\Entities\Subscription;
+use Modules\Superadmin\Entities\Package;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 
@@ -39,15 +39,14 @@ class SuperadminSubscriptionsController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        if(request()->ajax())
-        {   
-            
-            $superadmin_subscription = Subscription::join('business',           'subscriptions.business_id', '=', 'business.id')
+        if (request()->ajax()) {
+            $superadmin_subscription = Subscription::join('business', 'subscriptions.business_id', '=', 'business.id')
                 ->join('packages', 'subscriptions.package_id', '=', 'packages.id')
                 ->select('business.name as business_name', 'packages.name as package_name', 'subscriptions.status', 'subscriptions.start_date', 'subscriptions.trial_end_date', 'subscriptions.end_date', 'subscriptions.package_price', 'subscriptions.paid_via', 'subscriptions.payment_transaction_id', 'subscriptions.id');
             
             return DataTables::of($superadmin_subscription)
-                        ->addColumn('action',
+                        ->addColumn(
+                            'action',
                             '<button data-href ="{{action(\'\Modules\Superadmin\Http\Controllers\SuperadminSubscriptionsController@edit\',[$id])}}" class="btn btn-info btn-xs change_status" data-toggle="modal" data-target="#statusModal">
                             @lang( "superadmin::lang.status")
                             </button> <button data-href ="{{action(\'\Modules\Superadmin\Http\Controllers\SuperadminSubscriptionsController@editSubscription\',["id" => $id])}}" class="btn btn-primary btn-xs btn-modal" data-container=".view_modal">
@@ -57,7 +56,8 @@ class SuperadminSubscriptionsController extends BaseController
                         ->editColumn('trial_end_date', '@if(!empty($trial_end_date)){{@format_date($trial_end_date)}} @endif')
                         ->editColumn('start_date', '@if(!empty($start_date)){{@format_date($start_date)}}@endif')
                         ->editColumn('end_date', '@if(!empty($end_date)){{@format_date($end_date)}}@endif')
-                        ->editColumn('status', 
+                        ->editColumn(
+                            'status',
                             '@if($status == "approved")
                                 <span class="label bg-light-green">{{__(\'superadmin::lang.\'.$status)}}
                                 </span>
@@ -69,7 +69,8 @@ class SuperadminSubscriptionsController extends BaseController
                                 </span>
                             @endif'
                         )
-                        ->editColumn('package_price', 
+                        ->editColumn(
+                            'package_price',
                             '<span class="display_currency" data-currency_symbol="true">
                                 {{$package_price}}
                             </span>'
@@ -77,7 +78,7 @@ class SuperadminSubscriptionsController extends BaseController
                         ->removeColumn('id')
                         ->rawColumns([2, 6, 9])
                         ->make(false);
-           }
+        }
         return view('superadmin::superadmin_subscription.index');
     }
 
@@ -87,12 +88,12 @@ class SuperadminSubscriptionsController extends BaseController
      */
     public function create()
     {
-      $business_id = request()->input('business_id');
-      $packages = Package::active()->orderby('sort_order')->pluck('name', 'id');
+        $business_id = request()->input('business_id');
+        $packages = Package::active()->orderby('sort_order')->pluck('name', 'id');
 
-      $gateways = $this->_payment_gateways();
+        $gateways = $this->_payment_gateways();
 
-      return view('superadmin::superadmin_subscription.add_subscription')
+        return view('superadmin::superadmin_subscription.add_subscription')
               ->with(compact('packages', 'business_id', 'gateways'));
     }
 
@@ -103,33 +104,30 @@ class SuperadminSubscriptionsController extends BaseController
      */
     public function store(Request $request)
     {
-      if (!auth()->user()->can('subscribe')) {
-        abort(403, 'Unauthorized action.');
-      }
+        if (!auth()->user()->can('subscribe')) {
+            abort(403, 'Unauthorized action.');
+        }
 
-      try{
+        try {
+            DB::beginTransaction();
 
-        DB::beginTransaction();
+            $input = $request->only(['business_id', 'package_id', 'paid_via', 'payment_transaction_id']);
+            $package = Package::find($input['package_id']);
+            $user_id = $request->session()->get('user.id');
 
-        $input = $request->only(['business_id', 'package_id', 'paid_via', 'payment_transaction_id']);
-        $package = Package::find($input['package_id']);
-        $user_id = $request->session()->get('user.id');
+            $subscription =  $this->_add_subscription($input['business_id'], $package, $input['paid_via'], $input['payment_transaction_id'], $user_id, true);
 
-        $subscription =  $this->_add_subscription($input['business_id'], $package, $input['paid_via'], $input['payment_transaction_id'], $user_id, true);
+            DB::commit();
 
-        DB::commit();
-
-        $output = ['success' => 1, 
+            $output = ['success' => 1,
                     'msg' => __('lang_v1.success')
                 ];
+        } catch (\Exception $e) {
+            DB::rollBack();
 
-        } catch(\Exception $e){
-
-          DB::rollBack();
-
-          \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-          $output = ['success' => 0, 'msg' => __('messages.something_went_wrong') ];
+            $output = ['success' => 0, 'msg' => __('messages.something_went_wrong') ];
         }
 
         return back()->with('status', $output);
@@ -154,8 +152,7 @@ class SuperadminSubscriptionsController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        if(request()->ajax()){ 
-            
+        if (request()->ajax()) {
             $status = Subscription::package_subscription_status();
             $subscription = Subscription::find($id);
 
@@ -169,22 +166,20 @@ class SuperadminSubscriptionsController extends BaseController
      * @param  Request $request
      * @return Response
      */
-    public function update(Request $request, $id )
+    public function update(Request $request, $id)
     {
         if (!auth()->user()->can('superadmin')) {
             abort(403, 'Unauthorized action.');
         }
 
-        if(request()->ajax()){
-
-           try{
+        if (request()->ajax()) {
+            try {
                 $business_id = $request->session()->get('user.business_id');
                 $input = $request->only(['status', 'payment_transaction_id']);
         
                 $subscriptions = Subscription::findOrFail($id);
 
-                if($subscriptions->status == 'waiting' && $subscriptions->paid_via == 'offline' && empty($subscriptions->start_date && $input['status'] == 'approved')){
-
+                if ($subscriptions->status == 'waiting' && $subscriptions->paid_via == 'offline' && empty($subscriptions->start_date && $input['status'] == 'approved')) {
                     $dates = $this->_get_package_dates($business_id, $subscriptions->package);
                     $subscriptions->start_date = $dates['start'];
                     $subscriptions->end_date = $dates['end'];
@@ -195,18 +190,17 @@ class SuperadminSubscriptionsController extends BaseController
                 $subscriptions->payment_transaction_id = $input['payment_transaction_id'];
                 $subscriptions->save();
 
-                $output = array('success' => true, 
+                $output = array('success' => true,
                                     'msg' => __("superadmin::lang.subcription_updated_success")
                                 );
-                                
-            } catch(\Exception $e){
+            } catch (\Exception $e) {
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-                $output = array('success' => false, 
+                $output = array('success' => false,
                             'msg' => __("messages.something_went_wrong")
                             );
             }
-          return $output;
+            return $output;
         }
     }
 
@@ -228,11 +222,11 @@ class SuperadminSubscriptionsController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        if(request()->ajax()){ 
+        if (request()->ajax()) {
             $subscription = Subscription::find($id);
 
             return view('superadmin::superadmin_subscription.edit_date_modal')
-                        ->with(compact('subscription', 'status'));
+                        ->with(compact('subscription'));
         }
     }
 
@@ -247,9 +241,8 @@ class SuperadminSubscriptionsController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        if(request()->ajax()){
-
-           try{
+        if (request()->ajax()) {
+            try {
                 $business_id = $request->session()->get('user.business_id');
                 $input = $request->only(['start_date', 'end_date', 'trial_end_date']);
         
@@ -260,18 +253,17 @@ class SuperadminSubscriptionsController extends BaseController
                 $subscription->trial_end_date = !empty($input['trial_end_date']) ? $this->businessUtil->uf_date($input['trial_end_date']) : null;
                 $subscription->save();
 
-                $output = array('success' => true, 
+                $output = array('success' => true,
                                     'msg' => __("superadmin::lang.subcription_updated_success")
                                 );
-                                
-            } catch(\Exception $e){
+            } catch (\Exception $e) {
                 \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-                $output = array('success' => false, 
+                $output = array('success' => false,
                             'msg' => __("messages.something_went_wrong")
                             );
             }
-          return $output;
+            return $output;
         }
     }
 }

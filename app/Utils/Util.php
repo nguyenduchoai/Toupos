@@ -3,17 +3,19 @@
 namespace App\Utils;
 
 use App\Business;
+use App\Product;
 use App\ReferenceCount;
-use App\Unit;
 use App\Transaction;
+use App\TransactionSellLine;
+use App\Unit;
 use App\User;
-
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Client;
-use Illuminate\Support\Facades\Log;
-use Spatie\Permission\Models\Role;
+use App\VariationLocationDetails;
 
 use DB;
+
+use GuzzleHttp\Client;
+
+use Spatie\Permission\Models\Role;
 
 class Util
 {
@@ -60,7 +62,7 @@ class Util
 
         $currency_precision = config('constants.currency_precision', 2);
 
-        if($is_quantity) {
+        if ($is_quantity) {
             $currency_precision = config('constants.quantity_precision', 2);
         }
 
@@ -235,7 +237,7 @@ class Util
     }
 
     /**
-     * Converts date in business format to mysql format
+     * Converts date in mysql format to business format
      *
      * @param string $date
      * @param bool $time (default = false)
@@ -296,7 +298,7 @@ class Util
      *
      * @return int
      */
-    public function generateReferenceNumber($type, $ref_count, $business_id = null)
+    public function generateReferenceNumber($type, $ref_count, $business_id = null, $default_prefix = null)
     {
         $prefix = '';
 
@@ -307,6 +309,10 @@ class Util
             $business = Business::find($business_id);
             $prefixes = $business->ref_no_prefixes;
             $prefix = $prefixes[$type];
+        }
+
+        if (!empty($default_prefix)) {
+            $prefix = $default_prefix;
         }
 
         $ref_digits =  str_pad($ref_count, 4, 0, STR_PAD_LEFT);
@@ -368,78 +374,45 @@ class Util
             $sms_settings['msg_param_name'] => $data['sms_body'],
         ];
 
-        if (!empty($sms_settings['param_1']) && !empty($sms_settings['param_val_1'])) {
+        if (!empty($sms_settings['param_1'])) {
             $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
         }
-        if (!empty($sms_settings['param_2']) && !empty($sms_settings['param_val_2'])) {
+        if (!empty($sms_settings['param_2'])) {
             $request_data[$sms_settings['param_2']] = $sms_settings['param_val_2'];
         }
-        if (!empty($sms_settings['param_3']) && !empty($sms_settings['param_val_3'])) {
+        if (!empty($sms_settings['param_3'])) {
             $request_data[$sms_settings['param_3']] = $sms_settings['param_val_3'];
         }
-        if (!empty($sms_settings['param_4']) && !empty($sms_settings['param_val_4'])) {
+        if (!empty($sms_settings['param_4'])) {
             $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
         }
-        if (!empty($sms_settings['param_5']) && !empty($sms_settings['param_val_5'])) {
+        if (!empty($sms_settings['param_5'])) {
             $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
         }
-        if (!empty($sms_settings['param_6']) && !empty($sms_settings['param_val_6'])) {
+        if (!empty($sms_settings['param_6'])) {
             $request_data[$sms_settings['param_6']] = $sms_settings['param_val_6'];
         }
-        if (!empty($sms_settings['param_7']) && !empty($sms_settings['param_val_7'])) {
+        if (!empty($sms_settings['param_7'])) {
             $request_data[$sms_settings['param_7']] = $sms_settings['param_val_7'];
         }
-        if (!empty($sms_settings['param_8']) && !empty($sms_settings['param_val_8'])) {
+        if (!empty($sms_settings['param_8'])) {
             $request_data[$sms_settings['param_8']] = $sms_settings['param_val_8'];
         }
-        if (!empty($sms_settings['param_9']) && !empty($sms_settings['param_val_9'])) {
+        if (!empty($sms_settings['param_9'])) {
             $request_data[$sms_settings['param_9']] = $sms_settings['param_val_9'];
         }
-        if (!empty($sms_settings['param_10']) && !empty($sms_settings['param_val_10'])) {
+        if (!empty($sms_settings['param_10'])) {
             $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
         }
-        
+
         $client = new Client();
-        
+
         if ($sms_settings['request_method'] == 'get') {
             $response = $client->get($sms_settings['url'] . '?'. http_build_query($request_data));
         } else {
-            /* // generic solution that use normal request with body and header
-            $json_req = array(
-            "submission" => array(
-                "api_key" => $request_data["api_key"],
-                "api_secret" => $request_data["api_secret"],
-                "sms" => array(array(
-                    "id" => 0,
-                    "brandname" => $request_data["brandname"],
-                    "text" => $request_data["text"],
-                    "to" => $request_data["to"]
-                    ))
-                )
-            );
-
             $response = $client->post($sms_settings['url'], [
-                "body" => json_encode($json_req), 
-                "headers" => ["Content-Type" => "application/json"]
-                ]);
-                */
-            // simplify the request, use json (no header needed that laravel do it for you instead)
-            $json_req = [
-            "submission" => [
-                "api_key" => $request_data["api_key"],
-                "api_secret" => $request_data["api_secret"],
-                "sms" => [
-                    [
-                        "id" => 0,
-                        "brandname" => $request_data["brandname"],
-                        "text" => $request_data["text"],
-                        "to" => $request_data["to"]
-                    ]
-                ]
-                ]
-            ];
-
-            $response = $client->post($sms_settings['url'], ["json" => $json_req]);
+                'form_params' => $request_data
+            ]);
         }
     }
 
@@ -448,34 +421,71 @@ class Util
     *
     * @param integer $business_id
     * @param integer $unit_id
+    * @param boolean $return_main_unit_if_empty = false
+    * @param integer $product_id = null
     *
     * @return array
     */
-    public function getSubUnits($business_id, $unit_id)
+    public function getSubUnits($business_id, $unit_id, $return_main_unit_if_empty = false, $product_id = null)
     {
         $unit = Unit::where('business_id', $business_id)
                     ->with(['sub_units'])
                     ->findOrFail($unit_id);
 
+        //Find related subunits for the product.
+        $related_sub_units = [];
+        if (!empty($product_id)) {
+            $product = Product::where('business_id', $business_id)->findOrFail($product_id);
+            $related_sub_units = $product->sub_unit_ids;
+        }
+
         $sub_units = [];
 
-        if (count($unit->sub_units) > 0) {
+        //Add main unit as per given parameter or conditions.
+        if (($return_main_unit_if_empty && count($unit->sub_units) == 0)) {
             $sub_units[$unit->id] = [
                       'name' => $unit->actual_name,
                       'multiplier' => 1,
                       'allow_decimal' => $unit->allow_decimal
                     ];
-
-            foreach ($unit->sub_units as $sub_unit) {
-                $sub_units[$sub_unit->id] = [
-                      'name' => $sub_unit->actual_name,
-                      'multiplier' => $sub_unit->base_unit_multiplier,
-                      'allow_decimal' => $sub_unit->allow_decimal
+        } elseif (empty($related_sub_units) || in_array($unit->id, $related_sub_units)) {
+            $sub_units[$unit->id] = [
+                      'name' => $unit->actual_name,
+                      'multiplier' => 1,
+                      'allow_decimal' => $unit->allow_decimal
                     ];
+        }
+
+        if (count($unit->sub_units) > 0) {
+            foreach ($unit->sub_units as $sub_unit) {
+                //Check if subunit is related to the product or not.
+                if (empty($related_sub_units) || in_array($sub_unit->id, $related_sub_units)) {
+                    $sub_units[$sub_unit->id] = [
+                        'name' => $sub_unit->actual_name,
+                        'multiplier' => $sub_unit->base_unit_multiplier,
+                        'allow_decimal' => $sub_unit->allow_decimal
+                        ];
+                }
             }
         }
 
         return $sub_units;
+    }
+
+    public function getMultiplierOf2Units($base_unit_id, $unit_id)
+    {
+        if ($base_unit_id == $unit_id || is_null($base_unit_id) || is_null($unit_id)) {
+            return 1;
+        }
+
+        $unit = Unit::where('base_unit_id', $base_unit_id)
+                    ->where('id', $unit_id)
+                    ->first();
+        if (empty($unit)) {
+            return 1;
+        } else {
+            return $unit->base_unit_multiplier;
+        }
     }
 
     /**
@@ -535,19 +545,29 @@ class Util
         return $uploaded_file_name;
     }
     
-    public function serviceStaffDropdown($business_id)
+    public function serviceStaffDropdown($business_id, $location_id = null)
     {
         $waiters = [];
         //Get all service staff roles
-        $service_staff_roles = Role::where('business_id', $business_id)
+        $service_staff_roles_obj = Role::where('business_id', $business_id)
                             ->where('is_service_staff', 1)
-                            ->get()
-                            ->pluck('name')
-                            ->toArray();
+                            ->get();
 
+        $service_staff_roles = [];
+
+        if (!empty($location_id)) {
+            foreach ($service_staff_roles_obj as $role) {
+                if ($role->hasPermissionTo('location.' . $location_id) || $role->hasPermissionTo('access_all_locations')) {
+                    $service_staff_roles[] = $role->name;
+                }
+            }
+        } else {
+            $service_staff_roles = $service_staff_roles_obj->pluck('name')->toArray();
+        }
+        
         //Get all users of service staff roles
         if (!empty($service_staff_roles)) {
-            $waiters = User::where('business_id', $business_id)->role($service_staff_roles)->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
+            $waiters = User::where('business_id', $business_id)->role($service_staff_roles)->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
         }
 
         return $waiters;
@@ -637,13 +657,13 @@ class Util
         return $data;
     }
 
-    public function getCronJobCommand() 
+    public function getCronJobCommand()
     {
         $php_binary_path = empty(PHP_BINARY) ? "php" : PHP_BINARY;
 
-        $command = "* * * * * " . $php_binary_path . " " . base_path('artisan') . "schedule:run >> /dev/null 2>&1";
+        $command = "* * * * * " . $php_binary_path . " " . base_path('artisan') . " schedule:run >> /dev/null 2>&1";
 
-        if(config('app.env') == 'demo'){
+        if (config('app.env') == 'demo') {
             $command = '';
         }
 
@@ -659,8 +679,8 @@ class Util
     {
         $is_mail_configured = false;
 
-        if(!empty(env('MAIL_DRIVER')) && 
-            !empty(env('MAIL_HOST')) && 
+        if (!empty(env('MAIL_DRIVER')) &&
+            !empty(env('MAIL_HOST')) &&
             !empty(env('MAIL_PORT')) &&
             !empty(env('MAIL_USERNAME')) &&
             !empty(env('MAIL_PASSWORD')) &&
@@ -670,5 +690,147 @@ class Util
         }
 
         return $is_mail_configured;
+    }
+
+    /**
+    * Returns the list of barcode types
+    *
+    * @return array
+    */
+    public function barcode_types()
+    {
+        $types = [ 'C128' => 'Code 128 (C128)', 'C39' => 'Code 39 (C39)', 'EAN13' => 'EAN-13', 'EAN8' => 'EAN-8', 'UPCA' => 'UPC-A', 'UPCE' => 'UPC-E'];
+
+        return $types;
+    }
+
+    /**
+     * Returns the default barcode.
+     *
+     * @return string
+     */
+    public function barcode_default()
+    {
+        return 'C128';
+    }
+
+    /**
+     * Retrieves user role name.
+     *
+     * @return string
+     */
+    public function getUserRoleName($user_id)
+    {
+        $user = User::findOrFail($user_id);
+
+        $roles = $user->getRoleNames();
+
+        $role_name = '';
+
+        if (!empty($roles[0])) {
+            $array = explode('#', $roles[0], 2);
+            $role_name = !empty($array[0]) ? $array[0] : '';
+        }
+        return $role_name;
+    }
+
+    /**
+    * Retrieves all admins of a business
+    *
+    * @param int $business_id
+    *
+    * @return obj
+    */
+    public function get_admins($business_id)
+    {
+        $admins = User::role('Admin#' . $business_id)->get();
+
+        return $admins;
+    }
+
+    /**
+    * Retrieves IP address of the user
+    *
+    * @return string
+    */
+    public function getUserIpAddr()
+    {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+            //ip from share internet
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            //ip pass from proxy
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ip;
+    }
+
+    /**
+     * This function updates the stock of products present in combo product and also updates transaction sell line.
+     *
+     * @param array $lines
+     * @param int $location_id
+     * @param boolean $adjust_stock = true
+     *
+     * @return void
+     */
+    public function updateEditedSellLineCombo($lines, $location_id, $adjust_stock = true)
+    {
+        if (empty($lines)) {
+            return true;
+        }
+
+        $change_percent = null;
+
+        foreach ($lines as $key => $line) {
+            $prev_line = TransactionSellLine::find($line['transaction_sell_lines_id']);
+
+            $difference = $prev_line->quantity - $line['quantity'];
+            if ($difference != 0) {
+                //Update stock in variation location details table.
+                //Adjust Quantity in variations location table
+                if ($adjust_stock) {
+                    VariationLocationDetails::where('variation_id', $line['variation_id'])
+                    ->where('product_id', $line['product_id'])
+                    ->where('location_id', $location_id)
+                    ->increment('qty_available', $difference);
+                }
+                
+                //Update the child line quantity
+                $prev_line->quantity = $line['quantity'];
+            }
+            
+            //Recalculate the price.
+            if (is_null($change_percent)) {
+                $parent = TransactionSellLine::findOrFail($prev_line->parent_sell_line_id);
+                $child_sum = TransactionSellLine::where('parent_sell_line_id', $prev_line->parent_sell_line_id)
+                    ->select(DB::raw('SUM(unit_price_inc_tax * quantity) as total_price'))
+                    ->first()
+                    ->total_price;
+                    
+                $change_percent = $this->get_percent($child_sum, $parent->unit_price_inc_tax * $parent->quantity);
+            }
+
+            $price = $this->calc_percentage($prev_line->unit_price_inc_tax, $change_percent, $prev_line->unit_price_inc_tax);
+            $prev_line->unit_price_before_discount = $price;
+            $prev_line->unit_price = $price;
+            $prev_line->unit_price_inc_tax = $price;
+
+            $prev_line->save();
+        }
+    }
+
+    /**
+     *
+     * Generates string to calculate sum of purchase line quantity used
+     */
+    public function get_pl_quantity_sum_string($table_name = '')
+    {
+        $table_name = !empty($table_name) ? $table_name . '.' : '';
+        $string = $table_name . "quantity_sold + " . $table_name . "quantity_adjusted + " . $table_name . "quantity_returned + " . $table_name . "mfg_quantity_used";
+        
+        return $string;
     }
 }

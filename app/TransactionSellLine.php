@@ -30,7 +30,8 @@ class TransactionSellLine extends Model
 
     public function modifiers()
     {
-        return $this->hasMany(\App\TransactionSellLine::class, 'parent_sell_line_id');
+        return $this->hasMany(\App\TransactionSellLine::class, 'parent_sell_line_id')
+            ->where('children_type', 'modifier');
     }
 
     /**
@@ -56,7 +57,7 @@ class TransactionSellLine extends Model
             if ($this->line_discount_type == 'fixed') {
                 $discount_amount = $this->line_discount_amount;
             } elseif ($this->line_discount_type == 'percentage') {
-                $discount_amount = ($this->unit_price * $this->line_discount_amount) / 100;
+                $discount_amount = ($this->unit_price_before_discount * $this->line_discount_amount) / 100;
             }
         }
         return $discount_amount;
@@ -77,5 +78,10 @@ class TransactionSellLine extends Model
             'cooked',
             'served'
         ];
+    }
+
+    public function service_staff()
+    {
+        return $this->belongsTo(\App\User::class, 'res_service_staff_id');
     }
 }

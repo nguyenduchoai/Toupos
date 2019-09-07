@@ -256,6 +256,13 @@
                         <td>34</td>
                         <td>@lang('lang_v1.product_custom_field4') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                     </tr>
+                    <tr>
+                        <td>35</td>
+                        <td>@lang('lang_v1.not_for_selling') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td><strong>1 = @lang('messages.yes')<br>
+                            0 = @lang('messages.no')</strong><br>
+                        </td>
+                    </tr>
 
                 </table>
             @endcomponent

@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,7 +26,6 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::before(function ($user, $ability) {
-
             if (in_array($ability, ['backup', 'superadmin'])) {
                 $administrator_list = env('ADMINISTRATOR_USERNAMES');
                 if (in_array($user->username, explode(',', $administrator_list))) {

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
+use App\AccountTransaction;
+use App\PurchaseLine;
 use App\Transaction;
+use App\Utils\ProductUtil;
+use App\Utils\TransactionUtil;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
-
-use App\Utils\TransactionUtil;
-use App\Utils\ProductUtil;
 
 class PurchaseReturnController extends Controller
 {
@@ -53,7 +53,7 @@ class PurchaseReturnController extends Controller
                         '=',
                         'BS.id'
                     )
-                    ->join(
+                    ->leftJoin(
                         'transactions AS T',
                         'transactions.return_parent_id',
                         '=',
@@ -99,9 +99,21 @@ class PurchaseReturnController extends Controller
             }
             return Datatables::of($purchases_returns)
                 ->addColumn('action', function ($row) {
-                    $html = '<a href="' . action('PurchaseReturnController@add', $row->return_parent_id) . '" class="btn btn-info btn-xs" ><i class="glyphicon glyphicon-edit"></i>' .
+                    $html = '';
+                    if (!empty($row->return_parent_id)) {
+                        $html .= '<a href="' . action('PurchaseReturnController@add', $row->return_parent_id) . '" class="btn btn-info btn-xs" ><i class="glyphicon glyphicon-edit"></i>' .
                                 __("messages.edit") .
                                 '</a>';
+                    } else {
+                        $html .= '<a href="' . action('CombinedPurchaseReturnController@edit', $row->id) . '" class="btn btn-info btn-xs" ><i class="glyphicon glyphicon-edit"></i>' .
+                                __("messages.edit") .
+                                '</a>';
+                    }
+
+                    $html .= '<a href="' . action('PurchaseReturnController@destroy', $row->id) . '" class="btn btn-danger btn-xs delete_purchase_return" ><i class="fa fa-trash"></i>' .
+                                __("messages.delete") .
+                                '</a>';
+                    
                     
                     return $html;
                 })
@@ -111,7 +123,7 @@ class PurchaseReturnController extends Controller
                     'final_total',
                     '<span class="display_currency final_total" data-currency_symbol="true" data-orig-value="{{$final_total}}">{{$final_total}}</span>'
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                
                 ->editColumn(
                     'payment_status',
@@ -119,7 +131,11 @@ class PurchaseReturnController extends Controller
                         </span></a>'
                 )
                 ->editColumn('parent_purchase', function ($row) {
-                    return '<a href="#" data-href="' . action('PurchaseController@show', [$row->return_parent_id]) . '" class="btn-modal" data-container=".view_modal">' . $row->parent_purchase . '</a>';
+                    $html = '';
+                    if (!empty($row->parent_purchase)) {
+                        $html = '<a href="#" data-href="' . action('PurchaseController@show', [$row->return_parent_id]) . '" class="btn-modal" data-container=".view_modal">' . $row->parent_purchase . '</a>';
+                    }
+                    return $html;
                 })
                 ->addColumn('payment_due', function ($row) {
                     $due = $row->final_total - $row->amount_paid;
@@ -128,7 +144,8 @@ class PurchaseReturnController extends Controller
                 ->setRowAttr([
                     'data-href' => function ($row) {
                         if (auth()->user()->can("purchase.view")) {
-                            return  action('PurchaseReturnController@show', [$row->return_parent_id]) ;
+                            $return_id = !empty($row->return_parent_id) ? $row->return_parent_id : $row->id;
+                            return  action('PurchaseReturnController@show', [$return_id]) ;
                         } else {
                             return '';
                         }
@@ -158,7 +175,7 @@ class PurchaseReturnController extends Controller
 
         foreach ($purchase->purchase_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
-                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value);
+                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
                 $purchase->purchase_lines[$key] = $formated_purchase_line;
             }
         }
@@ -294,13 +311,12 @@ class PurchaseReturnController extends Controller
         $business_id = request()->session()->get('user.business_id');
 
         $purchase = Transaction::where('business_id', $business_id)
-                        ->where('type', 'purchase')
                         ->with(['return_parent', 'return_parent.tax', 'purchase_lines', 'contact', 'tax', 'purchase_lines.sub_unit', 'purchase_lines.product', 'purchase_lines.product.unit'])
                         ->find($id);
 
         foreach ($purchase->purchase_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
-                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value);
+                $formated_purchase_line = $this->productUtil->changePurchaseLineUnit($value, $business_id);
                 $purchase->purchase_lines[$key] = $formated_purchase_line;
             }
         }
@@ -314,7 +330,90 @@ class PurchaseReturnController extends Controller
             }
         }
 
+        //For combined purchase return return_parent is empty
+        if (empty($purchase->return_parent) && !empty($purchase->tax)) {
+            if ($purchase->tax->is_tax_group) {
+                $purchase_taxes = $this->transactionUtil->sumGroupTaxDetails($this->transactionUtil->groupTaxDetails($purchase->tax, $purchase->tax_amount));
+            } else {
+                $purchase_taxes[$purchase->tax->name] = $purchase->tax_amount;
+            }
+        }
+
         return view('purchase_return.show')
                 ->with(compact('purchase', 'purchase_taxes'));
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        if (!auth()->user()->can('purchase.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            if (request()->ajax()) {
+                $business_id = request()->session()->get('user.business_id');
+
+        
+                $purchase_return = Transaction::where('id', $id)
+                                ->where('business_id', $business_id)
+                                ->where('type', 'purchase_return')
+                                ->with(['purchase_lines'])
+                                ->first();
+                
+                DB::beginTransaction();
+
+                if (empty($purchase_return->return_parent_id)) {
+                    $delete_purchase_lines = $purchase_return->purchase_lines;
+                    $delete_purchase_line_ids = [];
+                    foreach ($delete_purchase_lines as $purchase_line) {
+                        $delete_purchase_line_ids[] = $purchase_line->id;
+                        $this->productUtil->updateProductQuantity($purchase_return->location_id, $purchase_line->product_id, $purchase_line->variation_id, $purchase_line->quantity_returned, 0, null, false);
+                    }
+                    PurchaseLine::where('transaction_id', $purchase_return->id)
+                                ->whereIn('id', $delete_purchase_line_ids)
+                                ->delete();
+                } else {
+                    $parent_purchase = Transaction::where('id', $purchase_return->return_parent_id)
+                                ->where('business_id', $business_id)
+                                ->where('type', 'purchase')
+                                ->with(['purchase_lines'])
+                                ->first();
+
+                    $updated_purchase_lines = $parent_purchase->purchase_lines;
+                    foreach ($updated_purchase_lines as $purchase_line) {
+                        $this->productUtil->updateProductQuantity($parent_purchase->location_id, $purchase_line->product_id, $purchase_line->variation_id, $purchase_line->quantity_returned, 0, null, false);
+                        $purchase_line->quantity_returned = 0;
+                        $purchase_line->save();
+                    }
+                }
+
+                //Delete Transaction
+                $purchase_return->delete();
+
+                //Delete account transactions
+                AccountTransaction::where('transaction_id', $id)->delete();
+
+                DB::commit();
+
+                $output = ['success' => true,
+                            'msg' => __('lang_v1.deleted_success')
+                        ];
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            $output = ['success' => false,
+                            'msg' => __('messages.something_went_wrong')
+                        ];
+        }
+
+        return $output;
     }
 }

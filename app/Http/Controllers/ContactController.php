@@ -2,25 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Business;
 use App\Contact;
-use App\User;
 use App\CustomerGroup;
 use App\Transaction;
-
-use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Http\Request;
-
-use Excel;
-use DB;
-
-use App\Utils\Util;
+use App\TransactionPayment;
+use App\User;
 use App\Utils\ModuleUtil;
 use App\Utils\TransactionUtil;
+use App\Utils\Util;
+use DB;
+use Excel;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class ContactController extends Controller
 {
     protected $commonUtil;
     protected $transactionUtil;
+    protected $moduleUtil;
 
     /**
      * Constructor
@@ -36,6 +36,16 @@ class ContactController extends Controller
         $this->commonUtil = $commonUtil;
         $this->moduleUtil = $moduleUtil;
         $this->transactionUtil = $transactionUtil;
+        $this->transactionTypes = [
+                    'sell' => __('sale.sale'),
+                    'purchase' => __('lang_v1.purchase'),
+                    'sell_return' => __('lang_v1.sell_return'),
+                    'purchase_return' =>  __('lang_v1.purchase_return'),
+                    'opening_balance' => __('lang_v1.opening_balance'),
+                    'payment' => __('lang_v1.payment')
+                ];
+
+        $this->paymentTypes = $this->transactionUtil->payment_types();
     }
 
     /**
@@ -63,8 +73,10 @@ class ContactController extends Controller
             }
         }
 
+        $reward_enabled = (request()->session()->get('business.enable_rp') == 1 && in_array($type, ['customer'])) ? true : false;
+
         return view('contact.index')
-            ->with(compact('type'));
+            ->with(compact('type', 'reward_enabled'));
     }
 
     /**
@@ -83,7 +95,7 @@ class ContactController extends Controller
         $contact = Contact::leftjoin('transactions AS t', 'contacts.id', '=', 't.contact_id')
                     ->where('contacts.business_id', $business_id)
                     ->onlySuppliers()
-                    ->select(['contacts.contact_id', 'supplier_business_name', 'name', 'mobile',
+                    ->select(['contacts.contact_id', 'supplier_business_name', 'name', 'contacts.created_at', 'mobile',
                         'contacts.type', 'contacts.id',
                         DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
                         DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as purchase_paid"),
@@ -129,6 +141,7 @@ class ContactController extends Controller
                     <li><a href="{{action(\'ContactController@destroy\', [$id])}}" class="delete_contact_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</a></li>
                 @endcan </ul></div>'
             )
+            ->editColumn('created_at', '{{@format_date($created_at)}}')
             ->removeColumn('opening_balance')
             ->removeColumn('opening_balance_paid')
             ->removeColumn('type')
@@ -137,7 +150,7 @@ class ContactController extends Controller
             ->removeColumn('purchase_paid')
             ->removeColumn('total_purchase_return')
             ->removeColumn('purchase_return_paid')
-            ->rawColumns([4, 5, 6])
+            ->rawColumns([5, 6, 7])
             ->make(false);
     }
 
@@ -154,11 +167,11 @@ class ContactController extends Controller
 
         $business_id = request()->session()->get('user.business_id');
 
-        $contact = Contact::leftjoin('transactions AS t', 'contacts.id', '=', 't.contact_id')
+        $query = Contact::leftjoin('transactions AS t', 'contacts.id', '=', 't.contact_id')
                     ->leftjoin('customer_groups AS cg', 'contacts.customer_group_id', '=', 'cg.id')
                     ->where('contacts.business_id', $business_id)
                     ->onlyCustomers()
-                    ->addSelect(['contacts.contact_id', 'contacts.name', 'cg.name as customer_group', 'city', 'state', 'country', 'landmark', 'mobile', 'contacts.id', 'is_default',
+                    ->addSelect(['contacts.contact_id', 'contacts.name', 'contacts.created_at', 'total_rp', 'cg.name as customer_group', 'city', 'state', 'country', 'landmark', 'mobile', 'contacts.id', 'is_default',
                         DB::raw("SUM(IF(t.type = 'sell' AND t.status = 'final', final_total, 0)) as total_invoice"),
                         DB::raw("SUM(IF(t.type = 'sell' AND t.status = 'final', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as invoice_received"),
                         DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
@@ -168,7 +181,7 @@ class ContactController extends Controller
                         ])
                     ->groupBy('contacts.id');
 
-        return Datatables::of($contact)
+        $contacts = Datatables::of($query)
             ->editColumn(
                 'landmark',
                 '{{implode(array_filter([$landmark, $city, $state, $country]), ", ")}}'
@@ -209,6 +222,8 @@ class ContactController extends Controller
                 @endcan
                 @endif </ul></div>'
             )
+            ->editColumn('total_rp', '{{$total_rp ?? 0}}')
+            ->editColumn('created_at', '{{@format_date($created_at)}}')
             ->removeColumn('total_invoice')
             ->removeColumn('opening_balance')
             ->removeColumn('opening_balance_paid')
@@ -220,9 +235,15 @@ class ContactController extends Controller
             ->removeColumn('id')
             ->removeColumn('is_default')
             ->removeColumn('total_sell_return')
-            ->removeColumn('sell_return_paid')
-            ->rawColumns([5, 6, 7])
-            ->make(false);
+            ->removeColumn('sell_return_paid');
+        $reward_enabled = (request()->session()->get('business.enable_rp') == 1) ? true : false;
+        $raw = [7, 8, 9];
+        if (!$reward_enabled) {
+            $contacts->removeColumn('total_rp');
+            $raw = [6, 7, 8];
+        }
+        return $contacts->rawColumns($raw)
+                        ->make(false);
     }
 
     /**
@@ -341,7 +362,10 @@ class ContactController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $business_id = request()->session()->get('user.business_id');
+
         $contact = Contact::where('contacts.id', $id)
+                            ->where('contacts.business_id', $business_id)
                             ->join('transactions AS t', 'contacts.id', '=', 't.contact_id')
                             ->select(
                                 DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
@@ -352,8 +376,11 @@ class ContactController extends Controller
                                 DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid"),
                                 'contacts.*'
                             )->first();
+
+        $reward_enabled = (request()->session()->get('business.enable_rp') == 1 && in_array($contact->type, ['customer', 'both'])) ? true : false;
+
         return view('contact.show')
-             ->with(compact('contact'));
+             ->with(compact('contact', 'reward_enabled'));
     }
 
     /**
@@ -568,7 +595,7 @@ class ContactController extends Controller
                 });
             }
 
-            $contacts = $contacts->select(
+            $contacts->select(
                 'contacts.id',
                 DB::raw("IF(contacts.contact_id IS NULL OR contacts.contact_id='', name, CONCAT(name, ' (', contacts.contact_id, ')')) AS text"),
                 'mobile',
@@ -578,8 +605,12 @@ class ContactController extends Controller
                 'pay_term_number',
                 'pay_term_type'
             )
-                    ->onlyCustomers()
-                    ->get();
+                    ->onlyCustomers();
+
+            if (request()->session()->get('business.enable_rp') == 1) {
+                $contacts->addSelect('total_rp');
+            }
+            $contacts = $contacts->get();
             return json_encode($contacts);
         }
     }
@@ -722,7 +753,7 @@ class ContactController extends Controller
 
                         //Check pay term
                         if (trim($value[6]) != '') {
-                            $contact_array['pay_term_number'] = $this->transactionUtil->num_uf($value[6]);
+                            $contact_array['pay_term_number'] = trim($value[6]);
                         } else {
                             $is_valid =  false;
                             $error_msg = "Pay term is required in row no. $row_no";
@@ -768,7 +799,7 @@ class ContactController extends Controller
 
                     //Check credit limit
                     if (trim($value[8]) != '' && in_array($contact_type, ['customer', 'both'])) {
-                        $contact_array['credit_limit'] = $this->transactionUtil->num_uf(trim($value[8]));
+                        $contact_array['credit_limit'] = trim($value[8]);
                     }
 
                     //Check email
@@ -863,5 +894,146 @@ class ContactController extends Controller
         }
 
         return redirect()->action('ContactController@index', ['type' => 'supplier'])->with('status', $output);
+    }
+
+    /**
+     * Shows ledger for contacts
+     *
+     * @param  \Illuminate\Http\Request
+     * @return \Illuminate\Http\Response
+     */
+    public function getLedger()
+    {
+        if (!auth()->user()->can('supplier.view') && !auth()->user()->can('customer.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        $contact_id = request()->input('contact_id');
+        $transaction_types = explode(',', request()->input('transaction_types'));
+        $show_payments = request()->input('show_payments') == 'true' ? true : false;
+
+        //Get transactions
+        $query1 = Transaction::where('transactions.contact_id', $contact_id)
+                            ->where('transactions.business_id', $business_id)
+                            ->where('status', '!=', 'draft')
+                            ->whereIn('type', $transaction_types)
+                            ->with(['location']);
+
+        if (!empty(request()->start_date) && !empty(request()->end_date)) {
+            $start = request()->start_date;
+            $end =  request()->end_date;
+            $query1->whereDate('transactions.transaction_date', '>=', $start)
+                        ->whereDate('transactions.transaction_date', '<=', $end);
+        }
+
+        $transactions = $query1->get();
+
+        $ledger = [];
+        foreach ($transactions as $transaction) {
+            $ledger[] = [
+                'date' => $transaction->transaction_date,
+                'ref_no' => in_array($transaction->type, ['sell', 'sell_return']) ? $transaction->invoice_no : $transaction->ref_no,
+                'type' => $this->transactionTypes[$transaction->type],
+                'location' => $transaction->location->name,
+                'payment_status' =>  __('lang_v1.' . $transaction->payment_status),
+                'total' => $transaction->final_total,
+                'payment_method' => '',
+                'debit' => '',
+                'credit' => '',
+                'others' => $transaction->additional_notes
+            ];
+        }
+
+        if ($show_payments) {
+            $query2 = TransactionPayment::join(
+                'transactions as t',
+                'transaction_payments.transaction_id',
+                '=',
+                't.id'
+            )
+                ->leftJoin('business_locations as bl', 't.location_id', '=', 'bl.id')
+                ->where('t.contact_id', $contact_id)
+                ->where('t.business_id', $business_id)
+                ->where('t.status', '!=', 'draft');
+
+            if (!empty(request()->start_date) && !empty(request()->end_date)) {
+                $start = request()->start_date;
+                $end =  request()->end_date;
+                $query1->whereDate('transactions.transaction_date', '>=', $start)
+                            ->whereDate('transactions.transaction_date', '<=', $end);
+
+                if ($show_payments) {
+                    $query2->whereDate('paid_on', '>=', $start)
+                            ->whereDate('paid_on', '<=', $end);
+                }
+            }
+
+            $payments = $query2->select('transaction_payments.*', 'bl.name as location_name', 't.type as transaction_type', 't.ref_no', 't.invoice_no')->get();
+
+            foreach ($payments as $payment) {
+                $ref_no = in_array($payment->transaction_type, ['sell', 'sell_return']) ?  $payment->invoice_no :  $payment->ref_no;
+                $ledger[] = [
+                    'date' => $payment->paid_on,
+                    'ref_no' => $payment->payment_ref_no,
+                    'type' => $this->transactionTypes['payment'],
+                    'location' => $payment->location_name,
+                    'payment_status' => '',
+                    'total' => '',
+                    'payment_method' => $this->paymentTypes[$payment->method],
+                    'debit' => in_array($payment->transaction_type, ['purchase', 'sell_return']) ? $payment->amount : '',
+                    'credit' => in_array($payment->transaction_type, ['sell', 'purchase_return', 'opening_balance']) ? $payment->amount : '',
+                    'others' => $payment->note . '<small>' . __('account.payment_for') . ': ' . $ref_no . '</small>'
+                ];
+            }
+        }
+
+        //Sort by date
+        if (!empty($ledger)) {
+            usort($ledger, function ($a, $b) {
+                $t1 = strtotime($a['date']);
+                $t2 = strtotime($b['date']);
+                return $t2 - $t1;
+            });
+        }
+        return view('contact.ledger')
+             ->with(compact('contact', 'ledger'));
+    }
+
+    public function postCustomersApi(Request $request)
+    {
+        try {
+            $api_token = $request->header('API-TOKEN');
+
+            $api_settings = $this->moduleUtil->getApiSettings($api_token);
+
+            $business = Business::find($api_settings->business_id);
+
+            $data = $request->only(['name', 'email']);
+
+            $customer = Contact::where('business_id', $api_settings->business_id)
+                                ->where('email', $data['email'])
+                                ->whereIn('type', ['customer', 'both'])
+                                ->first();
+
+            if (empty($customer)) {
+                $data['type'] = 'customer';
+                $data['business_id'] = $api_settings->business_id;
+                $data['created_by'] = $business->owner_id;
+                $data['mobile'] = 0;
+
+                $ref_count = $this->commonUtil->setAndGetReferenceCount('contacts', $business->id);
+
+                $data['contact_id'] = $this->commonUtil->generateReferenceNumber('contacts', $ref_count, $business->id);
+
+                $customer = Contact::create($data);
+            }
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            return $this->respondWentWrong($e);
+        }
+
+        return $this->respond($customer);
     }
 }

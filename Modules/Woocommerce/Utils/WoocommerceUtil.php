@@ -2,27 +2,26 @@
 namespace Modules\Woocommerce\Utils;
 
 use App\Business;
-use App\BusinessLocation;
 use App\Category;
-use App\Product;
-use App\Transaction;
 use App\Contact;
+use App\Exceptions\PurchaseSellMismatch;
+use App\Product;
 use App\TaxRate;
-use App\VariationTemplate;
-use App\VariationLocationDetails;
-
-use Automattic\WooCommerce\Client;
-
-use Modules\Woocommerce\Entities\WoocommerceSyncLog;
+use App\Transaction;
+use App\Utils\ProductUtil;
 
 use App\Utils\TransactionUtil;
-use App\Utils\ProductUtil;
+
 use App\Utils\Util;
 
-use App\Exceptions\PurchaseSellMismatch;
-use Modules\Woocommerce\Exceptions\WooCommerceError;
+use App\VariationLocationDetails;
+use App\VariationTemplate;
+use Automattic\WooCommerce\Client;
 
 use DB;
+use Modules\Woocommerce\Entities\WoocommerceSyncLog;
+
+use Modules\Woocommerce\Exceptions\WooCommerceError;
 
 class WoocommerceUtil extends Util
 {
@@ -85,7 +84,7 @@ class WoocommerceUtil extends Util
 
         //woocommerce api client object
         $woocommerce = $this->woo_client($business_id);
-
+        $count = 0;
         foreach (array_chunk($data, 99) as $chunked_array) {
             $sync_data = [];
             $sync_data[$type] = $chunked_array;
@@ -96,7 +95,7 @@ class WoocommerceUtil extends Util
             //update woocommerce_cat_id
             if (!empty($response->create)) {
                 foreach ($response->create as $key => $value) {
-                    $new_category = $new_categories[$key];
+                    $new_category = $new_categories[$count];
                     if ($value->id != 0) {
                         $new_category->woocommerce_cat_id = $value->id;
                     } else {
@@ -105,6 +104,7 @@ class WoocommerceUtil extends Util
                         }
                     }
                     $new_category->save();
+                    $count++;
                 }
             }
         }
@@ -175,6 +175,10 @@ class WoocommerceUtil extends Util
         $category_data = [];
         $new_categories = [];
         foreach ($child_categories as $category) {
+            if (empty($cat_id_woocommerce_id[$category->parent_id])) {
+                continue;
+            }
+
             if (empty($category->woocommerce_cat_id)) {
                 $category_data['create'][] = [
                     'name' => $category->name,
@@ -232,6 +236,7 @@ class WoocommerceUtil extends Util
 
         $query = Product::where('business_id', $business_id)
                         ->whereIn('type', ['single', 'variable'])
+                        ->where('woocommerce_disable_sync', 0)
                         ->with(['variations', 'category', 'sub_category',
                             'variations.variation_location_details',
                             'variations.product_variation',
@@ -255,7 +260,7 @@ class WoocommerceUtil extends Util
                 $last_updated = strtotime($last_stock_updated) > strtotime($last_updated) ?
                         $last_stock_updated : $last_updated;
             }
-            if (!empty($last_synced) && strtotime($last_updated) < strtotime($last_synced)) {
+            if (!empty($product->woocommerce_product_id) && !empty($last_synced) && strtotime($last_updated) < strtotime($last_synced)) {
                 continue;
             }
 
@@ -333,6 +338,15 @@ class WoocommerceUtil extends Util
                     $array['weight'] = $product->weight;
                 }
 
+                //Set product image url
+                if (!empty($product->image) && in_array('image', $woocommerce_api_settings->product_fields_for_create)) {
+                    if (!empty($product->image_path) && file_exists($product->image_path)) {
+                        $array['images'] = [
+                            ['src' => $product->image_url]
+                        ];
+                    }
+                }
+
                 //assign quantity and price if single product
                 if ($product->type == 'single') {
                     if (in_array('quantity', $woocommerce_api_settings->product_fields_for_create)) {
@@ -359,6 +373,15 @@ class WoocommerceUtil extends Util
 
                 if (in_array('weight', $woocommerce_api_settings->product_fields_for_update)) {
                     $array['weight'] = $product->weight;
+                }
+
+                //Set product image url
+                if (!empty($product->image) && in_array('image', $woocommerce_api_settings->product_fields_for_update)) {
+                    if (!empty($product->image_path) && file_exists($product->image_path)) {
+                        $array['images'] = [
+                            ['src' => $product->image_url]
+                        ];
+                    }
                 }
 
                 if ($product->type == 'single') {
@@ -423,6 +446,7 @@ class WoocommerceUtil extends Util
         $woocommerce = $this->woo_client($business_id);
 
         $new_woocommerce_product_ids = [];
+        $count = 0;
         foreach (array_chunk($data, 99) as $chunked_array) {
             $sync_data = [];
             $sync_data[$type] = $chunked_array;
@@ -430,7 +454,7 @@ class WoocommerceUtil extends Util
 
             if (!empty($response->create)) {
                 foreach ($response->create as $key => $value) {
-                    $new_product = $new_products[$key];
+                    $new_product = $new_products[$count];
                     if ($value->id != 0) {
                         $new_product->woocommerce_product_id = $value->id;
                     } else {
@@ -441,6 +465,7 @@ class WoocommerceUtil extends Util
                     $new_product->save();
 
                     $new_woocommerce_product_ids[] = $new_product->woocommerce_product_id;
+                    $count ++;
                 }
             }
         }
@@ -585,6 +610,16 @@ class WoocommerceUtil extends Util
                     if (in_array('quantity', $woocommerce_api_settings->product_fields_for_create)) {
                         $variation_arr['stock_quantity'] = $qty_available;
                     }
+
+                    //Set variation images
+                    if (!empty($variation->media) && count($variation->media) > 0 && in_array('image', $woocommerce_api_settings->product_fields_for_create)) {
+                        $url = $variation->media->first()->display_url;
+                        $path = $variation->media->first()->display_path;
+                        if (file_exists($path)) {
+                            $variation_arr['image'] = ['src' => $url];
+                        }
+                    }
+
                     $variation_arr['regular_price'] = $price;
                     $new_variations[] = $variation;
 
@@ -595,6 +630,16 @@ class WoocommerceUtil extends Util
                     if (in_array('quantity', $woocommerce_api_settings->product_fields_for_update)) {
                         $variation_arr['stock_quantity'] = $qty_available;
                     }
+
+                    //Set variation images
+                    if (!empty($variation->media) && count($variation->media) > 0 && in_array('image', $woocommerce_api_settings->product_fields_for_update)) {
+                        $url = $variation->media->first()->display_url;
+                        $path = $variation->media->first()->display_path;
+                        if (file_exists($path)) {
+                            $variation_arr['image'] = ['src' => $url];
+                        }
+                    }
+                    
                     //assign price
                     if (in_array('price', $woocommerce_api_settings->product_fields_for_update)) {
                         $variation_arr['regular_price'] = $price;
@@ -862,23 +907,35 @@ class WoocommerceUtil extends Util
         //Get customer details
         $order_customer_id = $order->customer_id;
 
-        //If Customer empty skip order
+        $customer_details = [];
+
+        //If Customer empty skip get guest customer details from billing address
         if (empty($order_customer_id)) {
-            return ['has_error' =>
-                    [
-                        'error_type' => 'order_customer_empty',
-                        'order_number' => $order->number
-                    ]
+            $customer_details = [
+                    'email' => $order->billing->email,
+                    'name' => $order->billing->first_name . ' ' . $order->billing->last_name,
+                    'mobile' => $order->billing->phone,
+                    'city' => $order->billing->city,
+                    'state' => $order->billing->state,
+                    'country' => $order->billing->country,
                 ];
-            exit;
+        } else {
+            //woocommerce api client object
+            $woocommerce = $this->woo_client($business_id);
+            $order_customer = $woocommerce->get('customers/' . $order_customer_id);
+
+            $customer_details = [
+                    'email' => $order_customer->email,
+                    'name' => $order_customer->first_name . ' ' . $order_customer->last_name,
+                    'mobile' => $order_customer->billing->phone,
+                    'city' => $order_customer->billing->city,
+                    'state' => $order_customer->billing->state,
+                    'country' => $order_customer->billing->country,
+                ];
         }
 
-        //woocommerce api client object
-        $woocommerce = $this->woo_client($business_id);
-
-        $order_customer = $woocommerce->get('customers/' . $order_customer_id);
         $customer = Contact::where('business_id', $business_id)
-                            ->where('email', $order_customer->email)
+                            ->where('email', $customer_details['email'])
                             ->OnlyCustomers()
                             ->first();
 
@@ -890,13 +947,13 @@ class WoocommerceUtil extends Util
             $customer_data = [
                 'business_id' => $business_id,
                 'type' => 'customer',
-                'name' => $order_customer->first_name . ' ' . $order_customer->last_name,
-                'email' => $order_customer->email,
+                'name' => $customer_details['name'],
+                'email' => $customer_details['email'],
                 'contact_id' => $contact_id,
-                'mobile' => $order_customer->billing->phone,
-                'city' => $order_customer->billing->city,
-                'state' => $order_customer->billing->state,
-                'country' => $order_customer->billing->country,
+                'mobile' => $customer_details['mobile'],
+                'city' => $customer_details['city'],
+                'state' => $customer_details['state'],
+                'country' => $customer_details['country'],
                 'created_by' => $user_id
             ];
             $customer = Contact::create($customer_data);
@@ -1003,7 +1060,7 @@ class WoocommerceUtil extends Util
         $status_before = $sell->status;
 
         DB::beginTransaction();
-        $transaction = $this->transactionUtil->updateSellTransaction($sell, $business_id, $input, $invoice_total, $user_id);
+        $transaction = $this->transactionUtil->updateSellTransaction($sell, $business_id, $input, $invoice_total, $user_id, true, false);
 
         //Update Sell lines
         $deleted_lines = $this->transactionUtil->createOrUpdateSellLines($transaction, $input['products'], $input['location_id'], true, $status_before, [], false);

@@ -31,8 +31,7 @@
                     <span class="input-group-addon">
                         <i class="fa fa-plus-circle"></i>
                     </span>
-                    {!! Form::number('default_profit_percent', $business->default_profit_percent, ['class' => 'form-control', 'min' => 0, 
-                    'step' => 0.01, 'max' => 100]); !!}
+                    {!! Form::text('default_profit_percent', @num_format($business->default_profit_percent), ['class' => 'form-control input_number']); !!}
                 </div>
             </div>
         </div>

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
+    //Transaction types = ['purchase','sell','expense','stock_adjustment','sell_transfer','purchase_transfer','opening_stock','sell_return','opening_balance','purchase_return', 'payroll']
+    
     /**
      * The attributes that aren't mass assignable.
      *
@@ -201,5 +203,10 @@ class Transaction extends Model
     public function media()
     {
         return $this->morphMany(\App\Media::class, 'model');
+    }
+
+    public function transaction_for()
+    {
+        return $this->belongsTo(\App\User::class, 'expense_for');
     }
 }

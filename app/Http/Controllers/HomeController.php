@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Transaction;
-use App\VariationLocationDetails;
-use App\Currency;
 use App\BusinessLocation;
 
+use App\Currency;
+use App\Transaction;
 use App\Utils\BusinessUtil;
-use App\Utils\TransactionUtil;
-
 use App\Utils\ModuleUtil;
 
-use Datatables;
+use App\Utils\TransactionUtil;
+use App\VariationLocationDetails;
+
 use Charts;
+
+use Datatables;
 use DB;
+use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
@@ -117,7 +117,9 @@ class HomeController extends Controller
             }
         }
 
-        $sells_chart_1->dataset(__('report.all_locations'), $all_sell_values);
+        if (count($all_locations) > 1) {
+            $sells_chart_1->dataset(__('report.all_locations'), $all_sell_values);
+        }
 
         //Chart for sells this financial year
         $sells_this_fy = $this->transactionUtil->getSellsCurrentFy($business_id, $fy['start'], $fy['end']);
@@ -181,8 +183,9 @@ class HomeController extends Controller
                 $sells_chart_2->dataset($location_sell['loc_label'], $location_sell['values']);
             }
         }
-
-        $sells_chart_2->dataset(__('report.all_locations'), $values);
+        if (count($all_locations) > 1) {
+            $sells_chart_2->dataset(__('report.all_locations'), $values);
+        }
 
         //Get Dashboard widgets from module
         $module_widgets = $this->moduleUtil->getModuleData('dashboard_widget');
@@ -190,7 +193,7 @@ class HomeController extends Controller
         $widgets = [];
 
         foreach ($module_widgets as $widget_array) {
-            if(!empty($widget_array['position'])) {
+            if (!empty($widget_array['position'])) {
                 $widgets[$widget_array['position']][] = $widget_array['widget'];
             }
         }
@@ -281,6 +284,7 @@ class HomeController extends Controller
                     ->leftjoin('units as u', 'p.unit_id', '=', 'u.id')
                     ->where('p.business_id', $business_id)
                     ->where('p.enable_stock', 1)
+                    ->where('p.is_inactive', 0)
                     ->whereRaw('variation_location_details.qty_available <= p.alert_quantity');
 
             //Check for permitted locations of a user

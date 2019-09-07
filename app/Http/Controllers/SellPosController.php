@@ -27,35 +27,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Account;
+use App\AccountTransaction;
+use App\Brands;
+use App\Business;
+use App\BusinessLocation;
+use App\Category;
+use App\Contact;
+use App\CustomerGroup;
+use App\Media;
+use App\Product;
+use App\SellingPriceGroup;
 use App\TaxRate;
 use App\Transaction;
 use App\TransactionSellLine;
-use App\BusinessLocation;
-use App\Business;
 use App\User;
-use App\Category;
-use App\Brands;
-use App\Product;
-use App\CustomerGroup;
-use App\SellingPriceGroup;
-use App\NotificationTemplate;
-use App\Account;
-use App\AccountTransaction;
-use App\Contact;
-use App\Media;
-
+use App\Utils\BusinessUtil;
+use App\Utils\CashRegisterUtil;
+use App\Utils\ContactUtil;
+use App\Utils\ModuleUtil;
+use App\Utils\NotificationUtil;
+use App\Utils\ProductUtil;
+use App\Utils\TransactionUtil;
+use App\Variation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-
-use App\Utils\ContactUtil;
-use App\Utils\ProductUtil;
-use App\Utils\BusinessUtil;
-use App\Utils\TransactionUtil;
-use App\Utils\CashRegisterUtil;
-use App\Utils\ModuleUtil;
-use App\Utils\NotificationUtil;
-
 use Yajra\DataTables\Facades\DataTables;
 
 class SellPosController extends Controller
@@ -114,8 +111,22 @@ class SellPosController extends Controller
 
         $business_locations = BusinessLocation::forDropdown($business_id, false);
         $customers = Contact::customersDropdown($business_id, false);
+      
+        $sales_representative = User::forDropdown($business_id, false, false, true);
         
-        return view('sale_pos.index')->with(compact('business_locations', 'customers'));
+        $is_cmsn_agent_enabled = request()->session()->get('business.sales_cmsn_agnt');
+        $commission_agents = [];
+        if (!empty($is_cmsn_agent_enabled)) {
+            $commission_agents = User::forDropdown($business_id, false, true, true);
+        }
+
+        //Service staff filter
+        $service_staffs = null;
+        if ($this->productUtil->isModuleEnabled('service_staff')) {
+            $service_staffs = $this->productUtil->serviceStaffDropdown($business_id);
+        }
+
+        return view('sale_pos.index')->with(compact('business_locations', 'customers', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs'));
     }
 
     /**
@@ -285,7 +296,6 @@ class SellPosController extends Controller
                 }
         
                 $user_id = $request->session()->get('user.id');
-                $commsn_agnt_setting = $request->session()->get('business.sales_cmsn_agnt');
 
                 $discount = ['discount_type' => $input['discount_type'],
                                 'discount_amount' => $input['discount_amount']
@@ -303,7 +313,9 @@ class SellPosController extends Controller
                     $input['is_direct_sale'] = 1;
                 }
 
+                //Set commission agent
                 $input['commission_agent'] = !empty($request->input('commission_agent')) ? $request->input('commission_agent') : null;
+                $commsn_agnt_setting = $request->session()->get('business.sales_cmsn_agnt');
                 if ($commsn_agnt_setting == 'logged_in_user') {
                     $input['commission_agent'] = $user_id;
                 }
@@ -332,6 +344,10 @@ class SellPosController extends Controller
                     //Update reference count
                     $ref_count = $this->transactionUtil->setAndGetReferenceCount('subscription');
                     $input['subscription_no'] = $this->transactionUtil->generateReferenceNumber('subscription', $ref_count);
+                }
+
+                if ($is_direct_sale) {
+                    $input['invoice_scheme_id'] = $request->input('invoice_scheme_id');
                 }
 
                 $transaction = $this->transactionUtil->createSellTransaction($business_id, $input, $invoice_total, $user_id);
@@ -367,18 +383,28 @@ class SellPosController extends Controller
                 if ($input['status'] == 'final') {
                     //update product stock
                     foreach ($input['products'] as $product) {
+                        $decrease_qty = $this->productUtil
+                                    ->num_uf($product['quantity']);
+                        if (!empty($product['base_unit_multiplier'])) {
+                            $decrease_qty = $decrease_qty * $product['base_unit_multiplier'];
+                        }
+
                         if ($product['enable_stock']) {
-                            $decrease_qty = $this->productUtil->num_uf($product['quantity']);
-                            if (!empty($product['base_unit_multiplier'])) {
-                                $decrease_qty = $decrease_qty * $product['base_unit_multiplier'];
-                            }
-                            
                             $this->productUtil->decreaseProductQuantity(
                                 $product['product_id'],
                                 $product['variation_id'],
                                 $input['location_id'],
                                 $decrease_qty
                             );
+                        }
+
+                        if ($product['product_type'] == 'combo') {
+                            //Decrease quantity of combo as well.
+                            $this->productUtil
+                                ->decreaseProductQuantityCombo(
+                                    $product['combo'],
+                                    $input['location_id']
+                                );
                         }
                     }
 
@@ -389,6 +415,11 @@ class SellPosController extends Controller
 
                     //Update payment status
                     $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
+
+                    if ($request->session()->get('business.enable_rp') == 1) {
+                        $redeemed = !empty($input['rp_redeemed']) ? $input['rp_redeemed'] : 0;
+                        $this->transactionUtil->updateCustomerRewardPoints($contact_id, $transaction->rp_earned, 0, $redeemed);
+                    }
 
                     //Allocate the quantity from purchase and add mapping of
                     //purchase & sell lines in
@@ -477,8 +508,8 @@ class SellPosController extends Controller
                 }
             } else {
                 if (!empty($input['sub_type']) && $input['sub_type'] == 'repair') {
-                    return redirect()
-                        ->action('\Modules\Repair\Http\Controllers\RepairController@index')
+                    $redirect_url = $input['print_label'] == 1 ? action('\Modules\Repair\Http\Controllers\RepairController@printLabel', [$transaction->id]) : action('\Modules\Repair\Http\Controllers\RepairController@index');
+                    return redirect($redirect_url)
                         ->with('status', $output);
                 }
                 return redirect()
@@ -502,7 +533,9 @@ class SellPosController extends Controller
         $business_id,
         $location_id,
         $transaction_id,
-        $printer_type = null
+        $printer_type = null,
+        $is_package_slip = false,
+        $from_pos_screen = true
     ) {
         $output = ['is_enabled' => false,
                     'print_type' => 'browser',
@@ -511,38 +544,44 @@ class SellPosController extends Controller
                     'data' => []
                 ];
 
+
         $business_details = $this->businessUtil->getDetails($business_id);
         $location_details = BusinessLocation::find($location_id);
-
+        
+        if ($from_pos_screen && $location_details->print_receipt_on_invoice != 1) {
+            return $output;
+        }
         //Check if printing of invoice is enabled or not.
-        if ($location_details->print_receipt_on_invoice == 1) {
-            //If enabled, get print type.
-            $output['is_enabled'] = true;
+        //If enabled, get print type.
+        $output['is_enabled'] = true;
 
-            $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $location_id, $location_details->invoice_layout_id);
+        $invoice_layout = $this->businessUtil->invoiceLayout($business_id, $location_id, $location_details->invoice_layout_id);
 
-            //Check if printer setting is provided.
-            $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
+        //Check if printer setting is provided.
+        $receipt_printer_type = is_null($printer_type) ? $location_details->receipt_printer_type : $printer_type;
 
-            $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type);
+        $receipt_details = $this->transactionUtil->getReceiptDetails($transaction_id, $location_id, $invoice_layout, $business_details, $location_details, $receipt_printer_type);
 
-            $currency_details = [
-                'symbol' => $business_details->currency_symbol,
-                'thousand_separator' => $business_details->thousand_separator,
-                'decimal_separator' => $business_details->decimal_separator,
-            ];
-            $receipt_details->currency = $currency_details;
-            
-            //If print type browser - return the content, printer - return printer config data, and invoice format config
-            if ($receipt_printer_type == 'printer') {
-                $output['print_type'] = 'printer';
-                $output['printer_config'] = $this->businessUtil->printerConfig($business_id, $location_details->printer_id);
-                $output['data'] = $receipt_details;
-            } else {
-                $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
+        $currency_details = [
+            'symbol' => $business_details->currency_symbol,
+            'thousand_separator' => $business_details->thousand_separator,
+            'decimal_separator' => $business_details->decimal_separator,
+        ];
+        $receipt_details->currency = $currency_details;
+        
+        if ($is_package_slip) {
+            $output['html_content'] = view('sale_pos.receipts.packing_slip', compact('receipt_details'))->render();
+            return $output;
+        }
+        //If print type browser - return the content, printer - return printer config data, and invoice format config
+        if ($receipt_printer_type == 'printer') {
+            $output['print_type'] = 'printer';
+            $output['printer_config'] = $this->businessUtil->printerConfig($business_id, $location_details->printer_id);
+            $output['data'] = $receipt_details;
+        } else {
+            $layout = !empty($receipt_details->design) ? 'sale_pos.receipts.' . $receipt_details->design : 'sale_pos.receipts.classic';
 
-                $output['html_content'] = view($layout, compact('receipt_details'))->render();
-            }
+            $output['html_content'] = view($layout, compact('receipt_details'))->render();
         }
         
         return $output;
@@ -634,6 +673,7 @@ class SellPosController extends Controller
                             'p.id as product_id',
                             'p.enable_stock',
                             'p.name as product_actual_name',
+                            'p.type as product_type',
                             'pv.name as product_variation_name',
                             'pv.is_dummy as is_dummy',
                             'variations.name as variation_name',
@@ -663,7 +703,8 @@ class SellPosController extends Controller
                         ->get();
         if (!empty($sell_details)) {
             foreach ($sell_details as $key => $value) {
-                //If modifier sell line then unset
+
+                //If modifier or combo sell line then unset
                 if (!empty($sell_details[$key]->parent_sell_line_id)) {
                     unset($sell_details[$key]);
                 } else {
@@ -700,7 +741,9 @@ class SellPosController extends Controller
 
                     if ($this->transactionUtil->isModuleEnabled('modifiers')) {
                         //Add modifier details to sel line details
-                        $sell_line_modifiers = TransactionSellLine::where('parent_sell_line_id', $sell_details[$key]->transaction_sell_lines_id)->get();
+                        $sell_line_modifiers = TransactionSellLine::where('parent_sell_line_id', $sell_details[$key]->transaction_sell_lines_id)
+                            ->where('children_type', 'modifier')
+                            ->get();
                         $modifiers_ids = [];
                         if (count($sell_line_modifiers) > 0) {
                             $sell_details[$key]->modifiers = $sell_line_modifiers;
@@ -715,6 +758,35 @@ class SellPosController extends Controller
                         if (count($this_product->modifier_sets) > 0) {
                             $sell_details[$key]->product_ms = $this_product->modifier_sets;
                         }
+                    }
+
+                    //Get details of combo items
+                    if ($sell_details[$key]->product_type == 'combo') {
+                        $sell_line_combos = TransactionSellLine::where('parent_sell_line_id', $sell_details[$key]->transaction_sell_lines_id)
+                            ->where('children_type', 'combo')
+                            ->get()
+                            ->toArray();
+                        if (!empty($sell_line_combos)) {
+                            $sell_details[$key]->combo_products = $sell_line_combos;
+                        }
+
+                        //calculate quantity available if combo product
+                        $combo_variations = [];
+                        foreach ($sell_line_combos as $combo_line) {
+                            $combo_variations[] = [
+                                'variation_id' => $combo_line['variation_id'],
+                                'quantity' => $combo_line['quantity'] / $sell_details[$key]->quantity_ordered,
+                                'unit_id' => null
+                            ];
+                        }
+                        $sell_details[$key]->qty_available =
+                        $this->productUtil->calculateComboQuantity($location_id, $combo_variations);
+                        
+                        if ($transaction->status == 'final') {
+                            $sell_details[$key]->qty_available = $sell_details[$key]->qty_available + $sell_details[$key]->quantity_ordered;
+                        }
+                        
+                        $sell_details[$key]->formatted_qty_available = $this->productUtil->num_f($sell_details[$key]->qty_available, false, null, true);
                     }
                 }
             }
@@ -765,14 +837,21 @@ class SellPosController extends Controller
         //Selling Price Group Dropdown
         $price_groups = SellingPriceGroup::forDropdown($business_id);
 
-        $waiters = null;
+        $waiters = [];
         if ($this->productUtil->isModuleEnabled('service_staff') && !empty($pos_settings['inline_service_staff'])) {
             $waiters_enabled = true;
             $waiters = $this->productUtil->serviceStaffDropdown($business_id);
         }
+        $redeem_details = [];
+        if (request()->session()->get('business.enable_rp') == 1) {
+            $redeem_details = $this->transactionUtil->getRewardRedeemDetails($business_id, $transaction->contact_id);
+
+            $redeem_details['points'] += $transaction->rp_redeemed;
+            $redeem_details['points'] -= $transaction->rp_earned;
+        }
         
         return view('sale_pos.edit')
-            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters'));
+            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters', 'redeem_details'));
     }
 
     /**
@@ -804,6 +883,8 @@ class SellPosController extends Controller
                 //Get transaction value before updating.
                 $transaction_before = Transaction::find($id);
                 $status_before =  $transaction_before->status;
+                $rp_earned_before = $transaction_before->rp_earned;
+                $rp_redeemed_before = $transaction_before->rp_redeemed;
 
                 if ($transaction_before->is_direct_sale == 1) {
                     $is_direct_sale = true;
@@ -868,6 +949,10 @@ class SellPosController extends Controller
                     $input['sale_note'] = !empty($input['additional_notes']) ? $input['additional_notes'] : null;
                 }
 
+                if ($is_direct_sale && $status_before == 'draft') {
+                    $input['invoice_scheme_id'] = $request->input('invoice_scheme_id');
+                }
+
                 //Begin transaction
                 DB::beginTransaction();
 
@@ -893,6 +978,10 @@ class SellPosController extends Controller
                     $this->cashRegisterUtil->updateSellPayments($status_before, $transaction, $input['payment']);
                 }
 
+                if ($request->session()->get('business.enable_rp') == 1) {
+                    $this->transactionUtil->updateCustomerRewardPoints($contact_id, $transaction->rp_earned, $rp_earned_before, $transaction->rp_redeemed, $rp_redeemed_before);
+                }
+
                 //Update payment status
                 $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
 
@@ -902,9 +991,13 @@ class SellPosController extends Controller
                 //Allocate the quantity from purchase and add mapping of
                 //purchase & sell lines in
                 //transaction_sell_lines_purchase_lines table
+                $business_details = $this->businessUtil->getDetails($business_id);
+                $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
+
                 $business = ['id' => $business_id,
                                 'accounting_method' => $request->session()->get('business.accounting_method'),
-                                'location_id' => $input['location_id']
+                                'location_id' => $input['location_id'],
+                                'pos_settings' => $pos_settings
                             ];
                 $this->transactionUtil->adjustMappingPurchaseSell($status_before, $transaction, $business, $deleted_lines);
                 
@@ -916,16 +1009,20 @@ class SellPosController extends Controller
                     $transaction->res_waiter_id = request()->get('res_waiter_id');
                     $transaction->save();
                 }
+                $log_properties = [];
+                if (isset($input['repair_completed_on'])) {
+                    $completed_on = !empty($input['repair_completed_on']) ? $this->transactionUtil->uf_date($input['repair_completed_on'], true) : null;
+                    if ($transaction->repair_completed_on != $completed_on) {
+                        $log_properties['completed_on_from'] = $transaction->repair_completed_on;
+                        $log_properties['completed_on_to'] = $completed_on;
+                    }
+                }
 
                 //Set Module fields
                 if (!empty($input['has_module_data'])) {
                     $this->moduleUtil->getModuleData('after_sale_saved', ['transaction' => $transaction, 'input' => $input]);
                 }
 
-                $log_properties = [];
-                if (!empty($input['update_note'])) {
-                    $log_properties['update_note'] = $input['update_note'];
-                }
                 if (!empty($input['update_note'])) {
                     $log_properties['update_note'] = $input['update_note'];
                 }
@@ -935,7 +1032,7 @@ class SellPosController extends Controller
                 activity()
                 ->performedOn($transaction)
                 ->withProperties($log_properties)
-                ->log(__('edited'));
+                ->log('edited');
 
                 DB::commit();
                     
@@ -1046,6 +1143,8 @@ class SellPosController extends Controller
                             $transaction->location_id
                         );
 
+                        $this->transactionUtil->updateCustomerRewardPoints($transaction->contact_id, 0, $transaction->rp_earned, 0, $transaction->rp_redeemed);
+
                         $transaction->status = 'draft';
                         $business = ['id' => $business_id,
                                 'accounting_method' => request()->session()->get('business.accounting_method'),
@@ -1102,10 +1201,14 @@ class SellPosController extends Controller
 
             $business_id = request()->session()->get('user.business_id');
 
-            $product = $this->productUtil->getDetailsFromVariation($variation_id, $business_id, $location_id);
+            $business_details = $this->businessUtil->getDetails($business_id);
+            $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
+
+            $check_qty = !empty($pos_settings['allow_overselling']) ? false : true;
+            $product = $this->productUtil->getDetailsFromVariation($variation_id, $business_id, $location_id, $check_qty);
             $product->formatted_qty_available = $this->productUtil->num_f($product->qty_available, false, null, true);
 
-            $sub_units = $this->productUtil->getSubUnits($business_id, $product->unit_id);
+            $sub_units = $this->productUtil->getSubUnits($business_id, $product->unit_id, false, $product->product_id);
 
             //Get customer group and change the price accordingly
             $customer_id = request()->get('customer_id', null);
@@ -1139,15 +1242,12 @@ class SellPosController extends Controller
                 }
             }
 
-            $business_details = $this->businessUtil->getDetails($business_id);
-            $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
-
             $output['success'] = true;
 
             $waiters = null;
             if ($this->productUtil->isModuleEnabled('service_staff') && !empty($pos_settings['inline_service_staff'])) {
                 $waiters_enabled = true;
-                $waiters = $this->productUtil->serviceStaffDropdown($business_id);
+                $waiters = $this->productUtil->serviceStaffDropdown($business_id, $location_id);
             }
 
             if (request()->get('type') == 'sell-return') {
@@ -1284,11 +1384,13 @@ class SellPosController extends Controller
                 }
 
                 $printer_type = 'browser';
-                if(!empty(request()->input('check_location')) && request()->input('check_location') == true) {
+                if (!empty(request()->input('check_location')) && request()->input('check_location') == true) {
                     $printer_type = $transaction->location->receipt_printer_type;
                 }
 
-                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type);
+                $is_package_slip = !empty($request->input('package_slip')) ? true : false;
+
+                $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction_id, $printer_type, $is_package_slip, false);
 
                 if (!empty($receipt)) {
                     $output = ['success' => 1, 'receipt' => $receipt];
@@ -1322,37 +1424,33 @@ class SellPosController extends Controller
             $check_qty = false;
             $business_id = $request->session()->get('user.business_id');
 
-            $products = Product::join(
-                'variations',
-                'products.id',
-                '=',
-                'variations.product_id'
-            )
-                        ->leftjoin(
-                            'variation_location_details AS VLD',
-                            function ($join) use ($location_id) {
-                                $join->on('variations.id', '=', 'VLD.variation_id');
+            $products = Variation::join('products as p', 'variations.product_id', '=', 'p.id')
+                ->leftjoin(
+                    'variation_location_details AS VLD',
+                    function ($join) use ($location_id) {
+                        $join->on('variations.id', '=', 'VLD.variation_id');
 
-                                //Include Location
-                                if (!empty($location_id)) {
-                                    $join->where(function ($query) use ($location_id) {
-                                        $query->where('VLD.location_id', '=', $location_id);
-                                        //Check null to show products even if no quantity is available in a location.
-                                        //TODO: Maybe add a settings to show product not available at a location or not.
-                                        $query->orWhereNull('VLD.location_id');
-                                    });
-                                    ;
-                                }
-                            }
-                        )
-                ->active()
-                ->where('products.business_id', $business_id)
-                ->where('products.type', '!=', 'modifier');
+                        //Include Location
+                        if (!empty($location_id)) {
+                            $join->where(function ($query) use ($location_id) {
+                                $query->where('VLD.location_id', '=', $location_id);
+                                //Check null to show products even if no quantity is available in a location.
+                                //TODO: Maybe add a settings to show product not available at a location or not.
+                                $query->orWhereNull('VLD.location_id');
+                            });
+                            ;
+                        }
+                    }
+                )
+                        ->where('p.business_id', $business_id)
+                        ->where('p.type', '!=', 'modifier')
+                        ->where('p.is_inactive', 0)
+                        ->where('p.not_for_selling', 0);
 
             //Include search
             if (!empty($term)) {
                 $products->where(function ($query) use ($term) {
-                    $query->where('products.name', 'like', '%' . $term .'%');
+                    $query->where('p.name', 'like', '%' . $term .'%');
                     $query->orWhere('sku', 'like', '%' . $term .'%');
                     $query->orWhere('sub_sku', 'like', '%' . $term .'%');
                 });
@@ -1365,28 +1463,28 @@ class SellPosController extends Controller
             
             if ($category_id != 'all') {
                 $products->where(function ($query) use ($category_id) {
-                    $query->where('products.category_id', $category_id);
-                    $query->orWhere('products.sub_category_id', $category_id);
+                    $query->where('p.category_id', $category_id);
+                    $query->orWhere('p.sub_category_id', $category_id);
                 });
             }
             if ($brand_id != 'all') {
-                $products->where('products.brand_id', $brand_id);
+                $products->where('p.brand_id', $brand_id);
             }
 
+
             $products = $products->select(
-                'products.id as product_id',
-                'products.name',
-                'products.type',
-                'products.enable_stock',
-                'variations.id as variation_id',
+                'p.id as product_id',
+                'p.name',
+                'p.type',
+                'p.enable_stock',
+                'variations.id',
                 'variations.name as variation',
                 'VLD.qty_available',
                 'variations.default_sell_price as selling_price',
-                'variations.sub_sku',
-                'products.image'
+                'variations.sub_sku'
             )
-            ->orderBy('products.name', 'asc')
-            ->groupBy('variations.id')
+            ->with(['media'])
+            ->orderBy('p.name', 'asc')
             ->paginate(20);
 
             return view('sale_pos.partials.product_list')
@@ -1606,5 +1704,178 @@ class SellPosController extends Controller
         }
 
         return $output;
+    }
+
+    public function getRewardDetails(Request $request)
+    {
+        if ($request->session()->get('business.enable_rp') != 1) {
+            return '';
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+        
+        $customer_id = $request->input('customer_id');
+
+        $redeem_details = $this->transactionUtil->getRewardRedeemDetails($business_id, $customer_id);
+        
+        return json_encode($redeem_details);
+    }
+
+    public function placeOrdersApi(Request $request)
+    {
+        try {
+            $api_token = $request->header('API-TOKEN');
+            $api_settings = $this->moduleUtil->getApiSettings($api_token);
+
+            $business_id = $api_settings->business_id;
+            $location_id = $api_settings->location_id;
+
+            $input = $request->only(['products', 'customer_id', 'addresses']);
+
+            //check if all stocks are available
+            $variation_ids = [];
+            foreach ($input['products'] as $product_data) {
+                $variation_ids[] = $product_data['variation_id'];
+            }
+
+            $variations_details = $this->getVariationsDetails($business_id, $location_id, $variation_ids);
+            $is_valid = true;
+            $error_messages = [];
+            $sell_lines = [];
+            $final_total = 0;
+            foreach ($variations_details as $variation_details) {
+                if ($variation_details->product->enable_stock == 1) {
+                    if (empty($variation_details->variation_location_details[0]) || $variation_details->variation_location_details[0]->qty_available < $input['products'][$variation_details->id]['quantity']) {
+                        $is_valid = false;
+                        $error_messages[] = 'Only ' . $variation_details->variation_location_details[0]->qty_available . ' ' . $variation_details->product->unit->short_name . ' of '. $input['products'][$variation_details->id]['product_name'] . ' available';
+                    }
+                }
+
+                //Create product line array
+                $sell_lines[] = [
+                    'product_id' => $variation_details->product->id,
+                    'unit_price_before_discount' => $variation_details->unit_price_inc_tax,
+                    'unit_price' => $variation_details->unit_price_inc_tax,
+                    'unit_price_inc_tax' => $variation_details->unit_price_inc_tax,
+                    'variation_id' => $variation_details->id,
+                    'quantity' => $input['products'][$variation_details->id]['quantity'],
+                    'item_tax' => 0,
+                    'enable_stock' => $variation_details->product->enable_stock,
+                    'tax_id' => null,
+                ];
+
+                $final_total += ($input['products'][$variation_details->id]['quantity'] * $variation_details->unit_price_inc_tax);
+            }
+
+            if (!$is_valid) {
+                return $this->respond([
+                    'success' => false,
+                    'error_messages' => $error_messages
+                ]);
+            }
+
+            $business = Business::find($business_id);
+            $user_id = $business->owner_id;
+
+            $business_data = [
+                'id' => $business_id,
+                'accounting_method' => $business->accounting_method,
+                'location_id' => $location_id
+            ];
+
+            $customer = Contact::where('business_id', $business_id)
+                            ->whereIn('type', ['customer', 'both'])
+                            ->find($input['customer_id']);
+
+            $order_data = [
+                'business_id' => $business_id,
+                'location_id' => $location_id,
+                'contact_id' => $input['customer_id'],
+                'final_total' => $final_total,
+                'created_by' => $user_id,
+                'status' => 'final',
+                'payment_status' => 'due',
+                'additional_notes' => '',
+                'transaction_date' => \Carbon::now(),
+                'customer_group_id' => $customer->customer_group_id,
+                'tax_rate_id' => null,
+                'sale_note' => null,
+                'commission_agent' => null,
+                'order_addresses' => json_encode($input['addresses']),
+                'products' => $sell_lines,
+                'is_created_from_api' => 1,
+                'discount_type' => 'fixed',
+                'discount_amount' => 0
+            ];
+
+            $invoice_total = [
+                'total_before_tax' => $final_total,
+                'tax' => 0,
+            ];
+
+            DB::beginTransaction();
+
+            $transaction = $this->transactionUtil->createSellTransaction($business_id, $order_data, $invoice_total, $user_id, false);
+
+            //Create sell lines
+            $this->transactionUtil->createOrUpdateSellLines($transaction, $order_data['products'], $order_data['location_id'], false, null, [], false);
+
+            //update product stock
+            foreach ($order_data['products'] as $product) {
+                if ($product['enable_stock']) {
+                    $this->productUtil->decreaseProductQuantity(
+                        $product['product_id'],
+                        $product['variation_id'],
+                        $order_data['location_id'],
+                        $product['quantity']
+                    );
+                }
+            }
+
+            $this->transactionUtil->mapPurchaseSell($business_data, $transaction->sell_lines, 'purchase');
+            //Auto send notification
+            $this->notificationUtil->autoSendNotification($business_id, 'new_sale', $transaction, $transaction->contact);
+
+            DB::commit();
+
+            $receipt = $this->receiptContent($business_id, $transaction->location_id, $transaction->id);
+
+            $output = [
+                'success' => 1,
+                'transaction' => $transaction,
+                'receipt' => $receipt
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            $msg = trans("messages.something_went_wrong");
+                
+            if (get_class($e) == \App\Exceptions\PurchaseSellMismatch::class) {
+                $msg = $e->getMessage();
+            }
+
+            $output = ['success' => 0,
+                        'error_messages' => [$msg]
+                    ];
+        }
+
+        return $this->respond($output);
+    }
+
+    private function getVariationsDetails($business_id, $location_id, $variation_ids)
+    {
+        $variation_details = Variation::whereIn('id', $variation_ids)
+                            ->with([
+                                'product' => function ($q) use ($business_id) {
+                                    $q->where('business_id', $business_id);
+                                },
+                                'product.unit',
+                                'variation_location_details' => function ($q) use ($location_id) {
+                                    $q->where('location_id', $location_id);
+                                }
+                            ])->get();
+
+        return $variation_details;
     }
 }

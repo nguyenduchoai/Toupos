@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Product;
-use App\Variation;
 use App\Business;
-use App\BusinessLocation;
-use App\Transaction;
 
+use App\BusinessLocation;
+use App\Product;
+use App\Transaction;
 use App\Utils\ProductUtil;
+use App\Variation;
+
+use DB;
 
 use Excel;
-use DB;
+use Illuminate\Http\Request;
 
 class ImportOpeningStockController extends Controller
 {
@@ -149,7 +149,7 @@ class ImportOpeningStockController extends Controller
                     }
 
                     if (!empty(trim($value[3]))) {
-                        $unit_cost_before_tax = $this->productUtil->num_uf(trim($value[3]));
+                        $unit_cost_before_tax = trim($value[3]);
                     } else {
                         $is_valid = false;
                         $error_msg = "Invalid UNIT COST in row no. $row_no";
@@ -173,11 +173,11 @@ class ImportOpeningStockController extends Controller
 
                     // //If exist add to it.
                     // if(!empty($os_transaction)){
-                    // 	//If not create new
+                    //  //If not create new
                         
                     // } else {
-                    // 	//If not create new
-                    // 	$this->addOpeningStock($opening_stock, $product_info, $business_id, $unit_cost_before_tax);
+                    //  //If not create new
+                    //  $this->addOpeningStock($opening_stock, $product_info, $business_id, $unit_cost_before_tax);
                     // }
                 }
             }

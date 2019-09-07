@@ -2,12 +2,11 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-use App\Utils\BusinessUtil;
-
 use App\System;
+use App\Utils\BusinessUtil;
+use Illuminate\Http\Request;
+
+use Illuminate\Http\Response;
 
 class SuperadminSettingsController extends BaseController
 {
@@ -52,37 +51,51 @@ class SuperadminSettingsController extends BaseController
         $is_demo = env('APP_ENV') == 'demo' ? true : false;
 
         $default_values = [
-            'APP_NAME' => env('APP_NAME'), 
-            'APP_TITLE' => env('APP_TITLE'), 
+            'APP_NAME' => env('APP_NAME'),
+            'APP_TITLE' => env('APP_TITLE'),
             'APP_LOCALE' => env('APP_LOCALE'),
-            'MAIL_DRIVER' => $is_demo ? null : env('MAIL_DRIVER'), 
-            'MAIL_HOST' => $is_demo ? null : env('MAIL_HOST'), 
-            'MAIL_PORT' => $is_demo ? null : env('MAIL_PORT'), 
-            'MAIL_USERNAME' => $is_demo ? null : env('MAIL_USERNAME'), 
-            'MAIL_PASSWORD' => $is_demo ? null : env('MAIL_PASSWORD'), 
-            'MAIL_ENCRYPTION' => $is_demo ? null : env('MAIL_ENCRYPTION'), 
-            'MAIL_FROM_ADDRESS' => $is_demo ? null : env('MAIL_FROM_ADDRESS'), 
-            'MAIL_FROM_NAME' => $is_demo ? null : env('MAIL_FROM_NAME'), 
-            'STRIPE_PUB_KEY' => $is_demo ? null : env('STRIPE_PUB_KEY'), 
-            'STRIPE_SECRET_KEY' => $is_demo ? null : env('STRIPE_SECRET_KEY'), 
-            'PAYPAL_MODE' => env('PAYPAL_MODE'), 
-            'PAYPAL_SANDBOX_API_USERNAME' => $is_demo ? null : env('PAYPAL_SANDBOX_API_USERNAME'), 
-            'PAYPAL_SANDBOX_API_PASSWORD' => $is_demo ? null : env('PAYPAL_SANDBOX_API_PASSWORD'), 
-            'PAYPAL_SANDBOX_API_SECRET' => $is_demo ? null : env('PAYPAL_SANDBOX_API_SECRET'), 
-            'PAYPAL_LIVE_API_USERNAME' =>$is_demo ? null : env('PAYPAL_LIVE_API_USERNAME'), 
-            'PAYPAL_LIVE_API_PASSWORD' => $is_demo ? null : env('PAYPAL_LIVE_API_PASSWORD'), 
-            'PAYPAL_LIVE_API_SECRET' => $is_demo ? null : env('PAYPAL_LIVE_API_SECRET'), 
-            'BACKUP_DISK' => env('BACKUP_DISK'), 
-            'DROPBOX_ACCESS_TOKEN' => $is_demo ? null : env('DROPBOX_ACCESS_TOKEN'), 
+            'MAIL_DRIVER' => $is_demo ? null : env('MAIL_DRIVER'),
+            'MAIL_HOST' => $is_demo ? null : env('MAIL_HOST'),
+            'MAIL_PORT' => $is_demo ? null : env('MAIL_PORT'),
+            'MAIL_USERNAME' => $is_demo ? null : env('MAIL_USERNAME'),
+            'MAIL_PASSWORD' => $is_demo ? null : env('MAIL_PASSWORD'),
+            'MAIL_ENCRYPTION' => $is_demo ? null : env('MAIL_ENCRYPTION'),
+            'MAIL_FROM_ADDRESS' => $is_demo ? null : env('MAIL_FROM_ADDRESS'),
+            'MAIL_FROM_NAME' => $is_demo ? null : env('MAIL_FROM_NAME'),
+            'STRIPE_PUB_KEY' => $is_demo ? null : env('STRIPE_PUB_KEY'),
+            'STRIPE_SECRET_KEY' => $is_demo ? null : env('STRIPE_SECRET_KEY'),
+            'PAYPAL_MODE' => env('PAYPAL_MODE'),
+            'PAYPAL_SANDBOX_API_USERNAME' => $is_demo ? null : env('PAYPAL_SANDBOX_API_USERNAME'),
+            'PAYPAL_SANDBOX_API_PASSWORD' => $is_demo ? null : env('PAYPAL_SANDBOX_API_PASSWORD'),
+            'PAYPAL_SANDBOX_API_SECRET' => $is_demo ? null : env('PAYPAL_SANDBOX_API_SECRET'),
+            'PAYPAL_LIVE_API_USERNAME' =>$is_demo ? null : env('PAYPAL_LIVE_API_USERNAME'),
+            'PAYPAL_LIVE_API_PASSWORD' => $is_demo ? null : env('PAYPAL_LIVE_API_PASSWORD'),
+            'PAYPAL_LIVE_API_SECRET' => $is_demo ? null : env('PAYPAL_LIVE_API_SECRET'),
+            'BACKUP_DISK' => env('BACKUP_DISK'),
+            'DROPBOX_ACCESS_TOKEN' => $is_demo ? null : env('DROPBOX_ACCESS_TOKEN'),
         ];
         $mail_drivers = $this->mailDrivers;
 
-        $languages = config('constants.langs');
+        $config_languages = config('constants.langs');
+        $languages = [];
+        foreach ($config_languages as $key => $value) {
+            $languages[$key] = $value['full_name'];
+        }
         $backup_disk = $this->backupDisk;
 
+        $cron_job_command = $this->businessUtil->getCronJobCommand();
+
         return view('superadmin::superadmin_settings.edit')
-            ->with(compact('currencies', 'settings', 
-                'superadmin_version', 'mail_drivers', 'languages', 'default_values', 'backup_disk'));
+            ->with(compact(
+                'currencies',
+                'settings',
+                'superadmin_version',
+                'mail_drivers',
+                'languages',
+                'default_values',
+                'backup_disk',
+                'cron_job_command'
+            ));
     }
 
     /**
@@ -96,7 +109,7 @@ class SuperadminSettingsController extends BaseController
             abort(403, 'Unauthorized action.');
         }
         
-        try{
+        try {
 
             //Disable .ENV settings in demo
             if (config('app.env') == 'demo') {
@@ -109,29 +122,28 @@ class SuperadminSettingsController extends BaseController
             $system_settings = $request->only(['app_currency_id', 'invoice_business_name', 'email', 'invoice_business_landmark', 'invoice_business_zip', 'invoice_business_state', 'invoice_business_city', 'invoice_business_country', 'package_expiry_alert_days', 'superadmin_register_tc']);
 
             //Checkboxes
-            $checkboxes = ['enable_business_based_username', 'superadmin_enable_register_tc'];
+            $checkboxes = ['enable_business_based_username', 'superadmin_enable_register_tc', 'allow_email_settings_to_businesses'];
             $input = $request->input();
             foreach ($checkboxes as $checkbox) {
-               $system_settings[$checkbox] = !empty($input[$checkbox]) ? 1 : 0;
+                $system_settings[$checkbox] = !empty($input[$checkbox]) ? 1 : 0;
             }
 
-            foreach( $system_settings as $key => $setting)
-            {
+            foreach ($system_settings as $key => $setting) {
                 System::updateOrCreate(
-                                ['key' => $key],
-                                ['value' => $setting]
+                    ['key' => $key],
+                    ['value' => $setting]
                             );
             }
 
-            $env_settings =  $request->only(['APP_NAME', 'APP_TITLE', 
-                'APP_LOCALE', 'MAIL_DRIVER', 'MAIL_HOST', 'MAIL_PORT', 
-                'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_ENCRYPTION', 
+            $env_settings =  $request->only(['APP_NAME', 'APP_TITLE',
+                'APP_LOCALE', 'MAIL_DRIVER', 'MAIL_HOST', 'MAIL_PORT',
+                'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_ENCRYPTION',
                 'MAIL_FROM_ADDRESS', 'MAIL_FROM_NAME', 'STRIPE_PUB_KEY',
-                'STRIPE_SECRET_KEY', 'PAYPAL_MODE', 
-                'PAYPAL_SANDBOX_API_USERNAME', 
-                'PAYPAL_SANDBOX_API_PASSWORD', 
+                'STRIPE_SECRET_KEY', 'PAYPAL_MODE',
+                'PAYPAL_SANDBOX_API_USERNAME',
+                'PAYPAL_SANDBOX_API_PASSWORD',
                 'PAYPAL_SANDBOX_API_SECRET', 'PAYPAL_LIVE_API_USERNAME',
-                'PAYPAL_LIVE_API_PASSWORD', 'PAYPAL_LIVE_API_SECRET', 
+                'PAYPAL_LIVE_API_PASSWORD', 'PAYPAL_LIVE_API_SECRET',
                 'BACKUP_DISK', 'DROPBOX_ACCESS_TOKEN'
             ]);
 
@@ -151,10 +163,10 @@ class SuperadminSettingsController extends BaseController
 
             //Add the missing env settings
             $missing_envs = array_diff(array_keys($env_settings), $found_envs);
-            if(!empty($missing_envs)){
+            if (!empty($missing_envs)) {
                 $missing_envs = array_values($missing_envs);
                 foreach ($missing_envs as $k => $key) {
-                    if($k == 0){
+                    if ($k == 0) {
                         $env_lines[] = PHP_EOL . $key . '="' . $env_settings[$key] . '"' . PHP_EOL;
                     } else {
                         $env_lines[] = $key . '="' . $env_settings[$key] . '"' . PHP_EOL;
@@ -164,20 +176,19 @@ class SuperadminSettingsController extends BaseController
 
             $env_content = implode('', $env_lines);
 
-            if(is_writable($env_path) && file_put_contents($env_path, $env_content)){
-                $output = ['success' => 1, 
+            if (is_writable($env_path) && file_put_contents($env_path, $env_content)) {
+                $output = ['success' => 1,
                             'msg' => __('lang_v1.success')
                         ];
             } else {
                 $output = ['success' => 0, 'msg' => 'Some setting could not be saved, make sure .env file has 644 permission & owned by www-data user'];
             }
-
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0, 
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
         }
 
         return redirect()

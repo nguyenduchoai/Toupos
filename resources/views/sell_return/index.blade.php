@@ -23,32 +23,7 @@
                   </button>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped ajax_view" id="sell_return_table">
-                    <thead>
-                        <tr>
-                            <th>@lang('messages.date')</th>
-                            <th>@lang('sale.invoice_no')</th>
-                            <th>@lang('lang_v1.parent_sale')</th>
-                            <th>@lang('sale.customer_name')</th>
-                            <th>@lang('sale.location')</th>
-                            <th>@lang('purchase.payment_status')</th>
-                            <th>@lang('sale.total_amount')</th>
-                            <th>@lang('purchase.payment_due')</th>
-                            <th>@lang('messages.action')</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr class="bg-gray font-17 text-center footer-total">
-                            <td colspan="5"><strong>@lang('sale.total'):</strong></td>
-                            <td id="footer_payment_status_count"></td>
-                            <td><span class="display_currency" id="footer_sell_return_total" data-currency_symbol ="true"></span></td>
-                            <td><span class="display_currency" id="footer_total_due" data-currency_symbol ="true"></span></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+            @include('sell_return.partials.sell_return_list')
         @endcan
     @endcomponent
     <div class="modal fade payment_modal" tabindex="-1" role="dialog" 
@@ -112,10 +87,10 @@
                 var total_sell = sum_table_col($('#sell_return_table'), 'final_total');
                 $('#footer_sell_return_total').text(total_sell);
                 
-                $('#footer_payment_status_count').html(__sum_status_html($('#sell_return_table'), 'payment-status-label'));
+                $('#footer_payment_status_count_sr').html(__sum_status_html($('#sell_return_table'), 'payment-status-label'));
 
                 var total_due = sum_table_col($('#sell_return_table'), 'payment_due');
-                $('#footer_total_due').text(total_due);
+                $('#footer_total_due_sr').text(total_due);
 
                 __currency_convert_recursively($('#sell_return_table'));
             },

@@ -7,7 +7,7 @@
                     <span class="input-group-addon">
                         <i class="fa fa-percent"></i>
                     </span>
-                    {!! Form::number('default_sales_discount', $business->default_sales_discount, ['class' => 'form-control', 'min' => 0, 'step' => 0.01, 'max' => 100]); !!}
+                    {!! Form::text('default_sales_discount', @num_format($business->default_sales_discount), ['class' => 'form-control input_number']); !!}
                 </div>
             </div>
         </div>

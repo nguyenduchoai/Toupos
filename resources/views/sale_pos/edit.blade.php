@@ -15,6 +15,12 @@
 
 <!-- Main content -->
 <section class="content no-print">
+	@if(!empty($pos_settings['allow_overselling']))
+		<input type="hidden" id="is_overselling_allowed">
+	@endif
+	@if(session('business.enable_rp') == 1)
+        <input type="hidden" id="reward_point_enabled">
+    @endif
 	<div class="row">
 		<div class="@if(!empty($pos_settings['hide_product_suggestion']) && !empty($pos_settings['hide_recent_trans'])) col-md-10 col-md-offset-1 @else col-md-7 @endif col-sm-12">
 			<div class="box box-success">
@@ -178,9 +184,17 @@
 								</tr>
 							</thead>
 							<tbody>
-								@foreach($sell_details as $sell_line)
-									@include('sale_pos.product_row', ['product' => $sell_line, 'row_count' => $loop->index, 'tax_dropdown' => $taxes, 'sub_units' => !empty($sell_line->unit_details) ? $sell_line->unit_details : []  ])
-								@endforeach
+
+@foreach($sell_details as $sell_line)
+
+	@include('sale_pos.product_row', 
+		['product' => $sell_line, 
+		'row_count' => $loop->index, 
+		'tax_dropdown' => $taxes, 
+		'sub_units' => !empty($sell_line->unit_details) ? $sell_line->unit_details : [],
+		'action' => 'edit'
+	])
+@endforeach
 							</tbody>
 						</table>
 					</div>

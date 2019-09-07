@@ -2,19 +2,19 @@
 
 namespace App\Utils;
 
-use Illuminate\Support\Facades\DB;
+use App\Barcode;
 
+use App\Business;
+use App\BusinessLocation;
 use App\Contact;
 use App\Currency;
-use App\Business;
-use App\InvoiceScheme;
 use App\InvoiceLayout;
-use App\Barcode;
-use App\BusinessLocation;
-use App\Unit;
-use App\Printer;
-use App\User;
+use App\InvoiceScheme;
 use App\NotificationTemplate;
+use App\Printer;
+use App\Unit;
+use App\User;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
 class BusinessUtil extends Util
@@ -374,6 +374,7 @@ class BusinessUtil extends Util
             $output['ip_address'] = $printer->ip_address;
             $output['port'] = $printer->port;
             $output['path'] = $printer->path;
+            $output['server_url'] = $printer->server_url;
         }
 
         return $output;

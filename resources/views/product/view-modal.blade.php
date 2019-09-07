@@ -83,11 +83,8 @@
 						@endphp
 						<b>@lang('product.selling_price_tax_type'): </b>
 						{{$tax_type[$product->tax_type]  }}<br>
-						@php
-							$product_type = ['single' => 'Single', 'variable' => 'Variable'];
-						@endphp
 						<b>@lang('product.product_type'): </b>
-						{{$product_type[$product->type] }}
+						@lang('lang_v1.' . $product->type)
 						
 	      			</div>
 	      			<div class="clearfix"></div>
@@ -145,8 +142,10 @@
       		@endif
       		@if($product->type == 'single')
       			@include('product.partials.single_product_details')
-      		@else
+      		@elseif($product->type == 'variable')
       			@include('product.partials.variable_product_details')
+      		@elseif($product->type == 'combo')
+      			@include('product.partials.combo_product_details')
       		@endif
       	</div>
       	<div class="modal-footer">

@@ -34,8 +34,10 @@
           @else
             <strong>@lang('purchase.ref_no'): </strong>{{ $transaction->ref_no }}
           @endif
+          @if(!empty($transaction->location))
             <br>
             <strong>@lang('purchase.location'): </strong>{{ $transaction->location->name }}
+          @endif
           </div>
         </div>
         <div class="col-md-4">

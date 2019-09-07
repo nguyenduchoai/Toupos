@@ -2,32 +2,46 @@
   <div class="modal-content">
     <div class="modal-header">
       <button type="button" class="close no-print" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <h4 class="modal-title" id="modalTitle"> @lang('lang_v1.purchase_return_details') (<b>@lang('purchase.ref_no'):</b> #{{ $purchase->return_parent->ref_no }})
+      <h4 class="modal-title" id="modalTitle"> @lang('lang_v1.purchase_return_details') (<b>@lang('purchase.ref_no'):</b> #{{ $purchase->return_parent->ref_no ?? $purchase->ref_no}})
         </h4>
     </div>
 
     <div class="modal-body">
       <div class="row">
+        @if(!empty($purchase->return_parent))
         <div class="col-sm-6 col-xs-6">
-          <h4>@lang('lang_v1.purchase_return_details'):</h4>
-          <strong>@lang('lang_v1.return_date'):</strong> {{@format_date($purchase->return_parent->transaction_date)}}<br>
-          <strong>@lang('purchase.supplier'):</strong> {{ $purchase->contact->name }} <br>
-          <strong>@lang('purchase.business_location'):</strong> {{ $purchase->location->name }}
+            <h4>@lang('lang_v1.purchase_return_details'):</h4>
+            <strong>@lang('lang_v1.return_date'):</strong> {{@format_date($purchase->return_parent->transaction_date)}}<br>
+            <strong>@lang('purchase.supplier'):</strong> {{ $purchase->contact->name }} <br>
+            <strong>@lang('purchase.business_location'):</strong> {{ $purchase->location->name }}
         </div>
         <div class="col-sm-6 col-xs-6">
-          <h4>@lang('purchase.purchase_details'):</h4>
-          <strong>@lang('purchase.ref_no'):</strong> {{ $purchase->ref_no }} <br>
-          <strong>@lang('messages.date'):</strong> {{@format_date($purchase->transaction_date)}}
+            <h4>@lang('purchase.purchase_details'):</h4>
+            <strong>@lang('purchase.ref_no'):</strong> {{ $purchase->ref_no }} <br>
+            <strong>@lang('messages.date'):</strong> {{@format_date($purchase->transaction_date)}}
         </div>
+        @else
+            <div class="col-sm-6 col-xs-6">
+                <h4>@lang('lang_v1.purchase_return_details'):</h4>
+                <strong>@lang('lang_v1.return_date'):</strong> {{@format_date($purchase->transaction_date)}}<br>
+                <strong>@lang('purchase.supplier'):</strong> {{ $purchase->contact->name ?? '' }} <br>
+                <strong>@lang('purchase.business_location'):</strong> {{ $purchase->location->name }}
+            </div>
+        @endif
+        @if(empty($purchase->return_parent))
+            @if($purchase->document_path)
+                <div class="col-md-12">
+                    <a href="{{$purchase->document_path}}" 
+                      download="{{$purchase->document_name}}" class="btn btn-sm btn-success pull-right no-print">
+                        <i class="fa fa-download"></i> 
+                          &nbsp;{{ __('purchase.download_document') }}
+                    </a>
+                </div>
+            @endif
+        @endif
       </div>
       <br>
       <div class="row">
-        <div class="col-sm-12">
-          
-        </div>
-        <div class="col-sm-4">
-          
-        </div>
         <div class="col-sm-12">
           <br>
           <table class="table bg-gray">
@@ -104,7 +118,7 @@
           <tr>
             <th>@lang('lang_v1.return_total'):</th>
             <td></td>
-            <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $purchase->return_parent->final_total }}</span></td>
+            <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $purchase->return_parent->final_total ??  $purchase->final_total }}</span></td>
           </tr>
         </table>
       </div>

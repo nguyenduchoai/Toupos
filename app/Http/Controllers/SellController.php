@@ -2,24 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\BusinessLocation;
 
+use App\Contact;
+use App\CustomerGroup;
+use App\InvoiceScheme;
+use App\SellingPriceGroup;
 use App\TaxRate;
 use App\Transaction;
-use App\BusinessLocation;
 use App\TransactionSellLine;
 use App\User;
-use App\CustomerGroup;
-use App\SellingPriceGroup;
-use App\Contact;
-use Yajra\DataTables\Facades\DataTables;
-use DB;
-
-use App\Utils\ContactUtil;
 use App\Utils\BusinessUtil;
-use App\Utils\TransactionUtil;
+use App\Utils\ContactUtil;
 use App\Utils\ModuleUtil;
+
 use App\Utils\ProductUtil;
+use App\Utils\TransactionUtil;
+use DB;
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class SellController extends Controller
 {
@@ -58,7 +59,7 @@ class SellController extends Controller
      */
     public function index()
     {
-        if (!auth()->user()->can('sell.view') && !auth()->user()->can('sell.create') && !auth()->user()->can('direct_sell.access')) {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('sell.create') && !auth()->user()->can('direct_sell.access') && !auth()->user()->can('view_own_sell_only')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -96,6 +97,9 @@ class SellController extends Controller
                     'transactions.discount_amount',
                     'transactions.discount_type',
                     'transactions.total_before_tax',
+                    'transactions.rp_redeemed',
+                    'transactions.rp_redeemed_amount',
+                    'transactions.rp_earned',
                     DB::raw('SUM(IF(tp.is_return = 1,-1*tp.amount,tp.amount)) as total_paid'),
                     'bl.name as business_location',
                     DB::raw('COUNT(SR.id) as return_exists'),
@@ -120,6 +124,10 @@ class SellController extends Controller
                 }
             }
 
+            if (!auth()->user()->can('direct_sell.access') && auth()->user()->can('view_own_sell_only')) {
+                $sells->where('transactions.created_by', request()->session()->get('user.id'));
+            }
+
             if (!empty(request()->input('payment_status'))) {
                 $sells->where('transactions.payment_status', request()->input('payment_status'));
             }
@@ -130,6 +138,13 @@ class SellController extends Controller
                 if (!empty($location_id)) {
                     $sells->where('transactions.location_id', $location_id);
                 }
+            }
+
+            if (!empty(request()->input('rewards_only')) && request()->input('rewards_only') == true) {
+                $sells->where(function ($q) {
+                    $q->whereNotNull('transactions.rp_earned')
+                    ->orWhere('transactions.rp_redeemed', '>', 0);
+                });
             }
 
             if (!empty(request()->customer_id)) {
@@ -183,6 +198,18 @@ class SellController extends Controller
                 $sells->where('transactions.sub_type', request()->input('sub_type'));
             }
 
+            if (!empty(request()->input('created_by'))) {
+                $sells->where('transactions.created_by', request()->input('created_by'));
+            }
+
+            if (!empty(request()->input('sales_cmsn_agnt'))) {
+                $sells->where('transactions.commission_agent', request()->input('sales_cmsn_agnt'));
+            }
+
+            if (!empty(request()->input('service_staffs'))) {
+                $sells->where('transactions.res_waiter_id', request()->input('service_staffs'));
+            }
+            
             $sells->groupBy('transactions.id');
 
             if (!empty(request()->suspended)) {
@@ -227,7 +254,7 @@ class SellController extends Controller
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-right" role="menu">' ;
 
-                        if (auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access")) {
+                        if (auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access") || auth()->user()->can("view_own_sell_only")) {
                             $html .= '<li><a href="#" data-href="' . action("SellController@show", [$row->id]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-external-link" aria-hidden="true"></i> ' . __("messages.view") . '</a></li>';
                         }
 
@@ -241,12 +268,13 @@ class SellController extends Controller
                             }
                         }
 
-                        if (auth()->user()->can("direct_sell.delete")) {
+                        if (auth()->user()->can("direct_sell.delete") || auth()->user()->can("sell.delete")) {
                             $html .= '<li><a href="' . action('SellPosController@destroy', [$row->id]) . '" class="delete-sale"><i class="fa fa-trash"></i> ' . __("messages.delete") . '</a></li>';
                         }
 
                         if (auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access")) {
-                            $html .= '<li><a href="#" class="print-invoice" data-href="' . route('sell.printInvoice', [$row->id]) . '"><i class="fa fa-print" aria-hidden="true"></i> ' . __("messages.print") . '</a></li>';
+                            $html .= '<li><a href="#" class="print-invoice" data-href="' . route('sell.printInvoice', [$row->id]) . '"><i class="fa fa-print" aria-hidden="true"></i> ' . __("messages.print") . '</a></li>
+                                <li><a href="#" class="print-invoice" data-href="' . route('sell.printInvoice', [$row->id]) . '?package_slip=true"><i class="fa fa-file-text-o" aria-hidden="true"></i> ' . __("lang_v1.packing_slip") . '</a></li>';
                         }
                         $html .= '<li class="divider"></li>';
                         if ($row->payment_status != "paid" && (auth()->user()->can("sell.create") || auth()->user()->can("direct_sell.access"))) {
@@ -301,7 +329,7 @@ class SellController extends Controller
                         return '<span class="display_currency total-discount" data-currency_symbol="true" data-orig-value="' . $discount . '">' . $discount . '</span>';
                     }
                 )
-                ->editColumn('transaction_date', '{{@format_date($transaction_date)}}')
+                ->editColumn('transaction_date', '{{@format_datetime($transaction_date)}}')
                 ->editColumn(
                     'payment_status',
                     '<a href="{{ action("TransactionPaymentController@show", [$id])}}" class="view_payment_modal payment-status-label no-print" data-orig-value="{{$payment_status}}" data-status-name="{{__(\'lang_v1.\' . $payment_status)}}"><span class="label @payment_status($payment_status)">{{__(\'lang_v1.\' . $payment_status)}}
@@ -340,7 +368,7 @@ class SellController extends Controller
                  })
                 ->setRowAttr([
                     'data-href' => function ($row) {
-                        if (auth()->user()->can("sell.view")) {
+                        if (auth()->user()->can("sell.view") || auth()->user()->can("view_own_sell_only")) {
                             return  action('SellController@show', [$row->id]) ;
                         } else {
                             return '';
@@ -355,8 +383,23 @@ class SellController extends Controller
 
         $business_locations = BusinessLocation::forDropdown($business_id, false);
         $customers = Contact::customersDropdown($business_id, false);
+        $sales_representative = User::forDropdown($business_id, false, false, true);
+        
+        //Commission agent filter
+        $is_cmsn_agent_enabled = request()->session()->get('business.sales_cmsn_agnt');
+        $commission_agents = [];
+        if (!empty($is_cmsn_agent_enabled)) {
+            $commission_agents = User::forDropdown($business_id, false, true, true);
+        }
 
-        return view('sell.index')->with(compact('business_locations', 'customers', 'is_woocommerce'));
+        //Service staff filter
+        $service_staffs = null;
+        if ($this->productUtil->isModuleEnabled('service_staff')) {
+            $service_staffs = $this->productUtil->serviceStaffDropdown($business_id);
+        }
+
+        return view('sell.index')
+        ->with(compact('business_locations', 'customers', 'is_woocommerce', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs'));
     }
 
     /**
@@ -425,6 +468,9 @@ class SellController extends Controller
 
         $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
 
+        $invoice_schemes = InvoiceScheme::forDropdown($business_id);
+        $default_invoice_schemes = InvoiceScheme::getDefault($business_id);
+
         return view('sell.create')
             ->with(compact(
                 'business_details',
@@ -440,7 +486,9 @@ class SellController extends Controller
                 'payment_types',
                 'price_groups',
                 'default_datetime',
-                'pos_settings'
+                'pos_settings',
+                'invoice_schemes',
+                'default_invoice_schemes'
             ));
     }
 
@@ -463,19 +511,24 @@ class SellController extends Controller
      */
     public function show($id)
     {
-        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.access')) {
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.access') && !auth()->user()->can('view_own_sell_only')) {
             abort(403, 'Unauthorized action.');
         }
 
         $business_id = request()->session()->get('user.business_id');
         $taxes = TaxRate::where('business_id', $business_id)
                             ->pluck('name', 'id');
-        $sell = Transaction::where('business_id', $business_id)
+        $query = Transaction::where('business_id', $business_id)
                     ->where('id', $id)
                     ->with(['contact', 'sell_lines' => function ($q) {
                         $q->whereNull('parent_sell_line_id');
-                    },'sell_lines.product', 'sell_lines.product.unit', 'sell_lines.variations', 'sell_lines.variations.product_variation', 'payment_lines', 'sell_lines.modifiers', 'sell_lines.lot_details', 'tax', 'sell_lines.sub_unit'])
-                    ->first();
+                    },'sell_lines.product', 'sell_lines.product.unit', 'sell_lines.variations', 'sell_lines.variations.product_variation', 'payment_lines', 'sell_lines.modifiers', 'sell_lines.lot_details', 'tax', 'sell_lines.sub_unit', 'table', 'service_staff', 'sell_lines.service_staff']);
+
+        if (!auth()->user()->can('sell.view') && !auth()->user()->can('direct_sell.access') && auth()->user()->can('view_own_sell_only')) {
+            $query->where('transactions.created_by', request()->session()->get('user.id'));
+        }
+
+        $sell = $query->firstOrFail();
 
         foreach ($sell->sell_lines as $key => $value) {
             if (!empty($value->sub_unit_id)) {
@@ -494,8 +547,12 @@ class SellController extends Controller
                 $order_taxes[$sell->tax->name] = $sell->tax_amount;
             }
         }
+
+        $business_details = $this->businessUtil->getDetails($business_id);
+        $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
+
         return view('sale_pos.show')
-            ->with(compact('taxes', 'sell', 'payment_types', 'order_taxes'));
+            ->with(compact('taxes', 'sell', 'payment_types', 'order_taxes', 'pos_settings'));
     }
 
     /**
@@ -586,6 +643,7 @@ class SellController extends Controller
                             'transaction_sell_lines.lot_no_line_id',
                             'transaction_sell_lines.line_discount_type',
                             'transaction_sell_lines.line_discount_amount',
+                            'transaction_sell_lines.res_service_staff_id',
                             'units.id as unit_id',
                             'transaction_sell_lines.sub_unit_id',
                             DB::raw('vld.qty_available + transaction_sell_lines.quantity AS qty_available')
@@ -651,8 +709,29 @@ class SellController extends Controller
 
         $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
 
+        $waiters = null;
+        if ($this->productUtil->isModuleEnabled('service_staff') && !empty($pos_settings['inline_service_staff'])) {
+            $waiters = $this->productUtil->serviceStaffDropdown($business_id);
+        }
+
+        $invoice_schemes = [];
+        $default_invoice_schemes = null;
+
+        if ($transaction->status == 'draft') {
+            $invoice_schemes = InvoiceScheme::forDropdown($business_id);
+            $default_invoice_schemes = InvoiceScheme::getDefault($business_id);
+        }
+
+        $redeem_details = [];
+        if (request()->session()->get('business.enable_rp') == 1) {
+            $redeem_details = $this->transactionUtil->getRewardRedeemDetails($business_id, $transaction->contact_id);
+
+            $redeem_details['points'] += $transaction->rp_redeemed;
+            $redeem_details['points'] -= $transaction->rp_earned;
+        }
+
         return view('sell.edit')
-            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings'));
+            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings', 'waiters', 'invoice_schemes', 'default_invoice_schemes', 'redeem_details'));
     }
 
     /**

@@ -16,103 +16,95 @@
 
 <!-- Main content -->
 <section class="content">
-@component('components.filters', ['title' => __('report.filters')])
-    <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('type', __('product.product_type') . ':') !!}
-            {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_type', 'placeholder' => __('lang_v1.all')]); !!}
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('category_id', __('product.category') . ':') !!}
-            {!! Form::select('category_id', $categories, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_category_id', 'placeholder' => __('lang_v1.all')]); !!}
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('unit_id', __('product.unit') . ':') !!}
-            {!! Form::select('unit_id', $units, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_unit_id', 'placeholder' => __('lang_v1.all')]); !!}
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('tax_id', __('product.tax') . ':') !!}
-            {!! Form::select('tax_id', $taxes, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_tax_id', 'placeholder' => __('lang_v1.all')]); !!}
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="form-group">
-            {!! Form::label('brand_id', __('product.brand') . ':') !!}
-            {!! Form::select('brand_id', $brands, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_brand_id', 'placeholder' => __('lang_v1.all')]); !!}
-        </div>
-    </div>
-@endcomponent
-
-@component('components.widget', ['class' => 'box-primary', 'title' => __('lang_v1.all_products')])
-    @can('product.create')
-        @slot('tool')
-            <div class="box-tools">
-                <a class="btn btn-block btn-primary" href="{{action('ProductController@create')}}">
-                    <i class="fa fa-plus"></i> @lang('messages.add')</a>
+<div class="row">
+    <div class="col-md-12">
+    @component('components.filters', ['title' => __('report.filters')])
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('type', __('product.product_type') . ':') !!}
+                {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_type', 'placeholder' => __('lang_v1.all')]); !!}
             </div>
-        @endslot
-    @endcan
-    @can('product.view')
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped ajax_view table-text-center" id="product_table">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="select-all-row"></th>
-                        <th>&nbsp;</th>
-                        <th>@lang('sale.product')</th>
-                        <th>@lang('product.product_type')</th>
-                        <th>@lang('product.category')</th>
-                        <th>@lang('product.sub_category')</th>
-                        <th>@lang('product.unit')</th>
-                        <th>@lang('product.brand')</th>
-                        <th>@lang('product.tax')</th>
-                        <th>@lang('product.sku')</th>
-                        <th>@lang('messages.action')</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <td colspan="11">
-                        <div style="display: flex; width: 100%;">
-                            @can('product.delete')
-                                {!! Form::open(['url' => action('ProductController@massDestroy'), 'method' => 'post', 'id' => 'mass_delete_form' ]) !!}
-                                {!! Form::hidden('selected_rows', null, ['id' => 'selected_rows']); !!}
-                                {!! Form::submit(__('lang_v1.delete_selected'), array('class' => 'btn btn-xs btn-danger', 'id' => 'delete-selected')) !!}
-                                {!! Form::close() !!}
-                            @endcan
-                            &nbsp;
-                            {!! Form::open(['url' => action('ProductController@massDeactivate'), 'method' => 'post', 'id' => 'mass_deactivate_form' ]) !!}
-                            {!! Form::hidden('selected_products', null, ['id' => 'selected_products']); !!}
-                            {!! Form::submit(__('lang_v1.deactivate_selected'), array('class' => 'btn btn-xs btn-warning', 'id' => 'deactivate-selected')) !!}
-                            {!! Form::close() !!} @show_tooltip(__('lang_v1.deactive_product_tooltip'))
-                            </div>
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
         </div>
-    @endcan
-@endcomponent
-    <input type="hidden" id="is_rack_enabled" value="{{$rack_enabled}}">
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('category_id', __('product.category') . ':') !!}
+                {!! Form::select('category_id', $categories, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_category_id', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
 
-    <div class="modal fade product_modal" tabindex="-1" role="dialog" 
-        aria-labelledby="gridSystemModalLabel">
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('unit_id', __('product.unit') . ':') !!}
+                {!! Form::select('unit_id', $units, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_unit_id', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('tax_id', __('product.tax') . ':') !!}
+                {!! Form::select('tax_id', $taxes, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_tax_id', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('brand_id', __('product.brand') . ':') !!}
+                {!! Form::select('brand_id', $brands, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_brand_id', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+        <div class="col-md-3 hide" id="location_filter">
+            <div class="form-group">
+                {!! Form::label('location_id',  __('purchase.business_location') . ':') !!}
+                {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%']); !!}
+            </div>
+        </div>
+    @endcomponent
     </div>
+</div>
+@can('product.view')
+    <div class="row">
+        <div class="col-md-12">
+           <!-- Custom Tabs -->
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#product_list_tab" data-toggle="tab" aria-expanded="true"><i class="fa fa-cubes" aria-hidden="true"></i> @lang('lang_v1.all_products')</a>
+                    </li>
 
-    <div class="modal fade" id="view_product_modal" tabindex="-1" role="dialog" 
-        aria-labelledby="gridSystemModalLabel">
-    </div>
+                    <li>
+                        <a href="#product_stock_report" data-toggle="tab" aria-expanded="true"><i class="fa fa-hourglass-half" aria-hidden="true"></i> @lang('report.stock_report')</a>
+                    </li>
+                </ul>
 
-    <div class="modal fade" id="opening_stock_modal" tabindex="-1" role="dialog" 
-        aria-labelledby="gridSystemModalLabel">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="product_list_tab">
+                        @can('product.create')
+                            <a class="btn btn-primary pull-right" href="{{action('ProductController@create')}}">
+                                        <i class="fa fa-plus"></i> @lang('messages.add')</a>
+                            <br><br>
+                        @endcan
+                        @include('product.partials.product_list')
+                    </div>
+
+                    <div class="tab-pane" id="product_stock_report">
+                        @include('report.partials.stock_report_table')
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+@endcan
+<input type="hidden" id="is_rack_enabled" value="{{$rack_enabled}}">
+
+<div class="modal fade product_modal" tabindex="-1" role="dialog" 
+    aria-labelledby="gridSystemModalLabel">
+</div>
+
+<div class="modal fade" id="view_product_modal" tabindex="-1" role="dialog" 
+    aria-labelledby="gridSystemModalLabel">
+</div>
+
+<div class="modal fade" id="opening_stock_modal" tabindex="-1" role="dialog" 
+    aria-labelledby="gridSystemModalLabel">
+</div>
 
 </section>
 <!-- /.content -->
@@ -124,7 +116,7 @@
     <script src="{{ asset('js/opening_stock.js?v=' . $asset_v) }}"></script>
     <script type="text/javascript">
         $(document).ready( function(){
-            var product_table = $('#product_table').DataTable({
+            product_table = $('#product_table').DataTable({
                 processing: true,
                 serverSide: true,
                 "ajax": {
@@ -138,7 +130,7 @@
                     }
                 },
                 columnDefs: [ {
-                    "targets": [0, 1, 10],
+                    "targets": [0, 1, 11],
                     "orderable": false,
                     "searchable": false
                 } ],
@@ -147,12 +139,13 @@
                         { data: 'mass_delete'  },
                         { data: 'image', name: 'products.image'  },
                         { data: 'product', name: 'products.name'  },
+                        { data: 'price', name: 'max_price', searchable: false},
+                        { data: 'current_stock', searchable: false},
                         { data: 'type', name: 'products.type'},
                         { data: 'category', name: 'c1.name'},
                         { data: 'sub_category', name: 'c2.name'},
-                        { data: 'unit', name: 'units.actual_name'},
                         { data: 'brand', name: 'brands.name'},
-                        { data: 'tax', name: 'tax_rates.name'},
+                        { data: 'tax', name: 'tax_rates.name', searchable: false},
                         { data: 'sku', name: 'products.sku'},
                         { data: 'action', name: 'action'}
                     ],
@@ -165,7 +158,10 @@
                             $( row ).find('td:eq('+target_col+') div').prepend('<i style="margin:auto;" class="fa fa-plus-circle text-success cursor-pointer no-print rack-details" title="' + LANG.details + '"></i>&nbsp;&nbsp;');
                         }
                         $( row ).find('td:eq(0)').attr('class', 'selectable_td');
-                    }
+                    },
+                    fnDrawCallback: function(oSettings) {
+                        __currency_convert_recursively($('#product_table'));
+                    },
             });
             // Array to track the ids of the details displayed rows
             var detailRows = [];
@@ -226,11 +222,7 @@
 
             $(document).on('click', '#delete-selected', function(e){
                 e.preventDefault();
-                var selected_rows = [];
-                var i = 0;
-                $('.row-select:checked').each(function () {
-                    selected_rows[i++] = $(this).val();
-                }); 
+                var selected_rows = getSelectedRows();
                 
                 if(selected_rows.length > 0){
                     $('input#selected_rows').val(selected_rows);
@@ -252,11 +244,7 @@
 
             $(document).on('click', '#deactivate-selected', function(e){
                 e.preventDefault();
-                var selected_rows = [];
-                var i = 0;
-                $('.row-select:checked').each(function () {
-                    selected_rows[i++] = $(this).val();
-                }); 
+                var selected_rows = getSelectedRows();
                 
                 if(selected_rows.length > 0){
                     $('input#selected_products').val(selected_rows);
@@ -270,6 +258,19 @@
                             $('form#mass_deactivate_form').submit();
                         }
                     });
+                } else{
+                    $('input#selected_products').val('');
+                    swal('@lang("lang_v1.no_row_selected")');
+                }    
+            })
+
+            $(document).on('click', '#edit-selected', function(e){
+                e.preventDefault();
+                var selected_rows = getSelectedRows();
+                
+                if(selected_rows.length > 0){
+                    $('input#selected_products_for_edit').val(selected_rows);
+                    $('form#bulk_edit_form').submit();
                 } else{
                     $('input#selected_products').val('');
                     swal('@lang("lang_v1.no_row_selected")');
@@ -294,14 +295,83 @@
                 });
             });
 
-            $(document).on('change', '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id', 
+            $(document).on('change', '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id, #location_id', 
                 function() {
-                    product_table.ajax.reload();
+                    if ($("#product_list_tab").hasClass('active')) {
+                        product_table.ajax.reload();
+                    }
+
+                    if ($("#product_stock_report").hasClass('active')) {
+                        stock_report_table.ajax.reload();
+                    }
             });
         });
 
         $(document).on('shown.bs.modal', 'div.view_product_modal, div.view_modal', function(){
             __currency_convert_recursively($(this));
         });
+        var data_table_initailized = false;
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            if ($(e.target).attr('href') == '#product_stock_report') {
+                $('#location_filter').removeClass('hide');
+                if (!data_table_initailized) {
+                    //Stock report table
+                    var stock_report_cols = [
+                        { data: 'sku', name: 'variations.sub_sku' },
+                        { data: 'product', name: 'p.name' },
+                        { data: 'unit_price', name: 'variations.sell_price_inc_tax' },
+                        { data: 'stock', name: 'stock', searchable: false },
+                        { data: 'total_sold', name: 'total_sold', searchable: false },
+                        { data: 'total_transfered', name: 'total_transfered', searchable: false },
+                        { data: 'total_adjusted', name: 'total_adjusted', searchable: false }
+                    ];
+                    if ($('th.current_stock_mfg').length) {
+                        stock_report_cols.push({ data: 'total_mfg_stock', name: 'total_mfg_stock', searchable: false });
+                    }
+                    stock_report_table = $('#stock_report_table').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: {
+                            url: '/reports/stock-report',
+                            data: function(d) {
+                                d.location_id = $('#location_id').val();
+                                d.category_id = $('#product_list_filter_category_id').val();
+                                d.brand_id = $('#product_list_filter_brand_id').val();
+                                d.unit_id = $('#product_list_filter_unit_id').val();
+                                d.type = $('#product_list_filter_type').val();
+                            }
+                        },
+                        columns: stock_report_cols,
+                        fnDrawCallback: function(oSettings) {
+                            $('#footer_total_stock').html(__sum_stock($('#stock_report_table'), 'current_stock'));
+                            $('#footer_total_sold').html(__sum_stock($('#stock_report_table'), 'total_sold'));
+                            $('#footer_total_transfered').html(
+                                __sum_stock($('#stock_report_table'), 'total_transfered')
+                            );
+                            $('#footer_total_adjusted').html(
+                                __sum_stock($('#stock_report_table'), 'total_adjusted')
+                            );
+                            __currency_convert_recursively($('#stock_report_table'));
+                        },
+                    });
+                    data_table_initailized = true;
+                } else {
+                    stock_report_table.ajax.reload();
+                }
+            } else {
+                $('#location_filter').addClass('hide');
+                product_table.ajax.reload();
+            }
+        });
+
+        function getSelectedRows() {
+            var selected_rows = [];
+            var i = 0;
+            $('.row-select:checked').each(function () {
+                selected_rows[i++] = $(this).val();
+            });
+
+            return selected_rows; 
+        }
     </script>
 @endsection

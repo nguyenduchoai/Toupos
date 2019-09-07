@@ -2,18 +2,18 @@
 
 namespace App\Utils;
 
-use Illuminate\Support\Facades\DB;
-
-use App\Business;
-use App\NotificationTemplate;
-use App\Transaction;
-use App\Restaurant\Booking;
-
 use \Notification;
-
+use App\Business;
 use App\Notifications\CustomerNotification;
-use App\Notifications\SupplierNotification;
 use App\Notifications\RecurringInvoiceNotification;
+
+use App\Notifications\SupplierNotification;
+
+use App\NotificationTemplate;
+use App\Restaurant\Booking;
+use App\System;
+use App\Transaction;
+use Config;
 
 class NotificationUtil extends Util
 {
@@ -160,5 +160,34 @@ class NotificationUtil extends Util
     public function recurringInvoiceNotification($user, $invoice)
     {
         $user->notify(new RecurringInvoiceNotification($invoice));
+    }
+
+    public function configureEmail($notificationInfo)
+    {
+        $email_settings = $notificationInfo['email_settings'];
+
+        $is_superadmin_settings_allowed = System::getProperty('allow_email_settings_to_businesses');
+
+        //Check if prefered email setting is superadmin email settings
+        if (!empty($is_superadmin_settings_allowed) && !empty($email_settings['use_superadmin_settings'])) {
+            $email_settings['mail_driver'] = env('MAIL_DRIVER');
+            $email_settings['mail_host'] = env('MAIL_HOST');
+            $email_settings['mail_port'] = env('MAIL_PORT');
+            $email_settings['mail_username'] = env('MAIL_USERNAME');
+            $email_settings['mail_password'] = env('MAIL_PASSWORD');
+            $email_settings['mail_encryption'] = env('MAIL_ENCRYPTION');
+            $email_settings['mail_from_address'] = env('MAIL_FROM_ADDRESS');
+        }
+
+        $mail_driver = !empty($email_settings['mail_driver']) ? $email_settings['mail_driver'] : 'smtp';
+        Config::set('mail.driver', $mail_driver);
+        Config::set('mail.host', $email_settings['mail_host']);
+        Config::set('mail.port', $email_settings['mail_port']);
+        Config::set('mail.username', $email_settings['mail_username']);
+        Config::set('mail.password', $email_settings['mail_password']);
+        Config::set('mail.encryption', $email_settings['mail_encryption']);
+
+        Config::set('mail.from.address', $email_settings['mail_from_address']);
+        Config::set('mail.from.name', $email_settings['mail_from_name']);
     }
 }

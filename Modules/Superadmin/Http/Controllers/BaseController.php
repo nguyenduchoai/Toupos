@@ -13,26 +13,27 @@ class BaseController extends Controller
      * Returns the list of all configured payment gateway
      * @return Response
      */
-    protected function _payment_gateways(){
+    protected function _payment_gateways()
+    {
         $gateways = [];
         
-        //Check if stripe is configured or not 
-        if(env('STRIPE_PUB_KEY') && env('STRIPE_SECRET_KEY')){
+        //Check if stripe is configured or not
+        if (env('STRIPE_PUB_KEY') && env('STRIPE_SECRET_KEY')) {
             $gateways['stripe'] = 'Stripe';
         }
 
-        //Check if paypal is configured or not 
-        if((env('PAYPAL_SANDBOX_API_USERNAME') && env('PAYPAL_SANDBOX_API_PASSWORD')  && env('PAYPAL_SANDBOX_API_SECRET')) || (env('PAYPAL_LIVE_API_USERNAME') && env('PAYPAL_LIVE_API_PASSWORD')  && env('PAYPAL_LIVE_API_SECRET')) ){
+        //Check if paypal is configured or not
+        if ((env('PAYPAL_SANDBOX_API_USERNAME') && env('PAYPAL_SANDBOX_API_PASSWORD')  && env('PAYPAL_SANDBOX_API_SECRET')) || (env('PAYPAL_LIVE_API_USERNAME') && env('PAYPAL_LIVE_API_PASSWORD')  && env('PAYPAL_LIVE_API_SECRET'))) {
             $gateways['paypal'] = 'PayPal';
         }
 
         //Check if Razorpay is configured or not
-        if((env('RAZORPAY_KEY_ID') && env('RAZORPAY_KEY_SECRET'))){
+        if ((env('RAZORPAY_KEY_ID') && env('RAZORPAY_KEY_SECRET'))) {
             $gateways['razorpay'] = 'Razor Pay';
         }
 
         //Check if Pesapal is configured or not
-        if((config('pesapal.consumer_key') && config('pesapal.consumer_secret'))){
+        if ((config('pesapal.consumer_key') && config('pesapal.consumer_secret'))) {
             $gateways['pesapal'] = 'PesaPal';
         }
 
@@ -45,15 +46,15 @@ class BaseController extends Controller
      * Enter details for subscriptions
      * @return object
      */
-    protected function _add_subscription($business_id, $package, $gateway, $payment_transaction_id, $user_id, $is_superadmin = false){
-
+    protected function _add_subscription($business_id, $package, $gateway, $payment_transaction_id, $user_id, $is_superadmin = false)
+    {
         $subscription = ['business_id' => $business_id,
                         'package_id' => $package->id,
                         'paid_via' => $gateway,
                         'payment_transaction_id' => $payment_transaction_id
                     ];
 
-        if(in_array($gateway, ['offline', 'pesapal']) && !$is_superadmin){
+        if (in_array($gateway, ['offline', 'pesapal']) && !$is_superadmin) {
             //If offline then dates will be decided when approved by superadmin
             $subscription['start_date'] = null;
             $subscription['end_date'] = null;
@@ -70,14 +71,14 @@ class BaseController extends Controller
 
         $subscription['package_price'] = $package->price;
         $subscription['package_details'] = [
-                'location_count' => $package->location_count, 
-                'user_count' => $package->user_count, 
-                'product_count' => $package->product_count, 
+                'location_count' => $package->location_count,
+                'user_count' => $package->user_count,
+                'product_count' => $package->product_count,
                 'invoice_count' => $package->invoice_count,
                 'name' => $package->name
             ];
         //Custom permissions.
-        if(!empty($package->custom_permissions)){
+        if (!empty($package->custom_permissions)) {
             foreach ($package->custom_permissions as $name => $value) {
                 $subscription['package_details'][$name] = $value;
             }
@@ -98,8 +99,8 @@ class BaseController extends Controller
      *
      * @return array
      */
-    protected function _get_package_dates($business_id, $package){
-
+    protected function _get_package_dates($business_id, $package)
+    {
         $output = ['start' => '', 'end' => '', 'trial' => ''];
 
         //calculate start date
@@ -107,11 +108,11 @@ class BaseController extends Controller
         $output['start'] = $start_date->toDateString();
 
         //Calculate end date
-        if($package->interval == 'days'){
+        if ($package->interval == 'days') {
             $output['end'] = $start_date->addDays($package->interval_count)->toDateString();
-        } elseif($package->interval == 'months'){
+        } elseif ($package->interval == 'months') {
             $output['end'] = $start_date->addMonths($package->interval_count)->toDateString();
-        } elseif($package->interval == 'years'){
+        } elseif ($package->interval == 'years') {
             $output['end'] = $start_date->addYears($package->interval_count)->toDateString();
         }
         

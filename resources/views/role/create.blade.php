@@ -283,6 +283,15 @@
               </label>
             </div>
           </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'view_purchase_price', false,['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.view_purchase_price') }}
+              </label>
+              @show_tooltip(__('lang_v1.view_purchase_price_tooltip'))
+            </div>
+          </div>
         </div>
         </div>
         <hr>
@@ -391,6 +400,14 @@
               <label>
                 {!! Form::checkbox('permissions[]', 'direct_sell.access', false, 
                 [ 'class' => 'input-icheck']); !!} {{ __( 'role.direct_sell.access' ) }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'view_own_sell_only', false, 
+                [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.view_own_sell_only' ) }}
               </label>
             </div>
           </div>
@@ -845,7 +862,6 @@
           @endforeach
         </div>
         </div>
-        @if(count($selling_price_groups) > 0)
         <hr>
         <div class="row">
         <div class="col-md-3">
@@ -860,6 +876,7 @@
               </label>
             </div>
           </div>
+          @if(count($selling_price_groups) > 0)
           @foreach($selling_price_groups as $selling_price_group)
           <div class="col-md-12">
             <div class="checkbox">
@@ -870,9 +887,10 @@
             </div>
           </div>
           @endforeach
+          @endif
         </div>
         </div>
-        @endif
+        
         @include('role.partials.module_permissions')
         <div class="row">
         <div class="col-md-12">

@@ -2,25 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Product;
 use App\Brands;
-use App\Category;
-use App\Unit;
-use App\TaxRate;
-use App\VariationTemplate;
-use App\ProductVariation;
-use App\Variation;
 use App\Business;
 use App\BusinessLocation;
+use App\Category;
+use App\Product;
+use App\TaxRate;
 use App\Transaction;
+use App\Unit;
+use App\Utils\ProductUtil;
+use App\Variation;
 use App\VariationValueTemplate;
 
-use App\Utils\ProductUtil;
+use DB;
 
 use Excel;
-use DB;
+use Illuminate\Http\Request;
 
 class ImportProductsController extends Controller
 {
@@ -106,6 +103,14 @@ class ImportProductsController extends Controller
                 
                 DB::beginTransaction();
                 foreach ($imported_data as $key => $value) {
+
+                    //Check if any column is missing
+                    if (count($value) != 35) {
+                        $is_valid =  false;
+                        $error_msg = "Some of the columns are missing. Please, use latest CSV file template.";
+                        break;
+                    }
+
                     $row_no = $key + 1;
                     $product_array = [];
                     $product_array['business_id'] = $business_id;
@@ -152,6 +157,9 @@ class ImportProductsController extends Controller
                     } else {
                         $product_array['product_custom_field4'] = '';
                     }
+
+                    //Add not for selling
+                    $product_array['not_for_selling'] = !empty($value[34]) && $value[34] == 1 ? 1 : 0;
 
                     //Add enable stock
                     $enable_stock = trim($value[7]);
@@ -235,7 +243,7 @@ class ImportProductsController extends Controller
 
                     //Add alert quantity
                     $product_array['alert_quantity'] = ($product_array['enable_stock'] == 1) ?
-                    $this->productUtil->num_uf($value[8]) : 0;
+                    trim($value[8]) : 0;
 
                     //Add brand
                     //Check if brand exists else create new
@@ -287,7 +295,7 @@ class ImportProductsController extends Controller
                     }
 
                     //Add product expiry
-                    $expiry_period = $this->productUtil->num_uf(trim($value[9]));
+                    $expiry_period = trim($value[9]);
                     $expiry_period_type = strtolower(trim($value[10]));
                     if (!empty($expiry_period) && in_array($expiry_period_type, ['months', 'days'])) {
                         $product_array['expiry_period'] = $expiry_period;
@@ -325,7 +333,7 @@ class ImportProductsController extends Controller
                         if (empty($profit_margin)) {
                             $profit_margin = $default_profit_percent;
                         } else {
-                            $profit_margin = $this->productUtil->num_uf(trim($value[18]));
+                            $profit_margin = trim($value[18]);
                         }
                         $product_array['variation']['profit_percent'] = $profit_margin;
 
@@ -337,12 +345,12 @@ class ImportProductsController extends Controller
                             $error_msg = "PURCHASE PRICE is required in row no. $row_no";
                             break;
                         } else {
-                            $dpp_inc_tax = !empty($dpp_inc_tax) ? $this->productUtil->num_uf($dpp_inc_tax) : 0;
-                            $dpp_exc_tax = !empty($dpp_exc_tax) ? $this->productUtil->num_uf($dpp_exc_tax) : 0;
+                            $dpp_inc_tax = !empty($dpp_inc_tax) ? $dpp_inc_tax : 0;
+                            $dpp_exc_tax = !empty($dpp_exc_tax) ? $dpp_exc_tax : 0;
                         }
 
                         //Calculate Selling price
-                        $selling_price = !empty(trim($value[19])) ? $this->productUtil->num_uf(trim($value[19])) : 0 ;
+                        $selling_price = !empty(trim($value[19])) ? trim($value[19]) : 0 ;
 
                         //Calculate product prices
                         $product_prices = $this->calculateVariationPrices($dpp_exc_tax, $dpp_inc_tax, $selling_price, $tax_amount, $tax_type, $profit_margin);
@@ -355,7 +363,7 @@ class ImportProductsController extends Controller
                         
                         //Opening stock
                         if (!empty($value[20]) && $enable_stock == 1) {
-                            $product_array['opening_stock_details']['quantity'] = $this->productUtil->num_uf(trim($value[20]));
+                            $product_array['opening_stock_details']['quantity'] = trim($value[20]);
 
                             if (!empty(trim($value[21]))) {
                                 $location_name = trim($value[21]);
@@ -417,10 +425,10 @@ class ImportProductsController extends Controller
                         //Map Purchase price with variation values
                         $dpp_inc_tax = [];
                         if (!empty($dpp_inc_tax_string)) {
-                            $dpp_inc_tax = array_map([$this->productUtil, 'num_uf'], array_map('trim', explode(
+                            $dpp_inc_tax = array_map('trim', explode(
                                 '|',
                                 $dpp_inc_tax_string
-                            )));
+                            ));
                         } else {
                             foreach ($variation_values as $k => $v) {
                                 $dpp_inc_tax[$k] = 0;
@@ -429,10 +437,10 @@ class ImportProductsController extends Controller
                         
                         $dpp_exc_tax = [];
                         if (!empty($dpp_exc_tax_string)) {
-                            $dpp_exc_tax = array_map([$this->productUtil, 'num_uf'], array_map('trim', explode(
+                            $dpp_exc_tax = array_map('trim', explode(
                                 '|',
                                 $dpp_exc_tax_string
-                            )));
+                            ));
                         } else {
                             foreach ($variation_values as $k => $v) {
                                 $dpp_exc_tax[$k] = 0;
@@ -442,13 +450,10 @@ class ImportProductsController extends Controller
                         //Map Selling price with variation values
                         $selling_price = [];
                         if (!empty($selling_price_string)) {
-                            $selling_price = array_map(
-                                [$this->productUtil, 'num_uf'],
-                                array_map('trim', explode(
-                                    '|',
-                                    $selling_price_string
-                                ))
-                            );
+                            $selling_price = array_map('trim', explode(
+                                '|',
+                                $selling_price_string
+                                ));
                         } else {
                             foreach ($variation_values as $k => $v) {
                                 $selling_price[$k] = 0;
@@ -458,13 +463,10 @@ class ImportProductsController extends Controller
                         //Map profit margin with variation values
                         $profit_margin = [];
                         if (!empty($profit_margin_string)) {
-                            $profit_margin = array_map(
-                                [$this->productUtil, 'num_uf'],
-                                array_map('trim', explode(
-                                    '|',
-                                    $profit_margin_string
-                                ))
-                            );
+                            $profit_margin = array_map('trim', explode(
+                                '|',
+                                $profit_margin_string
+                                ));
                         } else {
                             foreach ($variation_values as $k => $v) {
                                 $profit_margin[$k] = $default_profit_percent;
@@ -515,7 +517,7 @@ class ImportProductsController extends Controller
 
                         //Opening stock
                         if (!empty($value[20]) && $enable_stock == 1) {
-                            $variation_os = array_map([$this->productUtil, 'num_uf'], array_map('trim', explode('|', $value[20])));
+                            $variation_os = array_map('trim', explode('|', $value[20]));
 
                             //$product_array['opening_stock_details']['quantity'] = $variation_os;
 

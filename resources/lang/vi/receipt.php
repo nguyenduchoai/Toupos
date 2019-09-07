@@ -11,18 +11,18 @@ return [
     |
     */
 
-    'product' => 'Sản phẩm',
-    'qty' => 'Số lượng',
-    'unit_price' => 'Đơn giá',
-    'subtotal' => 'Tổng phụ',
-    'discount' => 'Giảm giá',
-    'tax' => 'Thuế',
-    'total' => 'Tổng',
-    'invoice_number' => 'Hóa đơn số',
-    'date' => 'Ngày',
-    'receipt_settings' => 'Cài đặt biên nhận',
-    'receipt_settings_mgs' => 'Tất cả cài đặt liên quan đến biên nhận cho vị trí này',
-    'print_receipt_on_invoice' => 'Hóa đơn in tự động sau khi hoàn tất',
-    'receipt_printer_type' => 'Loại Máy in Biên lai',
-    'receipt_settings_updated' => 'Cài đặt Biên nhận đã được cập nhật thành công'
+    "product" => "Sản phẩm",
+    "qty" => "Số lượng",
+    "unit_price" => "Đơn giá",
+    "subtotal" => "Tổng phụ",
+    "discount" => "Giảm giá",
+    "tax" => "Thuế",
+    "total" => "Toàn bộ",
+    "invoice_number" => "Hóa đơn không có.",
+    "date" => "Ngày",
+    "receipt_settings" => "Cài đặt biên nhận",
+    "receipt_settings_mgs" => "Tất cả các cài đặt liên quan đến hóa đơn cho vị trí này",
+    "print_receipt_on_invoice" => "Tự động in hóa đơn sau khi hoàn tất",
+    "receipt_printer_type" => "Loại máy in hóa đơn",
+    "receipt_settings_updated" => "Cài đặt hóa đơn được cập nhật thành công",
 ];

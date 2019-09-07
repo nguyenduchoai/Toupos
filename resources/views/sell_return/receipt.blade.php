@@ -152,7 +152,7 @@
 <div class="row invoice-info color-555">
 	<br/>
 	<div class="col-md-6 invoice-col width-50 word-wrap">
-		<b>{{ $receipt_details->customer_label }}</b><br/>
+		<b>{{ $receipt_details->customer_label ?? '' }}</b><br/>
 
 		<!-- customer info -->
 		@if(!empty($receipt_details->customer_name))
@@ -209,7 +209,9 @@
 						$p_width = 35;
 					@endphp
 					@if($receipt_details->show_cat_code != 1)
-						$p_width = 45;
+						@php
+							$p_width = 45;
+						@endphp
 					@endif
 					<td style="background-color: #357ca5 !important; color: white !important; width: {{$p_width}}% !important">
 						{{$receipt_details->table_product_label}}

@@ -100,9 +100,12 @@
             <td style="text-align: left;">
 
                 {{-- Maybe this condition for checkin expiry date need to be removed --}}
-                @if(!empty($product->expiry_period_type))
+                @php
+                    $expiry_period_type = !empty($product->expiry_period_type) ? $product->expiry_period_type : 'month';
+                @endphp
+                @if(!empty($expiry_period_type))
                 <input type="hidden" class="row_product_expiry" value="{{ $product->expiry_period }}">
-                <input type="hidden" class="row_product_expiry_type" value="{{ $product->expiry_period_type }}">
+                <input type="hidden" class="row_product_expiry_type" value="{{ $expiry_period_type }}">
 
                 @if(session('business.expiry_type') == 'add_manufacturing')
                     @php

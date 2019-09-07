@@ -20,16 +20,31 @@
 							</div>
 
 							<div class="col-sm-2 col-xs-6 d-inline-table">
+								@php
+									$is_discount_enabled = $pos_settings['disable_discount'] != 1 ? true : false;
+									$is_rp_enabled = session('business.enable_rp') == 1 ? true : false;
+								@endphp
+								<span class="@if(!$is_discount_enabled && !$is_rp_enabled) hide @endif">
 
-								<span class="@if($pos_settings['disable_discount'] != 0) hide @endif">
-
-								<b>@lang('sale.discount')(-): @show_tooltip(__('tooltip.sale_discount'))</b> 
+								<b>
+								@if($is_discount_enabled)
+									@lang('sale.discount')
+									@show_tooltip(__('tooltip.sale_discount'))
+								@endif
+								@if($is_rp_enabled)
+									{{session('business.rp_name')}}
+								@endif
+								(-):</b> 
 								<br/>
 								<i class="fa fa-pencil-square-o cursor-pointer" id="pos-edit-discount" title="@lang('sale.edit_discount')" aria-hidden="true" data-toggle="modal" data-target="#posEditDiscountModal"></i>
 								<span id="total_discount">0</span>
 								<input type="hidden" name="discount_type" id="discount_type" value="@if(empty($edit)){{'percentage'}}@else{{$transaction->discount_type}}@endif" data-default="percentage">
 
 								<input type="hidden" name="discount_amount" id="discount_amount" value="@if(empty($edit)) {{@num_format($business_details->default_sales_discount)}} @else {{@num_format($transaction->discount_amount)}} @endif" data-default="{{$business_details->default_sales_discount}}">
+
+								<input type="hidden" name="rp_redeemed" id="rp_redeemed" value="@if(empty($edit)){{'0'}}@else{{$transaction->rp_redeemed}}@endif">
+
+								<input type="hidden" name="rp_redeemed_amount" id="rp_redeemed_amount" value="@if(empty($edit)){{'0'}}@else {{$transaction->rp_redeemed_amount}} @endif">
 
 								</span>
 							</div>
@@ -162,9 +177,9 @@
 </div>
 
 @if(isset($transaction))
-	@include('sale_pos.partials.edit_discount_modal', ['sales_discount' => $transaction->discount_amount, 'discount_type' => $transaction->discount_type])
+	@include('sale_pos.partials.edit_discount_modal', ['sales_discount' => $transaction->discount_amount, 'discount_type' => $transaction->discount_type, 'rp_redeemed' => $transaction->rp_redeemed, 'rp_redeemed_amount' => $transaction->rp_redeemed_amount, 'max_available' => !empty($redeem_details['points']) ? $redeem_details['points'] : 0])
 @else
-	@include('sale_pos.partials.edit_discount_modal', ['sales_discount' => $business_details->default_sales_discount, 'discount_type' => 'percentage'])
+	@include('sale_pos.partials.edit_discount_modal', ['sales_discount' => $business_details->default_sales_discount, 'discount_type' => 'percentage', 'rp_redeemed' => 0, 'rp_redeemed_amount' => 0, 'max_available' => 0])
 @endif
 
 @if(isset($transaction))

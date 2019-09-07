@@ -2,6 +2,7 @@
 
 namespace App;
 
+use DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -70,7 +71,11 @@ class Category extends Model
     {
         $categories = Category::where('business_id', $business_id)
                             ->where('parent_id', 0)
-                            ->pluck('name', 'id');
-        return $categories;
+                            ->select(DB::raw('IF(short_code IS NOT NULL, CONCAT(name, "-", short_code), name) as name'), 'id')
+                            ->get();
+
+        $dropdown =  $categories->pluck('name', 'id');
+
+        return $dropdown;
     }
 }

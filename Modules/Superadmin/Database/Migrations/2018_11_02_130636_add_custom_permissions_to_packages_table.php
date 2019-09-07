@@ -27,7 +27,6 @@ class AddCustomPermissionsToPackagesTable extends Migration
     public function down()
     {
         Schema::table('packages', function (Blueprint $table) {
-
         });
     }
 }

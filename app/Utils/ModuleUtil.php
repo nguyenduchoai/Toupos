@@ -3,14 +3,12 @@
 namespace App\Utils;
 
 use \Module;
-use App\BusinessLocation;
-use App\User;
-use App\Product;
-use App\Transaction;
-use App\System;
 use App\Account;
-
-use \CarbonPeriod;
+use App\BusinessLocation;
+use App\Product;
+use App\System;
+use App\Transaction;
+use App\User;
 
 class ModuleUtil extends Util
 {
@@ -382,5 +380,13 @@ class ModuleUtil extends Util
         }
 
         return $form_fields;
+    }
+
+    public function getApiSettings($api_token)
+    {
+        $settings = \Modules\Ecommerce\Entities\EcomApiSetting::where('api_token', $api_token)
+                                ->first();
+
+        return $settings;
     }
 }

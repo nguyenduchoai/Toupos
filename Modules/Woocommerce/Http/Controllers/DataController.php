@@ -2,8 +2,8 @@
 
 namespace Modules\Woocommerce\Http\Controllers;
 
+use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Artisan;
 
@@ -82,5 +82,38 @@ class DataController extends Controller
         }
 
         return $notification_data;
+    }
+
+    /**
+     * Returns product form part path with required extra data.
+     *
+     * @return array
+     */
+    public function product_form_part()
+    {
+        $path = 'woocommerce::woocommerce.partials.product_form_part';
+
+        $business_id = request()->session()->get('user.business_id');
+
+        $module_util = new ModuleUtil();
+        $is_woo_enabled = (boolean)$module_util->hasThePermissionInSubscription($business_id, 'woocommerce_module', 'superadmin_package');
+        if ($is_woo_enabled) {
+            return  [
+                'template_path' => $path,
+                'template_data' => []
+            ];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Returns products table extra columns for this module
+     *
+     * @return array
+     */
+    public function product_form_fields()
+    {
+        return ['woocommerce_disable_sync'];
     }
 }

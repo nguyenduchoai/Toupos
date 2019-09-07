@@ -12,6 +12,17 @@ class Product extends Model
      * @var array
      */
     protected $guarded = ['id'];
+
+    protected $appends = ['image_url'];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'sub_unit_ids' => 'array',
+    ];
     
     /**
      * Get the products image.
@@ -26,6 +37,21 @@ class Product extends Model
             $image_url = asset('/img/default.png');
         }
         return $image_url;
+    }
+
+    /**
+    * Get the products image path.
+    *
+    * @return string
+    */
+    public function getImagePathAttribute()
+    {
+        if (!empty($this->image)) {
+            $image_path = public_path('uploads') . '/' . config('constants.product_img_path') . '/' . $this->image;
+        } else {
+            $image_path = null;
+        }
+        return $image_path;
     }
 
     public function product_variations()
@@ -112,5 +138,16 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('products.is_inactive', 0);
+    }
+
+    /**
+     * Scope a query to only include products for sales.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeProductForSales($query)
+    {
+        return $query->where('not_for_selling', 1);
     }
 }

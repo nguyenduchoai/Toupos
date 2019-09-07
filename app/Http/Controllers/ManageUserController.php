@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
-use App\System;
 use App\Contact;
-
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Yajra\DataTables\Facades\DataTables;
-
-use DB;
+use App\System;
+use App\User;
 
 use App\Utils\ModuleUtil;
+use DB;
+use Illuminate\Http\Request;
+
+use Spatie\Permission\Models\Role;
+
+use Yajra\DataTables\Facades\DataTables;
 
 class ManageUserController extends Controller
 {
@@ -51,17 +51,24 @@ class ManageUserController extends Controller
             return Datatables::of($users)
                 ->addColumn(
                     'role',
-                    '{{explode("#", App\User::find($id)->getRoleNames()[0], 2)[0]}}'
+                    function ($row) {
+                        $role_name = $this->moduleUtil->getUserRoleName($row->id);
+                        return $role_name;
+                    }
                 )
                 ->addColumn(
                     'action',
                     '@can("user.update")
-                    <a href="{{action(\'ManageUserController@edit\', [$id])}}" class="btn btn-xs btn-primary"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</a>
+                        <a href="{{action(\'ManageUserController@edit\', [$id])}}" class="btn btn-xs btn-primary"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</a>
                         &nbsp;
-                        @endcan
-                        @can("user.delete")
+                    @endcan
+                    @can("user.view")
+                    <a href="{{action(\'ManageUserController@show\', [$id])}}" class="btn btn-xs btn-info"><i class="fa fa-eye"></i> @lang("messages.view")</a>
+                    &nbsp;
+                    @endcan
+                    @can("user.delete")
                         <button data-href="{{action(\'ManageUserController@destroy\', [$id])}}" class="btn btn-xs btn-danger delete_user_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</button>
-                        @endcan'
+                    @endcan'
                 )
                 ->filterColumn('full_name', function ($query, $keyword) {
                     $query->whereRaw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) like ?", ["%{$keyword}%"]);
@@ -94,12 +101,7 @@ class ManageUserController extends Controller
             return $this->moduleUtil->quotaExpiredResponse('users', $business_id, action('ManageUserController@index'));
         }
 
-        $roles_array = Role::where('business_id', $business_id)->get()->pluck('name', 'id');
-        $roles = [];
-        foreach ($roles_array as $key => $value) {
-            $roles[$key] = str_replace('#' . $business_id, '', $value);
-        }
-
+        $roles  = $this->getRolesArray($business_id);
         $username_ext = $this->getUsernameExtension();
         $contacts = Contact::contactDropdown($business_id, true, false);
 
@@ -120,12 +122,24 @@ class ManageUserController extends Controller
         }
 
         try {
-            $user_details = $request->only(['surname', 'first_name', 'last_name', 'username', 'email', 'password', 'selected_contacts']);
+            $user_details = $request->only(['surname', 'first_name', 'last_name', 'username', 'email', 'password', 'selected_contacts', 'marital_status',
+                'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
+                'social_media_2', 'permanent_address', 'current_address',
+                'guardian_name', 'custom_field_1', 'custom_field_2',
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent']);
             
             $user_details['status'] = !empty($request->input('is_active')) ? 'active' : 'inactive';
             
             if (!isset($user_details['selected_contacts'])) {
                 $user_details['selected_contacts'] = false;
+            }
+
+            if (!empty($request->input('dob'))) {
+                $user_details['dob'] = $this->moduleUtil->uf_date($request->input('dob'));
+            }
+
+            if (!empty($request->input('bank_details'))) {
+                $user_details['bank_details'] = json_encode($request->input('bank_details'));
             }
 
             $business_id = $request->session()->get('user.business_id');
@@ -150,10 +164,7 @@ class ManageUserController extends Controller
             }
 
             //Sales commission percentage
-            $user_details['cmmsn_percent'] = $request->get('cmmsn_percent');
-            if (empty($user_details['cmmsn_percent'])) {
-                $user_details['cmmsn_percent'] = 0;
-            }
+            $user_details['cmmsn_percent'] = !empty($user_details['cmmsn_percent']) ? $this->moduleUtil->num_uf($user_details['cmmsn_percent']) : 0;
 
             //Create the user
             $user = User::create($user_details);
@@ -193,6 +204,14 @@ class ManageUserController extends Controller
         if (!auth()->user()->can('user.view')) {
             abort(403, 'Unauthorized action.');
         }
+
+        $business_id = request()->session()->get('user.business_id');
+
+        $user = User::where('business_id', $business_id)
+                    ->with(['contactAccess'])
+                    ->find($id);
+
+        return view('manage_user.show')->with(compact('user'));
     }
 
     /**
@@ -212,11 +231,7 @@ class ManageUserController extends Controller
                     ->with(['contactAccess'])
                     ->findOrFail($id);
 
-        $roles_array = Role::where('business_id', $business_id)->get()->pluck('name', 'id');
-        $roles = [];
-        foreach ($roles_array as $key => $value) {
-            $roles[$key] = str_replace('#' . $business_id, '', $value);
-        }
+        $roles = $this->getRolesArray($business_id);
 
         $contact_access = $user->contactAccess->pluck('id')->toArray();
         $contacts = Contact::contactDropdown($business_id, true, false);
@@ -245,7 +260,11 @@ class ManageUserController extends Controller
         }
 
         try {
-            $user_data = $request->only(['surname', 'first_name', 'last_name', 'email', 'selected_contacts']);
+            $user_data = $request->only(['surname', 'first_name', 'last_name', 'email', 'selected_contacts', 'marital_status',
+                'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
+                'social_media_2', 'permanent_address', 'current_address',
+                'guardian_name', 'custom_field_1', 'custom_field_2',
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent']);
 
             $user_data['status'] = !empty($request->input('is_active')) ? 'active' : 'inactive';
             $business_id = request()->session()->get('user.business_id');
@@ -259,9 +278,14 @@ class ManageUserController extends Controller
             }
 
             //Sales commission percentage
-            $user_data['cmmsn_percent'] = $request->get('cmmsn_percent');
-            if (empty($user_data['cmmsn_percent'])) {
-                $user_data['cmmsn_percent'] = 0;
+            $user_data['cmmsn_percent'] = !empty($user_data['cmmsn_percent']) ? $this->moduleUtil->num_uf($user_data['cmmsn_percent']) : 0;
+
+            if (!empty($request->input('dob'))) {
+                $user_data['dob'] = $this->moduleUtil->uf_date($request->input('dob'));
+            }
+
+            if (!empty($request->input('bank_details'))) {
+                $user_data['bank_details'] = json_encode($request->input('bank_details'));
             }
 
             $user = User::where('business_id', $business_id)
@@ -339,5 +363,27 @@ class ManageUserController extends Controller
     {
         $extension = !empty(System::getProperty('enable_business_based_username')) ? '-' .str_pad(session()->get('business.id'), 2, 0, STR_PAD_LEFT) : null;
         return $extension;
+    }
+
+    /**
+     * Retrives roles array (Hides admin role from non admin users)
+     *
+     * @param  int  $business_id
+     * @return array $roles
+     */
+    private function getRolesArray($business_id)
+    {
+        $roles_array = Role::where('business_id', $business_id)->get()->pluck('name', 'id');
+        $roles = [];
+
+        $is_admin = $this->moduleUtil->is_admin(auth()->user(), $business_id);
+
+        foreach ($roles_array as $key => $value) {
+            if (!$is_admin && $value == 'Admin#' . $business_id) {
+                continue;
+            }
+            $roles[$key] = str_replace('#' . $business_id, '', $value);
+        }
+        return $roles;
     }
 }

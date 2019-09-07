@@ -16,6 +16,8 @@
 
     <!-- Jquery Steps -->
     <link rel="stylesheet" href="{{ asset('plugins/jquery.steps/jquery.steps.css?v=' . $asset_v) }}">
+    <!-- iCheck -->
+    <link rel="stylesheet" href="{{ asset('AdminLTE/plugins/iCheck/square/blue.css?v='.$asset_v) }}">
 
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -39,11 +41,19 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/login.js?v=' . $asset_v) }}"></script>
+    <!-- iCheck -->
+    <script src="{{ asset('AdminLTE/plugins/iCheck/icheck.min.js?v=' . $asset_v) }}"></script>
     @yield('javascript')
 
     <script type="text/javascript">
         $(document).ready(function(){
             $('.select2_register').select2();
+
+            $('input').iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue',
+                increaseArea: '20%' // optional
+            });
         });
     </script>
 </body>

@@ -36,7 +36,7 @@
                 </div>
             @endslot
         @endcan
-        @can('direct_sell.access')
+        @if(auth()->user()->can('direct_sell.access') ||  auth()->user()->can('view_own_sell_only'))
             <div class="table-responsive">
                 <table class="table table-bordered table-striped ajax_view" id="sell_table">
                     <thead>
@@ -64,7 +64,7 @@
                     </tfoot>
                 </table>
             </div>
-        @endcan
+        @endif
     @endcomponent
 </section>
 <!-- /.content -->
@@ -116,7 +116,10 @@ $(document).ready( function(){
                 d.location_id = $('#sell_list_filter_location_id').val();
                 d.customer_id = $('#sell_list_filter_customer_id').val();
                 d.payment_status = $('#sell_list_filter_payment_status').val();
-
+                d.created_by = $('#created_by').val();
+                d.sales_cmsn_agnt = $('#sales_cmsn_agnt').val();
+                d.service_staffs = $('#service_staffs').val();
+                
                 @if($is_woocommerce)
                     if($('#synced_from_woocommerce').is(':checked')) {
                         d.only_woocommerce_sells = 1;
@@ -159,7 +162,7 @@ $(document).ready( function(){
         }
     });
 
-    $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status',  function() {
+    $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #sales_cmsn_agnt, #service_staffs',  function() {
         sell_table.ajax.reload();
     });
     @if($is_woocommerce)

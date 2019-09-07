@@ -45,7 +45,7 @@
                             <div class="widget-user-header bg-yellow">
                               <div class="widget-user-image">
                                 @if(!empty($business->logo))
-                                    <img class="img-circle" src="{{ url( 'storage/business_logos/' . $business->logo ) }}" alt="Business Logo">
+                                    <img class="img-circle" src="{{ url( 'uploads/business_logos/' . $business->logo ) }}" alt="Business Logo">
                                 @endif
                               </div>
                               <!-- /.widget-user-image -->

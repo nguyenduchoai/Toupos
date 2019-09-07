@@ -55,7 +55,7 @@ class PurchaseLine extends Model
      */
     public function getQuantityRemainingAttribute()
     {
-        return (float)($this->quantity - $this->quantity_sold - $this->quantity_adjusted - $this->quantity_returned);
+        return (float)($this->quantity - $this->quantity_used);
     }
 
     /**
@@ -65,6 +65,6 @@ class PurchaseLine extends Model
      */
     public function getQuantityUsedAttribute()
     {
-        return (float)($this->quantity_sold + $this->quantity_adjusted + $this->quantity_returned);
+        return (float)($this->quantity_sold + $this->quantity_adjusted + $this->quantity_returned + $this->mfg_quantity_used);
     }
 }

@@ -45,12 +45,21 @@
         @endif
         
       </div>
-      @if(!empty($sell->shipping_address()))
-        <div class="col-sm-4">
-          <strong>@lang('sale.shipping'):</strong><br>
-          {{$sell->shipping_address()}}
-        </div>
+      <div class="col-sm-4">
+      @if(in_array('tables' ,$enabled_modules))
+         <strong>@lang('restaurant.table'):</strong>
+          {{$sell->table->name ?? ''}}<br>
       @endif
+      @if(in_array('service_staff' ,$enabled_modules))
+          <strong>@lang('restaurant.service_staff'):</strong>
+          {{$sell->service_staff->user_full_name ?? ''}}<br>
+      @endif
+
+      @if(!empty($sell->shipping_address()))
+        <strong>@lang('sale.shipping'):</strong><br>
+          {{$sell->shipping_address()}}
+      @endif
+      </div>
     </div>
     <br>
     <div class="row">
@@ -127,6 +136,13 @@
               <td><b>(-)</b></td>
               <td><span class="pull-right">{{ $sell->discount_amount }} @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></td>
             </tr>
+            @if(session('business.enable_rp') == 1 && !empty($sell->rp_redeemed) )
+              <tr>
+                <th>{{session('business.rp_name')}}:</th>
+                <td><b>(-)</b></td>
+                <td> <span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->rp_redeemed_amount }}</span></td>
+              </tr>
+            @endif
             <tr>
               <th>{{ __('sale.order_tax') }}:</th>
               <td><b>(+)</b></td>
@@ -148,7 +164,7 @@
             <tr>
               <th>{{ __('sale.total_payable') }}: </th>
               <td></td>
-              <td><span class="display_currency pull-right">{{ $sell->final_total }}</span></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->final_total }}</span></td>
             </tr>
             <tr>
               <th>{{ __('sale.total_paid') }}:</th>

@@ -173,6 +173,10 @@
 			<br/>
 			<strong>{{ $receipt_details->sales_person_label }}</strong> {{ $receipt_details->sales_person }}
 		@endif
+		@if(!empty($receipt_details->customer_rp_label))
+			<br/>
+			<strong>{{ $receipt_details->customer_rp_label }}</strong> {{ $receipt_details->customer_total_rp }}
+		@endif
 	</div>
 
 	
@@ -194,7 +198,46 @@
 				<br>{{ $receipt_details->sub_heading_line5 }}
 			@endif
 		</p>
+		<p class="text-right color-555">
+		@if(!empty($receipt_details->serial_no_label) || !empty($receipt_details->repair_serial_no))
+			@if(!empty($receipt_details->serial_no_label))
+				<span class="pull-left">
+					<strong>{!! $receipt_details->serial_no_label !!}</strong>
+				</span>
+			@endif
+			{{$receipt_details->repair_serial_no}}<br>
+        @endif
+		@if(!empty($receipt_details->repair_status_label) || !empty($receipt_details->repair_status))
+			@if(!empty($receipt_details->repair_status_label))
+				<span class="pull-left">
+					<strong>{!! $receipt_details->repair_status_label !!}</strong>
+				</span>
+			@endif
+			{{$receipt_details->repair_status}}<br>
+        @endif
+        
+        @if(!empty($receipt_details->repair_warranty_label) || !empty($receipt_details->repair_warranty))
+			@if(!empty($receipt_details->repair_warranty_label))
+				<span class="pull-left">
+					<strong>{!! $receipt_details->repair_warranty_label !!}</strong>
+				</span>
+			@endif
+			{{$receipt_details->repair_warranty}}
+			<br>
+        @endif
+        </p>
 	</div>
+	@if(!empty($receipt_details->defects_label) || !empty($receipt_details->repair_defects))
+		<div class="col-xs-12">
+			<p class="color-555">
+				<br>
+				@if(!empty($receipt_details->defects_label))
+					<strong>{!! $receipt_details->defects_label !!}</strong> 
+				@endif
+				{{$receipt_details->repair_defects}}
+			</p>
+		</div>
+    @endif
 	
 </div>
 
@@ -249,6 +292,9 @@
 							{{$loop->iteration}}
 						</td>
 						<td style="word-break: break-all;">
+							@if(!empty($line['image']))
+								<img src="{{$line['image']}}" alt="Image" width="50" style="float: left; margin-right: 8px;">
+							@endif
                             {{$line['name']}} {{$line['variation']}} 
                             @if(!empty($line['sub_sku'])), {{$line['sub_sku']}} @endif @if(!empty($line['brand'])), {{$line['brand']}} @endif
                             @if(!empty($line['product_custom_fields'])), {{$line['product_custom_fields']}} @endif
@@ -401,6 +447,18 @@
 
 						<td class="text-right">
 							(-) {{$receipt_details->discount}}
+						</td>
+					</tr>
+				@endif
+
+				@if( !empty($receipt_details->reward_point_label) )
+					<tr class="color-555">
+						<td>
+							{!! $receipt_details->reward_point_label !!}
+						</td>
+
+						<td class="text-right">
+							(-) {{$receipt_details->reward_point_amount}}
 						</td>
 					</tr>
 				@endif

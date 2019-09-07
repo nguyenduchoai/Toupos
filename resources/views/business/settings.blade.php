@@ -35,6 +35,7 @@
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.prefixes')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.email_settings')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.sms_settings')</a>
+                    <a href="#" class="list-group-item text-center">@lang('lang_v1.reward_point_settings')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.modules')</a>
                 </div>
             </div>
@@ -73,7 +74,7 @@
                 @include('business.partials.settings_sms')
                 <!-- tab 10 end -->
                 <!-- tab 11 start -->
-                
+                @include('business.partials.settings_reward_point')
                 <!-- tab 11 end -->
                 <!-- tab 12 start -->
                 @include('business.partials.settings_modules')
@@ -92,5 +93,15 @@
 {!! Form::close() !!}
 </section>
 <!-- /.content -->
-
+@stop
+@section('javascript')
+<script type="text/javascript">
+    $(document).on('ifToggled', '#use_superadmin_settings', function() {
+        if ($('#use_superadmin_settings').is(':checked')) {
+            $('#toggle_visibility').addClass('hide');
+        } else {
+            $('#toggle_visibility').removeClass('hide');
+        }
+    });
+</script>
 @endsection

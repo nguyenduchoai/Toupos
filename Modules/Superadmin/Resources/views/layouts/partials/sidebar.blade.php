@@ -1,5 +1,5 @@
 @can('superadmin')
-	<li class="bg-red treeview {{ in_array($request->segment(1), ['superadmin']) ? 'active active-sub' : '' }}">
+	<li class="treeview {{ in_array($request->segment(1), ['superadmin']) ? 'active active-sub' : '' }}">
 	    <a href="#">
 	        <i class="fa fa-bank"></i>
 	        <span class="title">@lang('superadmin::lang.superadmin')</span>

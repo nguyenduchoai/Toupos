@@ -2,11 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
-use App\Utils\ModuleUtil;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -97,6 +96,19 @@ class AppServiceProvider extends ServiceProvider
                     $time_format = 'H:i';
                 }
                 return "\Carbon::createFromTimestamp(strtotime($date))->format('$time_format')";
+            } else {
+                return null;
+            }
+        });
+
+        Blade::directive('format_datetime', function ($date) {
+            if (!empty($date)) {
+                $time_format = 'h:i A';
+                if (session('business.time_format') == 24) {
+                    $time_format = 'H:i';
+                }
+                
+                return "\Carbon::createFromTimestamp(strtotime($date))->format(session('business.date_format') . ' ' . '$time_format')";
             } else {
                 return null;
             }

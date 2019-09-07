@@ -70,7 +70,7 @@ class PackagesController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        $intervals = ['days' => 'Days', 'months' => 'Months', 'years' => 'Years'];
+        $intervals = ['days' => __('lang_v1.days'), 'months' => __('lang_v1.months'), 'years' => __('lang_v1.years')];
         $currency = System::getCurrency();
         $permissions = $this->moduleUtil->getModuleData('superadmin_package');
 
@@ -89,8 +89,8 @@ class PackagesController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        try{
-            $input = $request->only(['name', 'description', 'location_count', 'user_count', 'product_count', 'invoice_count', 'interval', 'interval_count', 'trial_days', 'price', 'sort_order', 'is_active', 'custom_permissions', 'is_private', 'is_one_time', 'enable_custom_link', 'custom_link', 
+        try {
+            $input = $request->only(['name', 'description', 'location_count', 'user_count', 'product_count', 'invoice_count', 'interval', 'interval_count', 'trial_days', 'price', 'sort_order', 'is_active', 'custom_permissions', 'is_private', 'is_one_time', 'enable_custom_link', 'custom_link',
                 'custom_link_text']);
 
             $currency = System::getCurrency();
@@ -111,11 +111,10 @@ class PackagesController extends BaseController
             $package->save();
 
             $output = ['success' => 1, 'msg' => __('lang_v1.success')];
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0, 
+            $output = array('success' => 0,
                             'msg' => __('messages.something_went_wrong')
                         );
         }
@@ -140,10 +139,10 @@ class PackagesController extends BaseController
      */
     public function edit($id)
     {
-        $packages = Package::where( 'id', $id)
+        $packages = Package::where('id', $id)
                             ->first();
         
-        $intervals = ['days' => 'Days', 'months' => 'Months', 'years' => 'Years'];
+        $intervals = ['days' => __('lang_v1.days'), 'months' => __('lang_v1.months'), 'years' => __('lang_v1.years')];
 
         $permissions = $this->moduleUtil->getModuleData('superadmin_package', true);
 
@@ -162,7 +161,7 @@ class PackagesController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        try{
+        try {
             $packages_details = $request->only(['name', 'id', 'description', 'location_count', 'user_count', 'product_count', 'invoice_count', 'interval', 'interval_count', 'trial_days', 'price', 'sort_order', 'is_active', 'custom_permissions', 'is_private', 'is_one_time', 'enable_custom_link', 'custom_link', 'custom_link_text']);
             
             $packages_details['is_active'] = empty($packages_details['is_active']) ? 0 : 1;
@@ -177,14 +176,13 @@ class PackagesController extends BaseController
             $package = Package::where('id', $id)
                             ->first();
             $package->fill($packages_details);
-            $package->save();   
+            $package->save();
 
             $output = ['success' => 1, 'msg' => __('lang_v1.success')];
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0, 
+            $output = array('success' => 0,
                             'msg' => __('messages.something_went_wrong')
                         );
         }
@@ -204,16 +202,15 @@ class PackagesController extends BaseController
             abort(403, 'Unauthorized action.');
         }
 
-        try{
+        try {
             Package::where('id', $id)
                 ->delete();
             
             $output = ['success' => 1, 'msg' => __('lang_v1.success')];
-
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0, 
+            $output = array('success' => 0,
                             'msg' => __('messages.something_went_wrong')
                         );
         }
