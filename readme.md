@@ -1,15 +1,15 @@
-## About Ultimate POS
+## About TOUPOS
 
-Ultimate POS is a POS application by [Ultimate Fosters](http://ultimatefosters.com), a brand of [The Web Fosters](http://thewebfosters.com).
+TOUPOS is a POS application by [TOUPOS](http://toucan.vn), a brand of [TOUCAN](http://toucan.vn).
 
 ## Installation & Documentation
 You will find installation guide and documentation in the downloaded zip file.
-Also, For complete updated documentation of the ultimate pos please visit online [documentation guide](http://ultimatefosters.com/ultimate-pos/).
+Also, For complete updated documentation of the ultimate pos please visit online [documentation guide](http://http://toucan.vn/toupos/).
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within ultimate POS, please send an e-mail to support at thewebfosters@gmail.com. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within TOUPOS, please send an e-mail to support at duchoai@toucan.vn. All security vulnerabilities will be promptly addressed.
 
 ## License
 
-The Ultimate POS software is licensed under the [Codecanyon license](https://codecanyon.net/licenses/standard).
+The TOUPOS software is licensed under the [Toucan](https://http://toucan.vn).
