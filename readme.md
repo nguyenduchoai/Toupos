@@ -8,7 +8,7 @@ Also, For complete updated documentation of the ultimate pos please visit online
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability within TOUPOS, please send an e-mail to support at duchoai@tocuan.vn. All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability within TOUPOS, please send an e-mail to support at duchoai@toucan.vn. All security vulnerabilities will be promptly addressed.
 
 ## License
 
