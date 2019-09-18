@@ -51,7 +51,7 @@
 				<div class="form-group">
 					{!! Form::label('recipe_quantity', __('lang_v1.quantity').':*') !!}
 					<div class="@if(!empty($sub_units)) input_inline @else input-group @endif" id="recipe_quantity_input">
-						{!! Form::text('quantity', @num_format($quantity), ['class' => 'form-control input_number', 'id' => 'recipe_quantity']); !!}
+						{!! Form::text('quantity', @num_format($quantity), ['class' => 'form-control input_number', 'id' => 'recipe_quantity', 'required', 'data-rule-notEmpty' => 'true', 'data-rule-notEqualToWastedQuantity' => 'true']); !!}
 						<span class="@if(empty($sub_units)) input-group-addon @endif" id="unit_html">
 							@if(!empty($sub_units))
 								<select name="sub_unit_id" class="form-control" id="sub_unit_id">

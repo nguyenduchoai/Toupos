@@ -2,6 +2,7 @@
 
 namespace Modules\Manufacturing\Http\Controllers;
 
+use App\System;
 use App\Business;
 use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
@@ -42,7 +43,8 @@ class SettingsController extends Controller
         }
         $manufacturing_settings = $this->mfgUtil->getSettings($business_id);
 
-        return view('manufacturing::settings.index')->with(compact('manufacturing_settings'));
+        $version = System::getProperty('manufacturing_version');
+        return view('manufacturing::settings.index')->with(compact('manufacturing_settings', 'version'));
     }
 
     /**

@@ -80,12 +80,14 @@ class RecipeController extends Controller
                 ->addColumn('recipe_total', function ($row) {
                     $price = 0;
                     foreach ($row->ingredients as $ingredient) {
-                        $ingredient_total = $ingredient->variation->dpp_inc_tax * $ingredient->quantity;
-                        if (!empty($ingredient->sub_unit)) {
-                            $multiplier = !empty($ingredient->sub_unit->base_unit_multiplier) ? $ingredient->sub_unit->base_unit_multiplier : 1;
-                            $ingredient_total = $ingredient_total * $multiplier;
+                        if(!empty($ingredient->variation)){
+                            $ingredient_total = $ingredient->variation->dpp_inc_tax * $ingredient->quantity;
+                            if (!empty($ingredient->sub_unit)) {
+                                $multiplier = !empty($ingredient->sub_unit->base_unit_multiplier) ? $ingredient->sub_unit->base_unit_multiplier : 1;
+                                $ingredient_total = $ingredient_total * $multiplier;
+                            }
+                            $price += $ingredient_total;
                         }
-                        $price += $ingredient_total;
                     }
                     $price = $price + (($price * $row->extra_cost) / 100);
                     return '<span class="display_currency" data-currency_symbol="true">' . $price . '</span>';

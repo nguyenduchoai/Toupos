@@ -48,4 +48,7 @@ return [
     'current_stock_mfg' => 'Sản phẩm hiện tại (Sản xuất)',
     'only_mfg_products' => 'Chỉ sản xuất sản phẩm',
     'mfg_stock_tooltip' => 'Sản phẩm còn lại từ tổng sản xuất',
+    'quantity_greater_than_zero' => 'Số lượng phải lớn hơn 0',
+    'waste_qty_less_than_qty' => 'Số lượng phải lớn hơn số lượng hao hụt',
+    'version_info' => 'Phiên bản Module sản xuất - <code> :version </code>'
 ];

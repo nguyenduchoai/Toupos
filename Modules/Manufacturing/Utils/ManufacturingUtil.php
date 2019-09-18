@@ -14,7 +14,7 @@ class ManufacturingUtil extends Util
      * Retrives ingredients details.
      * @return array
      */
-    public function getIngredientDetails($ingredient_array, $business_id, $location_id = null, $recipe = null)
+    public function getIngredientDetails($ingredient_array, $business_id, $location_id = null, $recipe = null, $unformat = false)
     {
         $ingredients = [];
         $variation_ids = array_keys($ingredient_array);
@@ -27,8 +27,11 @@ class ManufacturingUtil extends Util
                 $q->where('location_id', $location_id);
             }];
         }
+
+        $ids_string = implode(', ', $variation_ids);
         $ingredient_variations = Variation::whereIn('id', $variation_ids)
                             ->with($with)
+                            ->orderByRaw("field(id, $ids_string)")
                             ->get();
 
         //Format variation data
@@ -50,8 +53,8 @@ class ManufacturingUtil extends Util
                 $is_sub_unit = true;
             }
 
-            $line_total_quantity = $ingredient_array[$ingredient_variation->id]['quantity'];
-            $unit_qty = $ingredient_array[$ingredient_variation->id]['quantity'] * $multiplier;
+            $line_total_quantity = $unformat ? $this->num_uf($ingredient_array[$ingredient_variation->id]['quantity']) : $ingredient_array[$ingredient_variation->id]['quantity'];
+            $unit_qty = $line_total_quantity * $multiplier;
 
             if (!empty($recipe)) {
                 $recipe_base_unit_multiplier = !empty($recipe->sub_unit) ? $recipe->sub_unit->base_unit_multiplier : 1;

@@ -1,5 +1,15 @@
 <script type="text/javascript">
 	$(document).ready( function() {
+        jQuery.validator.addMethod("notEmpty", function(value, element, param) {
+            return __number_uf(value) > 0
+        }, "{{__('manufacturing::lang.quantity_greater_than_zero')}}");
+
+        jQuery.validator.addMethod("notEqualToWastedQuantity", function(value, element, param) {
+            var waste_qty = __read_number($('#mfg_wasted_units'));
+            var qty = __number_uf(value);
+            return qty > waste_qty;
+        }, "{{__('manufacturing::lang.waste_qty_less_than_qty')}}");
+
 		$('#transaction_date').datetimepicker({
 	        format: moment_date_format + ' ' + moment_time_format,
 	        ignoreReadonly: true,

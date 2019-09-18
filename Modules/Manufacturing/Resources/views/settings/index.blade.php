@@ -52,6 +52,10 @@
             <button type="submit" class="btn btn-primary pull-right">@lang('messages.update')</button>
         </div>
     </div>
+
+    <div class="col-xs-12">
+        <p class="help-block"><i>{!! __('manufacturing::lang.version_info', ['version' => $version]) !!}</i></p>
+    </div>
     {!! Form::close() !!}
 </section>
 @stop

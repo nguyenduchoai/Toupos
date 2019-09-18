@@ -48,4 +48,7 @@ return [
     'current_stock_mfg' => 'Current Stock (Manufacturing)',
     'only_mfg_products' => 'Only manufactured products',
     'mfg_stock_tooltip' => 'Stock left from total manufactured',
+    'quantity_greater_than_zero' => 'Quantity must be greater than zero',
+    'waste_qty_less_than_qty' => 'Quantity must be greater than wasted quantity',
+    'version_info' => 'Manufacturing module version - <code> :version </code>'
 ];

@@ -250,10 +250,10 @@ class ProductionController extends Controller
             ];
 
             $sell_lines = [];
-            $ingredient_quantities = $request->input('ingredients');
+            $ingredient_quantities = !empty($request->input('ingredients')) ? $request->input('ingredients') : [];
 
             //Get ingredient details to create sell lines
-            $all_variation_details = $this->mfgUtil->getIngredientDetails($ingredient_quantities, $business_id);
+            $all_variation_details = $this->mfgUtil->getIngredientDetails($ingredient_quantities, $business_id, null, null, true);
 
             foreach ($all_variation_details as $variation_details) {
                 $variation = $variation_details['variation'];
@@ -624,7 +624,7 @@ class ProductionController extends Controller
 
             $sell_lines = [];
             $ingredient_quantities = $request->input('ingredients');
-            $all_variation_details = $this->mfgUtil->getIngredientDetails($ingredient_quantities, $business_id);
+            $all_variation_details = $this->mfgUtil->getIngredientDetails($ingredient_quantities, $business_id, null, null, true);
             foreach ($all_variation_details as $variation_details) {
                 $variation = $variation_details['variation'];
 
