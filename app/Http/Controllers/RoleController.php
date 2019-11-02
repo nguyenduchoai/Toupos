@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\BusinessLocation;
 use App\SellingPriceGroup;
 
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Yajra\DataTables\Facades\DataTables;
-
 use App\Utils\ModuleUtil;
+
+use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
+
+use Yajra\DataTables\Facades\DataTables;
 
 class RoleController extends Controller
 {
@@ -95,8 +93,6 @@ class RoleController extends Controller
 
         //Get all locations
         $business_id = request()->session()->get('user.business_id');
-        $locations = BusinessLocation::where('business_id', $business_id)
-                                    ->get();
 
         $selling_price_groups = SellingPriceGroup::where('business_id', $business_id)
                                     ->get();
@@ -138,15 +134,6 @@ class RoleController extends Controller
                             'business_id' => $business_id,
                             'is_service_staff' => $is_service_staff
                         ]);
-
-                //Include location permissions
-                $location_permissions = $request->input('location_permissions');
-                if (!in_array('access_all_locations', $permissions) &&
-                    !empty($location_permissions)) {
-                    foreach ($location_permissions as $location_permission) {
-                        $permissions[] = $location_permission;
-                    }
-                }
 
                 //Include selling price group permissions
                 $spg_permissions = $request->input('spg_permissions');
@@ -209,9 +196,6 @@ class RoleController extends Controller
             $role_permissions[] = $role_perm->name;
         }
 
-        $locations = BusinessLocation::where('business_id', $business_id)
-                                    ->get();
-
         $selling_price_groups = SellingPriceGroup::where('business_id', $business_id)
                                     ->get();
 
@@ -258,15 +242,6 @@ class RoleController extends Controller
                     $role->is_service_staff = $is_service_staff;
                     $role->name = $role_name . '#' . $business_id;
                     $role->save();
-
-                    //Include location permissions
-                    $location_permissions = $request->input('location_permissions');
-                    if (!in_array('access_all_locations', $permissions) &&
-                        !empty($location_permissions)) {
-                        foreach ($location_permissions as $location_permission) {
-                            $permissions[] = $location_permission;
-                        }
-                    }
 
                     //Include selling price group permissions
                     $spg_permissions = $request->input('spg_permissions');

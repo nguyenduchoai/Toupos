@@ -183,6 +183,16 @@
 					</label>
 					</div>
 				</div>
+				<div class="clearfix"></div>
+				<div class="col-sm-4">
+					<div class="checkbox">
+					<label>
+                        {!! Form::checkbox('update_subscriptions', 1, false, ['class' => 'input-icheck']); !!}
+                        {{__('superadmin::lang.update_existing_subscriptions')}}
+					</label>
+					@show_tooltip(__('superadmin::lang.update_existing_subscriptions_tooltip'))
+					</div>
+				</div>
 			</div>
 
 			<div class="row">

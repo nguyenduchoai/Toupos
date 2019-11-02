@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateVariationGroupPricesTable extends Migration
 {
@@ -19,7 +19,7 @@ class CreateVariationGroupPricesTable extends Migration
             $table->foreign('variation_id')->references('id')->on('variations')->onDelete('cascade');
             $table->integer('price_group_id')->unsigned();
             $table->foreign('price_group_id')->references('id')->on('selling_price_groups')->onDelete('cascade');
-            $table->decimal('price_inc_tax', 20, 2);
+            $table->decimal('price_inc_tax', 22, 4);
             $table->timestamps();
         });
     }

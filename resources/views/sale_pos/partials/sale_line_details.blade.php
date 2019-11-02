@@ -23,10 +23,10 @@
             <td>
                 {{ $sell_line->product->name }}
                 @if( $sell_line->product->type == 'variable')
-                - {{ $sell_line->variations->product_variation->name or ''}}
-                - {{ $sell_line->variations->name or ''}},
+                - {{ $sell_line->variations->product_variation->name ?? ''}}
+                - {{ $sell_line->variations->name ?? ''}},
                 @endif
-                {{ $sell_line->variations->sub_sku or ''}}
+                {{ $sell_line->variations->sub_sku ?? ''}}
                 @php
                 $brand = $sell_line->product->brand;
                 @endphp
@@ -39,7 +39,7 @@
                 @endif
             </td>
             @if( session()->get('business.enable_lot_number') == 1)
-                <td>{{ $sell_line->lot_details->lot_number or '--' }}
+                <td>{{ $sell_line->lot_details->lot_number ?? '--' }}
                     @if( session()->get('business.enable_product_expiry') == 1 && !empty($sell_line->lot_details->exp_date))
                     ({{@format_date($sell_line->lot_details->exp_date)}})
                     @endif
@@ -77,8 +77,8 @@
             <tr>
                 <td>&nbsp;</td>
                 <td>
-                    {{ $modifier->product->name }} - {{ $modifier->variations->name or ''}},
-                    {{ $modifier->variations->sub_sku or ''}}
+                    {{ $modifier->product->name }} - {{ $modifier->variations->name ?? ''}},
+                    {{ $modifier->variations->sub_sku ?? ''}}
                 </td>
                 @if( session()->get('business.enable_lot_number') == 1)
                     <td>&nbsp;</td>

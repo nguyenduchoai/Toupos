@@ -58,18 +58,18 @@
 			{{-- Price --}}
 			@if(!empty($print['price']))
 				<b>@lang('lang_v1.price'):</b>
-				<span class="display_currency" data-currency_symbol = true>
+				<span class="display_currency" data-currency_symbol = "true">
 					@if($print['price_type'] == 'inclusive')
-						{{$details['details']->sell_price_inc_tax}}
+						{{@num_format($details['details']->sell_price_inc_tax)}}
 					@else
-						{{$details['details']->default_sell_price}}
+						{{@num_format($details['details']->default_sell_price)}}
 					@endif
 				</span>
 			@endif
 
 
 			{{-- Barcode --}}
-			<img class="center-block" style="width:90% !important;height: {{$barcode_details->height*0.24}}in !important;" src="data:image/png;base64,{{DNS1D::getBarcodePNG($details['details']->sub_sku, $details['details']->barcode_type, 2,30,array(39, 48, 54), true)}}">
+			<img class="center-block" style="width:90% !important;height: {{$barcode_details->height*0.24}}in !important;" src="data:image/png;base64,{{DNS1D::getBarcodePNG($details['details']->sub_sku, $details['details']->barcode_type, 2,30,array(0, 0, 0), true)}}">
 
 		</div>
 		</div>

@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateCashRegistersTable extends Migration
 {
@@ -21,7 +21,7 @@ class CreateCashRegistersTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->enum('status', ['close', 'open'])->default('open');
             $table->dateTime('closed_at')->nullable();
-            $table->decimal('closing_amount', 8, 2)->default(0);
+            $table->decimal('closing_amount', 22, 4)->default(0);
             $table->integer('total_card_slips')->default(0);
             $table->integer('total_cheques')->default(0);
             $table->text('closing_note')->nullable();

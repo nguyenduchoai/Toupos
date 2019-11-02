@@ -730,8 +730,10 @@ class SellController extends Controller
             $redeem_details['points'] -= $transaction->rp_earned;
         }
 
+        $edit_discount = auth()->user()->can('edit_product_discount_from_sale_screen');
+        $edit_price = auth()->user()->can('edit_product_price_from_sale_screen');
         return view('sell.edit')
-            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings', 'waiters', 'invoice_schemes', 'default_invoice_schemes', 'redeem_details'));
+            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings', 'waiters', 'invoice_schemes', 'default_invoice_schemes', 'redeem_details', 'edit_discount', 'edit_price'));
     }
 
     /**

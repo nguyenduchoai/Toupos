@@ -204,7 +204,11 @@
 					<table class="table table-condensed table-bordered table-striped table-responsive">
 						<tr>
 							<td>
-								<div class="pull-right"><b>@lang('sale.total'): </b>
+								<div class="pull-right">
+									<b>@lang('sale.item'):</b> 
+									<span class="total_quantity">0</span>
+									&nbsp;&nbsp;&nbsp;&nbsp;
+									<b>@lang('sale.total'): </b>
 									<span class="price_total">0</span>
 								</div>
 							</td>

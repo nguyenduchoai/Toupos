@@ -16,16 +16,16 @@ class EventServiceProvider extends ServiceProvider
         // 'App\Events\Event' => [
         //     'App\Listeners\EventListener',
         // ],
-        'App\Events\TransactionPaymentAdded' => [
-            'App\Listeners\AddAccountTransaction',
+        \App\Events\TransactionPaymentAdded::class => [
+            \App\Listeners\AddAccountTransaction::class,
         ],
 
-        'App\Events\TransactionPaymentUpdated' => [
-            'App\Listeners\UpdateAccountTransaction',
+        \App\Events\TransactionPaymentUpdated::class => [
+            \App\Listeners\UpdateAccountTransaction::class,
         ],
 
-        'App\Events\TransactionPaymentDeleted' => [
-            'App\Listeners\DeleteAccountTransaction',
+        \App\Events\TransactionPaymentDeleted::class => [
+            \App\Listeners\DeleteAccountTransaction::class,
         ],
     ];
 

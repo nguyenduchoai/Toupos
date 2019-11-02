@@ -42,7 +42,7 @@ return [
     'discount_amount' => 'Số tiền giảm',
     'no_recent_transactions' => 'Không có giao dịch gần đây',
     'final' => 'Thành công',
-    'invoice_no' => 'Hóa đơn số.',
+    'invoice_no' => 'Số Hóa đơn',
     'customer_name' => 'Tên khách hàng',
     'payment_status' => 'Tình trạng thanh toán',
     'status' => 'Trạng thái',

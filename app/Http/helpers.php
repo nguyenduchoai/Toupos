@@ -10,20 +10,20 @@ function pos_boot($ul, $pt, $lc, $em, $un, $type = 1, $pid = null){
 
     $pid = is_null($pid) ? config('author.pid') : $pid;
 
-    $curlConfig = array(CURLOPT_URL => $request_url, 
+    $curlConfig = [CURLOPT_URL => $request_url, 
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_SSL_VERIFYHOST => false,
         CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_POSTFIELDS     => array(
+        CURLOPT_POSTFIELDS     => [
             'url' => $ul,
             'path' => $pt,
             'license_code' => $lc,
             'email' => $em,
             'username' => $un,
-            'product_id' => $pid
-        )
-    );
+            'product_id' => config('author.pid')
+        ]
+    ];
     curl_setopt_array($ch, $curlConfig);
     $result = curl_exec($ch);
 

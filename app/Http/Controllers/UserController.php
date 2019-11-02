@@ -129,7 +129,7 @@ class UserController extends Controller
             $user = User::where('id', $user_id)->first();
             
             if (Hash::check($request->input('current_password'), $user->password)) {
-                $user->password = bcrypt($request->input('new_password'));
+                $user->password = Hash::make($request->input('new_password'));
                 $user->save();
                 $output = ['success' => 1,
                                 'msg' => 'Password updated successfully'

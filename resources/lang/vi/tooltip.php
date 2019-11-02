@@ -29,7 +29,7 @@ return [
 
     'no_of_products_for_trending_products' => 'Số sản phẩm có xu hướng hàng đầu được so sánh trong biểu đồ dưới đây.',
 
-    'top_trending_products' => "Sản phẩm bán chạy nhất của cửa hàng <br/><small class='text-muted'>Áp dụng các bộ lọc để biết các sản phẩm theo xu hướng cho Danh mục, Thương hiệu, Địa điểm kinh doanh cụ thể, v.v.</small>",
+    'top_trending_products' => "Sản phẩm bán chạy nhất của cửa hàng <br/><small class='text-muted'>Áp dụng các bộ lọc để biết các sản phẩm theo xu hướng cho Danh mục, nhãn hiệu, Địa điểm kinh doanh cụ thể, v.v.</small>",
 
     'sku' => "Unique product id or Stock Keeping Unit <br><br>Giữ trống để tự động tạo sku.<br><small class='text-muted'>Bạn có thể sửa đổi tiền tố sku trong cài đặt Doanh nghiệp.</small>",
 
@@ -98,7 +98,7 @@ return [
 
     'express_checkout' => 'Mark complete paid & checkout',
     'total_card_slips' => 'Tổng số thanh toán thẻ được sử dụng trong đăng ký này',
-    'total_cheques' => 'Tổng số kiểm tra được sử dụng trong đăng ký này',
+    'total_cheques' => 'Tổng số cheque được sử dụng trong đăng ký này',
 
     'capability_profile' => "Hỗ trợ cho các lệnh và trang mã khác nhau giữa các nhà cung cấp máy in và mô hình. Nếu bạn không chắc chắn, nên sử dụng Hồ sơ năng lực 'đơn giản'",
 

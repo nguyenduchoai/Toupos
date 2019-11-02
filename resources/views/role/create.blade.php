@@ -431,8 +431,24 @@
           <div class="col-md-12">
             <div class="checkbox">
               <label>
+                {!! Form::checkbox('permissions[]', 'edit_product_price_from_pos_screen', false, ['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.edit_product_price_from_pos_screen') }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
                 {!! Form::checkbox('permissions[]', 'edit_product_discount_from_sale_screen', false, ['class' => 'input-icheck']); !!}
                 {{ __('lang_v1.edit_product_discount_from_sale_screen') }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'edit_product_discount_from_pos_screen', false, ['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.edit_product_discount_from_pos_screen') }}
               </label>
             </div>
           </div>
@@ -836,33 +852,6 @@
         </div>
         <hr>
         @endif
-        <div class="row">
-        <div class="col-md-3">
-          <h4>@lang( 'role.access_locations' ) @show_tooltip(__('tooltip.access_locations_permission'))</h4>
-        </div>
-        <div class="col-md-9">
-          <div class="col-md-12">
-            <div class="checkbox">
-                <label>
-                  {!! Form::checkbox('permissions[]', 'access_all_locations', true, 
-                [ 'class' => 'input-icheck']); !!} {{ __( 'role.all_locations' ) }} 
-                </label>
-                @show_tooltip(__('tooltip.all_location_permission'))
-            </div>
-          </div>
-          @foreach($locations as $location)
-          <div class="col-md-12">
-            <div class="checkbox">
-              <label>
-                {!! Form::checkbox('location_permissions[]', 'location.' . $location->id, false, 
-                [ 'class' => 'input-icheck']); !!} {{ $location->name }}
-              </label>
-            </div>
-          </div>
-          @endforeach
-        </div>
-        </div>
-        <hr>
         <div class="row">
         <div class="col-md-3">
           <h4>@lang( 'lang_v1.access_selling_price_groups' )</h4>

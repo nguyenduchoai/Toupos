@@ -25,7 +25,7 @@
         </div>
         <!-- <div class="clearfix"></div> -->
 
-        <div class="col-sm-12 hide">
+        {{--<div class="col-sm-12 hide">
             <div class="form-group">
                 {!! Form::label('sell_price_tax', __('business.sell_price_tax') . ':') !!}
                 <div class="input-group">
@@ -43,7 +43,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>--}}
         <div class="col-sm-4">
             <div class="form-group">
                 {!! Form::label('sales_cmsn_agnt', __('lang_v1.sales_commission_agent') . ':') !!}

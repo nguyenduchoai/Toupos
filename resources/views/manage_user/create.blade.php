@@ -34,16 +34,10 @@
         </div>
       </div>
       <div class="clearfix"></div>
-      <div class="col-md-12">
+      <div class="col-md-6">
         <div class="form-group">
           {!! Form::label('email', __( 'business.email' ) . ':*') !!}
             {!! Form::text('email', null, ['class' => 'form-control', 'required', 'placeholder' => __( 'business.email' ) ]); !!}
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="form-group">
-          {!! Form::label('role', __( 'user.role' ) . ':*') !!}
-            {!! Form::select('role', $roles, null, ['class' => 'form-control select2']); !!}
         </div>
       </div>
       <div class="col-md-6">
@@ -114,6 +108,41 @@
         </div>
       </div>
   @endcomponent
+  </div>
+  <div class="col-md-12">
+    @component('components.widget', ['title' => __('lang_v1.roles_and_permissions')])
+      <div class="col-md-6">
+        <div class="form-group">
+          {!! Form::label('role', __( 'user.role' ) . ':*') !!} @show_tooltip(__('lang_v1.admin_role_location_permission_help'))
+            {!! Form::select('role', $roles, null, ['class' => 'form-control select2']); !!}
+        </div>
+      </div>
+      <div class="clearfix"></div>
+      <div class="col-md-3">
+          <h4>@lang( 'role.access_locations' ) @show_tooltip(__('tooltip.access_locations_permission'))</h4>
+        </div>
+        <div class="col-md-9">
+          <div class="col-md-12">
+            <div class="checkbox">
+                <label>
+                  {!! Form::checkbox('access_all_locations', 'access_all_locations', true, 
+                ['class' => 'input-icheck']); !!} {{ __( 'role.all_locations' ) }} 
+                </label>
+                @show_tooltip(__('tooltip.all_location_permission'))
+            </div>
+          </div>
+          @foreach($locations as $location)
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('location_permissions[]', 'location.' . $location->id, false, 
+                [ 'class' => 'input-icheck']); !!} {{ $location->name }}
+              </label>
+            </div>
+          </div>
+          @endforeach
+        </div>
+    @endcomponent
   </div>
   </div>
     @include('user.edit_profile_form_part')

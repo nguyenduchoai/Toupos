@@ -34,6 +34,7 @@
 @section('javascript')
     <script type="text/javascript">
         $(document).ready(function(){
+            $('.select2_register').select2();
             $("form#business_register_form").validate({
                 errorPlacement: function(error, element) {
                     if(element.parent('.input-group').length) {

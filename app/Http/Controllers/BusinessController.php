@@ -346,7 +346,9 @@ class BusinessController extends Controller
 
         $allow_superadmin_email_settings = System::getProperty('allow_email_settings_to_businesses');
 
-        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings'));
+        $custom_labels = !empty($business->custom_labels) ? json_decode($business->custom_labels, true) : [];
+
+        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings', 'custom_labels'));
     }
 
     /**
@@ -369,7 +371,7 @@ class BusinessController extends Controller
                 'min_order_total_for_rp', 'max_rp_per_order',
                 'redeem_amount_per_unit_rp', 'min_order_total_for_redeem',
                 'min_redeem_point', 'max_redeem_point', 'rp_expiry_period',
-                'rp_expiry_type']);
+                'rp_expiry_type', 'custom_labels']);
 
             if (!empty($request->input('enable_rp')) &&  $request->input('enable_rp') == 1) {
                 $business_details['enable_rp'] = 1;
@@ -387,7 +389,7 @@ class BusinessController extends Controller
             $business_details['default_sales_discount'] = !empty($business_details['default_sales_discount']) ? $this->businessUtil->num_uf($business_details['default_sales_discount']) : 0;
 
             if (!empty($business_details['start_date'])) {
-                $business_details['start_date'] = Carbon::createFromFormat('m/d/Y', $business_details['start_date'])->toDateString();
+                $business_details['start_date'] = $this->businessUtil->uf_date($business_details['start_date']);
             }
 
             if (!empty($request->input('enable_tooltip')) &&  $request->input('enable_tooltip') == 1) {
@@ -451,6 +453,8 @@ class BusinessController extends Controller
                 }
             }
             $business_details['pos_settings'] = json_encode($pos_settings);
+
+            $business_details['custom_labels'] = json_encode($business_details['custom_labels']);
 
             //Enabled modules
             $enabled_modules = $request->input('enabled_modules');

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -69,7 +70,7 @@ class User extends Authenticatable
                     'last_name' => $details['last_name'],
                     'username' => $details['username'],
                     'email' => $details['email'],
-                    'password' => bcrypt($details['password']),
+                    'password' => Hash::make($details['password']),
                     'language' => !empty($details['language']) ? $details['language'] : 'en'
                 ]);
 
@@ -81,16 +82,18 @@ class User extends Authenticatable
      *
      * @return string or array
      */
-    public static function permitted_locations()
+    public function permitted_locations()
     {
-        if (auth()->user()->can('access_all_locations')) {
+        $user = $this;
+
+        if ($user->can('access_all_locations')) {
             return 'all';
         } else {
             $business_id = request()->session()->get('user.business_id');
             $permitted_locations = [];
             $all_locations = BusinessLocation::where('business_id', $business_id)->get();
             foreach ($all_locations as $location) {
-                if (auth()->user()->can('location.' . $location->id)) {
+                if ($user->can('location.' . $location->id)) {
                     $permitted_locations[] = $location->id;
                 }
             }
@@ -107,7 +110,7 @@ class User extends Authenticatable
      */
     public static function can_access_this_location($location_id)
     {
-        $permitted_locations = User::permitted_locations();
+        $permitted_locations = auth()->user()->permitted_locations();
         
         if ($permitted_locations == 'all' || in_array($location_id, $permitted_locations)) {
             return true;

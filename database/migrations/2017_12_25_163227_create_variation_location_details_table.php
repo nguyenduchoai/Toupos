@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateVariationLocationDetailsTable extends Migration
 {
@@ -25,7 +25,7 @@ class CreateVariationLocationDetailsTable extends Migration
             $table->integer('location_id')->unsigned();
             $table->foreign('location_id')->references('id')->on('business_locations');
 
-            $table->decimal('qty_available', 8, 2)->nullable();
+            $table->decimal('qty_available', 22, 4)->nullable();
 
             $table->timestamps();
 

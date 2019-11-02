@@ -66,8 +66,8 @@ class ReportController extends Controller
 
         $business_id = $request->session()->get('user.business_id');
 
-        if(\Module::has('Manufacturing') && (auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'manufacturing_module'))){
-                $show_manufacturing_data = true;
+        if (\Module::has('Manufacturing') && (auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'manufacturing_module'))) {
+            $show_manufacturing_data = true;
         } else {
             $show_manufacturing_data = false;
         }
@@ -134,13 +134,13 @@ class ReportController extends Controller
             $data = [];
 
             //Manufacturing module data.
-            if($show_manufacturing_data){
+            if ($show_manufacturing_data) {
                 $data['total_production_cost'] = $this->transactionUtil->getTotalProductionCost(
-                        $business_id,
-                        $start_date,
-                        $end_date,
-                        $location_id
-                    );  
+                    $business_id,
+                    $start_date,
+                    $end_date,
+                    $location_id
+                    );
             } else {
                 $data['total_production_cost'] = 0;
             }
@@ -303,9 +303,19 @@ class ReportController extends Controller
                     'contacts.id'
                 );
             $permitted_locations = auth()->user()->permitted_locations();
+            
             if ($permitted_locations != 'all') {
                 $contacts->whereIn('t.location_id', $permitted_locations);
             }
+
+            if (!empty($request->input('customer_group_id'))) {
+                $contacts->where('contacts.customer_group_id', $request->input('customer_group_id'));
+            }
+
+            if (!empty($request->input('contact_type'))) {
+                $contacts->where('contacts.type', $request->input('contact_type'));
+            }
+
             return Datatables::of($contacts)
                 ->editColumn('name', function ($row) {
                     $name = $row->name;
@@ -345,7 +355,11 @@ class ReportController extends Controller
                 ->make(true);
         }
 
-        return view('report.contact');
+        $customer_group = CustomerGroup::forDropdown($business_id, false, true);
+        $types = Contact::typeDropdown(true);
+
+        return view('report.contact')
+        ->with(compact('customer_group', 'types'));
     }
 
     /**
@@ -1819,6 +1833,8 @@ class ReportController extends Controller
             if (!empty($location_id)) {
                 $query->where('t.location_id', $location_id);
             }
+
+            $payment_types = $this->transactionUtil->payment_types();
             
             return Datatables::of($query)
                  ->editColumn('ref_no', function ($row) {
@@ -1830,8 +1846,8 @@ class ReportController extends Controller
                      }
                  })
                 ->editColumn('paid_on', '{{@format_date($paid_on)}}')
-                ->editColumn('method', function ($row) {
-                    $method = __('lang_v1.' . $row->method);
+                ->editColumn('method', function ($row) use ($payment_types) {
+                    $method = !empty($payment_types[$row->method]) ? $payment_types[$row->method] : '';
                     if ($row->method == 'cheque') {
                         $method .= '<br>(' . __('lang_v1.cheque_no') . ': ' . $row->cheque_number . ')';
                     } elseif ($row->method == 'card') {
@@ -1839,11 +1855,11 @@ class ReportController extends Controller
                     } elseif ($row->method == 'bank_transfer') {
                         $method .= '<br>(' . __('lang_v1.bank_account_no') . ': ' . $row->bank_account_number . ')';
                     } elseif ($row->method == 'custom_pay_1') {
-                        $method = __('lang_v1.custom_payment_1') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     } elseif ($row->method == 'custom_pay_2') {
-                        $method = __('lang_v1.custom_payment_2') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     } elseif ($row->method == 'custom_pay_3') {
-                        $method = __('lang_v1.custom_payment_3') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     }
                     return $method;
                 })
@@ -1912,6 +1928,7 @@ class ReportController extends Controller
                     'paid_on',
                     'transaction_payments.payment_ref_no',
                     'transaction_payments.document',
+                    'transaction_payments.transaction_no',
                     't.invoice_no',
                     't.id as transaction_id',
                     'cheque_number',
@@ -1939,7 +1956,7 @@ class ReportController extends Controller
             if (!empty($request->get('payment_types'))) {
                 $query->where('transaction_payments.method', $request->get('payment_types'));
             }
-
+            $payment_types = $this->transactionUtil->payment_types();
             return Datatables::of($query)
                  ->editColumn('invoice_no', function ($row) {
                      if (!empty($row->transaction_id)) {
@@ -1950,8 +1967,8 @@ class ReportController extends Controller
                      }
                  })
                 ->editColumn('paid_on', '{{@format_date($paid_on)}}')
-                ->editColumn('method', function ($row) {
-                    $method = __('lang_v1.' . $row->method);
+                ->editColumn('method', function ($row) use ($payment_types) {
+                    $method = !empty($payment_types[$row->method]) ? $payment_types[$row->method] : '';
                     if ($row->method == 'cheque') {
                         $method .= '<br>(' . __('lang_v1.cheque_no') . ': ' . $row->cheque_number . ')';
                     } elseif ($row->method == 'card') {
@@ -1959,11 +1976,11 @@ class ReportController extends Controller
                     } elseif ($row->method == 'bank_transfer') {
                         $method .= '<br>(' . __('lang_v1.bank_account_no') . ': ' . $row->bank_account_number . ')';
                     } elseif ($row->method == 'custom_pay_1') {
-                        $method = __('lang_v1.custom_payment_1') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     } elseif ($row->method == 'custom_pay_2') {
-                        $method = __('lang_v1.custom_payment_2') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     } elseif ($row->method == 'custom_pay_3') {
-                        $method = __('lang_v1.custom_payment_3') . '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
+                        $method .= '<br>(' . __('lang_v1.transaction_no') . ': ' . $row->transaction_no . ')';
                     }
                     return $method;
                 })

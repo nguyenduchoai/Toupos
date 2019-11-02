@@ -14,13 +14,8 @@
                     <span class="input-group-addon">
                         <i class="fa fa-calendar"></i>
                     </span>
-                    @php
-                        $start_date = null;
-                        if(!empty($business->start_date)){
-                            $start_date = date('m/d/Y', strtotime($business->start_date));
-                        }
-                    @endphp
-                    {!! Form::text('start_date', $start_date, ['class' => 'form-control start-date-picker','placeholder' => __('business.start_date'), 'readonly']); !!}
+                    
+                    {!! Form::text('start_date', @format_date($business->start_date), ['class' => 'form-control start-date-picker','placeholder' => __('business.start_date'), 'readonly']); !!}
                 </div>
             </div>
         </div>

@@ -149,7 +149,7 @@
             <span class="input-group-addon">
                 <i class="fa fa-clock-o"></i>
             </span>
-            {!! Form::select('time_zone', $timezone_list, 'Asia/Kolkata', ['class' => 'form-control select2_register','placeholder' => __('business.time_zone'), 'required']); !!}
+            {!! Form::select('time_zone', $timezone_list, config('app.timezone'), ['class' => 'form-control select2_register','placeholder' => __('business.time_zone'), 'required']); !!}
         </div>
     </div>
 </div>

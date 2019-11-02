@@ -6,10 +6,17 @@
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>@lang('business.business_settings')</h1>
-    <!-- <ol class="breadcrumb">
-        <li><a href="#"><i class="fa fa-dashboard"></i> Level</a></li>
-        <li class="active">Here</li>
-    </ol> -->
+    <br>
+    <div class="row">
+        <div class="col-md-8 col-xs-12 col-md-offset-2">
+            <div class="input-group">
+                <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                <select id="search_settings" class="form-control" style="width: 100%;">
+                </select>
+            </div>
+            
+        </div>
+    </div>
 </section>
 
 <!-- Main content -->
@@ -37,6 +44,7 @@
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.sms_settings')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.reward_point_settings')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.modules')</a>
+                    <a href="#" class="list-group-item text-center">@lang('lang_v1.custom_labels')</a>
                 </div>
             </div>
             <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10 pos-tab">
@@ -79,6 +87,7 @@
                 <!-- tab 12 start -->
                 @include('business.partials.settings_modules')
                 <!-- tab 12 end -->
+                @include('business.partials.settings_custom_labels')
             </div>
         </div>
         <!--  </pos-tab-container> -->
@@ -96,6 +105,49 @@
 @stop
 @section('javascript')
 <script type="text/javascript">
+    $(document).ready( function(){
+        //Search Settings
+        //Set all labels as select2 options
+        label_objects = [];
+        select2_data = [{
+            id: '',
+            text: ''
+        }];
+        var i = 0;
+        $('.pos-tab-container label').each( function(){
+            label_objects.push($(this));
+            var label_text = $(this).text().trim().replace(":", "").replace("*", "");
+            select2_data.push(
+                {
+                    id: i,
+                    text: label_text
+                }
+            );
+            i++;
+        });
+        $('#search_settings').select2({
+            data: select2_data,
+            placeholder: '@lang("lang_v1.search_settings")',
+        });
+        $('#search_settings').change( function(){
+            //Get label position and add active class to the tab
+            var label_index = $(this).val();
+            var label = label_objects[label_index];
+            $('.pos-tab-content.active').removeClass('active');
+            var tab_content = label.closest('.pos-tab-content');
+            tab_content.addClass('active');
+            tab_index = $('.pos-tab-content').index(tab_content);
+            $('.list-group-item.active').removeClass('active');
+            $('.list-group-item').eq(tab_index).addClass('active');
+
+            //Highlight the label for three seconds
+            label.css('background-color', 'yellow');
+            setTimeout(function(){ 
+                label.css('background-color', ''); 
+            }, 3000);
+        });
+    });
+
     $(document).on('ifToggled', '#use_superadmin_settings', function() {
         if ($('#use_superadmin_settings').is(':checked')) {
             $('#toggle_visibility').addClass('hide');

@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\CashRegister;
-use Illuminate\Http\Request;
-
 use App\Utils\CashRegisterUtil;
 
-use DB;
+use Illuminate\Http\Request;
 
 class CashRegisterController extends Controller
 {
@@ -26,7 +24,6 @@ class CashRegisterController extends Controller
     public function __construct(CashRegisterUtil $cashRegisterUtil)
     {
         $this->cashRegisterUtil = $cashRegisterUtil;
-        $this->payment_types = ['cash' => 'Cash', 'card' => 'Card', 'cheque' => 'Cheque', 'bank_transfer' => 'Bank Transfer', 'other' => 'Other'];
     }
 
     /**
@@ -102,8 +99,10 @@ class CashRegisterController extends Controller
         $close_time = \Carbon::now()->toDateTimeString();
         $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
 
+        $payment_types = $this->cashRegisterUtil->payment_types();
+
         return view('cash_register.register_details')
-                    ->with(compact('register_details', 'details'));
+                    ->with(compact('register_details', 'details', 'payment_types'));
     }
 
     /**
@@ -120,9 +119,10 @@ class CashRegisterController extends Controller
         $open_time = $register_details['open_time'];
         $close_time = \Carbon::now()->toDateTimeString();
         $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
-
+        $payment_types = $this->cashRegisterUtil->payment_types();
+        
         return view('cash_register.register_details')
-                ->with(compact('register_details', 'details'));
+                ->with(compact('register_details', 'details', 'payment_types'));
     }
 
     /**
@@ -139,9 +139,9 @@ class CashRegisterController extends Controller
         $open_time = $register_details['open_time'];
         $close_time = \Carbon::now()->toDateTimeString();
         $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
-
+        $payment_types = $this->cashRegisterUtil->payment_types();
         return view('cash_register.close_register_modal')
-                    ->with(compact('register_details', 'details'));
+                    ->with(compact('register_details', 'details', 'payment_types'));
     }
 
     /**

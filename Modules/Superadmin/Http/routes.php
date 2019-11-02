@@ -25,14 +25,16 @@ Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadm
     Route::get('/communicator', 'CommunicatorController@index');
     Route::post('/communicator/send', 'CommunicatorController@send');
     Route::get('/communicator/get-history', 'CommunicatorController@getHistory');
+
+    Route::resource('/frontend-pages', 'PageController');
 });
 
 Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone'],
     'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
         //Routes related to paypal checkout
         Route::get(
-        '/subscription/{package_id}/paypal-express-checkout',
-        'SubscriptionController@paypalExpressCheckout'
+            '/subscription/{package_id}/paypal-express-checkout',
+            'SubscriptionController@paypalExpressCheckout'
     );
 
         //Routes related to pesapal checkout
@@ -46,3 +48,5 @@ Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'tim
 
         Route::resource('/subscription', 'SubscriptionController');
     });
+
+Route::get('/page/{slug}', 'Modules\Superadmin\Http\Controllers\PageController@showPage')->name('frontend-pages');

@@ -529,18 +529,19 @@ class ProductUtil extends Util
         $details = [];
 
         foreach ($combo_variations as $key => $value) {
+            $variation = Variation::with('product')->findOrFail($value['variation_id']);
+
             $vld = VariationLocationDetails::where('variation_id', $value['variation_id'])
               ->where('location_id', $location_id)
               ->first();
-            $product = Product::find($vld->product_id);
 
             $variation_qty = !empty($vld) ? $vld->qty_available : 0;
-            $multiplier = $this->getMultiplierOf2Units($product->unit_id, $value['unit_id']);
+            $multiplier = $this->getMultiplierOf2Units($variation->product->unit_id, $value['unit_id']);
 
             $details[] = [
               'variation_id' => $value['variation_id'],
-              'product_id' => $vld->product_id,
-              'qty_required' => $value['quantity'] * $multiplier
+              'product_id' => $variation->product_id,
+              'qty_required' => $this->num_uf($value['quantity']) * $multiplier
             ];
         }
 

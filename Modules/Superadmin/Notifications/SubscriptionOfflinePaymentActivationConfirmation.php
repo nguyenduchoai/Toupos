@@ -3,9 +3,8 @@
 namespace Modules\Superadmin\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
 
 class SubscriptionOfflinePaymentActivationConfirmation extends Notification
 {
@@ -41,7 +40,7 @@ class SubscriptionOfflinePaymentActivationConfirmation extends Notification
      */
     public function toMail($notifiable)
     {
-        $details = 'Business: ' . $this->business->name . ', Package: ' . $this->package->name . ', Price:' . $this->package->price;
+        $details = 'Business: ' . $this->business->name . ', Package: ' . $this->package->name . ', Price: ' . $this->package->price;
 
         return (new MailMessage)
                 ->greeting('Hello!')

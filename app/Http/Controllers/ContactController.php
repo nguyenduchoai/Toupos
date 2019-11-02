@@ -44,8 +44,6 @@ class ContactController extends Controller
                     'opening_balance' => __('lang_v1.opening_balance'),
                     'payment' => __('lang_v1.payment')
                 ];
-
-        $this->paymentTypes = $this->transactionUtil->payment_types();
     }
 
     /**
@@ -970,7 +968,7 @@ class ContactController extends Controller
             }
 
             $payments = $query2->select('transaction_payments.*', 'bl.name as location_name', 't.type as transaction_type', 't.ref_no', 't.invoice_no')->get();
-
+            $paymentTypes = $this->transactionUtil->payment_types();
             foreach ($payments as $payment) {
                 $ref_no = in_array($payment->transaction_type, ['sell', 'sell_return']) ?  $payment->invoice_no :  $payment->ref_no;
                 $ledger[] = [
@@ -980,7 +978,7 @@ class ContactController extends Controller
                     'location' => $payment->location_name,
                     'payment_status' => '',
                     'total' => '',
-                    'payment_method' => $this->paymentTypes[$payment->method],
+                    'payment_method' => !empty($paymentTypes[$payment->method]) ? $paymentTypes[$payment->method] : '',
                     'debit' => in_array($payment->transaction_type, ['purchase', 'sell_return']) ? $payment->amount : '',
                     'credit' => in_array($payment->transaction_type, ['sell', 'purchase_return', 'opening_balance']) ? $payment->amount : '',
                     'others' => $payment->note . '<small>' . __('account.payment_for') . ': ' . $ref_no . '</small>'
@@ -997,7 +995,7 @@ class ContactController extends Controller
             });
         }
         return view('contact.ledger')
-             ->with(compact('contact', 'ledger'));
+             ->with(compact('ledger'));
     }
 
     public function postCustomersApi(Request $request)

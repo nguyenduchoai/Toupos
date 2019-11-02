@@ -919,6 +919,12 @@ class TransactionUtil extends Util
                         }
                         $output['taxes'][$tax_group_detail['name']] += $tax_group_detail['calculated_tax'];
                     }
+                } elseif(!empty($line['tax_unformatted']) && $line['tax_unformatted'] != 0){
+                    if (!isset($output['taxes'][$line['tax_name']])) {
+                        $output['taxes'][$line['tax_name']] = 0;
+                    }
+
+                    $output['taxes'][$line['tax_name']] += $line['tax_unformatted'];
                 }
             }
         } elseif ($transaction_type == 'sell_return') {
@@ -1040,11 +1046,13 @@ class TransactionUtil extends Util
             $output['payments'] = [];
             if ($il->show_payments == 1) {
                 $payments = $transaction->payment_lines->toArray();
+                $payment_types = $this->payment_types();
                 if (!empty($payments)) {
                     foreach ($payments as $value) {
+                        $method = !empty($payment_types[$value['method']]) ? $payment_types[$value['method']] : '';
                         if ($value['method'] == 'cash') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.cash") . ($value['is_return'] == 1 ? ' (' . trans("lang_v1.change_return") . ')(-)' : ''),
+                                ['method' => $method . ($value['is_return'] == 1 ? ' (' . trans("lang_v1.change_return") . ')(-)' : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
@@ -1052,43 +1060,43 @@ class TransactionUtil extends Util
                             }
                         } elseif ($value['method'] == 'card') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.card") . (!empty($value['card_transaction_number']) ? (', Transaction Number:' . $value['card_transaction_number']) : ''),
+                                ['method' => $method . (!empty($value['card_transaction_number']) ? (', Transaction Number:' . $value['card_transaction_number']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'cheque') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.cheque") . (!empty($value['cheque_number']) ? (', Cheque Number:' . $value['cheque_number']) : ''),
+                                ['method' => $method . (!empty($value['cheque_number']) ? (', Cheque Number:' . $value['cheque_number']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'bank_transfer') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.bank_transfer") . (!empty($value['bank_account_number']) ? (', Account Number:' . $value['bank_account_number']) : ''),
+                                ['method' => $method . (!empty($value['bank_account_number']) ? (', Account Number:' . $value['bank_account_number']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'other') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.other"),
+                                ['method' => $method,
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'custom_pay_1') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.custom_payment_1") . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
+                                ['method' => $method . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'custom_pay_2') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.custom_payment_2") . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
+                                ['method' => $method . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
                         } elseif ($value['method'] == 'custom_pay_3') {
                             $output['payments'][] =
-                                ['method' => trans("lang_v1.custom_payment_3") . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
+                                ['method' => $method . (!empty($value['transaction_no']) ? (', ' . trans("lang_v1.transaction_no") . ':' . $value['transaction_no']) : ''),
                                 'amount' => $this->num_f($value['amount'], $show_currency, $business_details),
                                 'date' => $this->format_date($value['paid_on'], false, $business_details)
                                 ];
@@ -1173,7 +1181,6 @@ class TransactionUtil extends Util
 
         $output['design'] = $il->design;
         $output['table_tax_headings'] = !empty($il->table_tax_headings) ? array_filter(json_decode($il->table_tax_headings), 'strlen') : null;
-        
         return (object)$output;
     }
 
@@ -1194,6 +1201,7 @@ class TransactionUtil extends Util
         foreach ($lines as $line) {
             $product = $line->product;
             $variation = $line->variations;
+            $product_variation = $line->variations->product_variation;
             $unit = $line->product->unit;
             $brand = $line->product->brand;
             $cat = $line->product->category;
@@ -1209,6 +1217,7 @@ class TransactionUtil extends Util
                 //Field for 1st column
                 'name' => $product->name,
                 'variation' => (empty($variation->name) || $variation->name == 'DUMMY') ? '' : $variation->name,
+                'product_variation' => (empty($product_variation->name) || $product_variation->name == 'DUMMY') ? '' : $product_variation->name,
                 //Field for 2nd column
                 'quantity' => $this->num_f($line->quantity, false, $business_details, true),
                 'units' => $unit_name,

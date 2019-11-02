@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateBarcodesTable extends Migration
 {
@@ -17,14 +17,14 @@ class CreateBarcodesTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->float('width', 8, 2)->nullable();
-            $table->float('height', 8, 2)->nullable();
-            $table->float('paper_width', 8, 2)->nullable();
-            $table->float('paper_height', 8, 2)->nullable();
-            $table->float('top_margin', 8, 2)->nullable();
-            $table->float('left_margin', 8, 2)->nullable();
-            $table->float('row_distance', 8, 2)->nullable();
-            $table->float('col_distance', 8, 2)->nullable();
+            $table->float('width', 22, 4)->nullable();
+            $table->float('height', 22, 4)->nullable();
+            $table->float('paper_width', 22, 4)->nullable();
+            $table->float('paper_height', 22, 4)->nullable();
+            $table->float('top_margin', 22, 4)->nullable();
+            $table->float('left_margin', 22, 4)->nullable();
+            $table->float('row_distance', 22, 4)->nullable();
+            $table->float('col_distance', 22, 4)->nullable();
             $table->integer('stickers_in_one_row')->nullable();
             $table->boolean('is_default')->default(0);
             $table->boolean('is_continuous')->default(0);

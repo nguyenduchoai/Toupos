@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\BusinessLocation;
 use App\Contact;
 use App\System;
-use App\User;
 
+use App\User;
 use App\Utils\ModuleUtil;
 use DB;
+
 use Illuminate\Http\Request;
 
 use Spatie\Permission\Models\Role;
-
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Hash;
 
 class ManageUserController extends Controller
 {
@@ -104,9 +106,11 @@ class ManageUserController extends Controller
         $roles  = $this->getRolesArray($business_id);
         $username_ext = $this->getUsernameExtension();
         $contacts = Contact::contactDropdown($business_id, true, false);
+        $locations = BusinessLocation::where('business_id', $business_id)
+                                    ->get();
 
         return view('manage_user.create')
-                ->with(compact('roles', 'username_ext', 'contacts'));
+                ->with(compact('roles', 'username_ext', 'contacts', 'locations'));
     }
 
     /**
@@ -144,7 +148,7 @@ class ManageUserController extends Controller
 
             $business_id = $request->session()->get('user.business_id');
             $user_details['business_id'] = $business_id;
-            $user_details['password'] = bcrypt($user_details['password']);
+            $user_details['password'] = Hash::make($user_details['password']);
 
             $ref_count = $this->moduleUtil->setAndGetReferenceCount('username');
             if (blank($user_details['username'])) {
@@ -178,6 +182,9 @@ class ManageUserController extends Controller
                 $contact_ids = $request->get('selected_contact_ids');
                 $user->contactAccess()->sync($contact_ids);
             }
+
+            //Grant Location permissions
+            $this->giveLocationPermissions($user, $request);
 
             $output = ['success' => 1,
                         'msg' => __("user.user_added")
@@ -241,9 +248,14 @@ class ManageUserController extends Controller
         } else {
             $is_checked_checkbox = false;
         }
+
+        $locations = BusinessLocation::where('business_id', $business_id)
+                                    ->get();
+
+        $permitted_locations = $user->permitted_locations();
         
         return view('manage_user.edit')
-                ->with(compact('roles', 'user', 'contact_access', 'contacts', 'is_checked_checkbox'));
+                ->with(compact('roles', 'user', 'contact_access', 'contacts', 'is_checked_checkbox', 'locations', 'permitted_locations'));
     }
 
     /**
@@ -274,7 +286,7 @@ class ManageUserController extends Controller
             }
 
             if (!empty($request->input('password'))) {
-                $user_data['password'] = bcrypt($request->input('password'));
+                $user_data['password'] = Hash::make($request->input('password'));
             }
 
             //Sales commission percentage
@@ -310,6 +322,9 @@ class ManageUserController extends Controller
                 $contact_ids = [];
             }
             $user->contactAccess()->sync($contact_ids);
+
+            //Grant Location permissions
+            $this->giveLocationPermissions($user, $request);
 
             $output = ['success' => 1,
                         'msg' => __("user.user_update_success")
@@ -385,5 +400,44 @@ class ManageUserController extends Controller
             $roles[$key] = str_replace('#' . $business_id, '', $value);
         }
         return $roles;
+    }
+
+    /**
+     * Adds or updates location permissions of a user
+     */
+    private function giveLocationPermissions($user, $request)
+    {
+        $permitted_locations = $user->permitted_locations();
+        $permissions = $request->input('access_all_locations');
+        $revoked_permissions = [];
+        //If not access all location then revoke permission
+        if ($permitted_locations == 'all' && $permissions != 'access_all_locations') {
+            $user->revokePermissionTo('access_all_locations');
+        }
+
+        //Include location permissions
+        $location_permissions = $request->input('location_permissions');
+        if (empty($permissions) &&
+            !empty($location_permissions)) {
+            $permissions = [];
+            foreach ($location_permissions as $location_permission) {
+                $permissions[] = $location_permission;
+            }
+
+            if (is_array($permitted_locations)) {
+                foreach ($permitted_locations as $key => $value) {
+                    if (!in_array('location.' . $value, $permissions)) {
+                        $revoked_permissions[] = 'location.' . $value;
+                    }
+                }
+            }
+        }
+
+        if (!empty($revoked_permissions)) {
+            $user->revokePermissionTo($revoked_permissions);
+        }
+        if (!empty($permissions)) {
+            $user->givePermissionTo($permissions);
+        }
     }
 }

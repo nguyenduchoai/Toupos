@@ -191,10 +191,10 @@
                           <td>{{ @format_date($payment->paid_on) }}</td>
                           <td>{{ $payment->payment_ref_no }}</td>
                           <td><span class="display_currency" data-currency_symbol="true">{{ $payment->amount }}</span></td>
-                          <td>{{ $payment_types[$payment->method] }}</td>
+                          <td>{{ $payment_types[$payment->method] ?? '' }}</td>
                           <td>{{ $payment->note }}</td>
                           @if($accounts_enabled)
-                            <td>{{$payment->payment_account->name or ''}}</td>
+                            <td>{{$payment->payment_account->name ?? ''}}</td>
                           @endif
                           <td class="no-print" style="display: flex;">
                           @if((auth()->user()->can('purchase.payments') && (in_array($transaction->type, ['purchase', 'purchase_return']) )) || (auth()->user()->can('sell.payments') && (in_array($transaction->type, ['sell', 'sell_return']))) || auth()->user()->can('expense.access') )

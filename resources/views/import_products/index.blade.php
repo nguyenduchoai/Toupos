@@ -36,7 +36,7 @@
                         <div class="col-sm-8">
                             <div class="form-group">
                                 {!! Form::label('name', __( 'product.file_to_import' ) . ':') !!}
-                                {!! Form::file('products_csv', ['accept'=> '.csv', 'required' => 'required']); !!}
+                                {!! Form::file('products_csv', ['accept'=> '.xls', 'required' => 'required']); !!}
                               </div>
                         </div>
                         <div class="col-sm-4">
@@ -50,7 +50,7 @@
                 <br><br>
                 <div class="row">
                     <div class="col-sm-4">
-                        <a href="{{ asset('uploads/files/import_products_csv_template.csv') }}" class="btn btn-success" download><i class="fa fa-download"></i> @lang('product.download_csv_file_template')</a>
+                        <a href="{{ asset('files/import_products_csv_template.xls') }}" class="btn btn-success" download><i class="fa fa-download"></i> @lang('lang_v1.download_template_file')</a>
                     </div>
                 </div>
             @endcomponent

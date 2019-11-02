@@ -10,10 +10,12 @@ return [
     */
 
     'langs' => [
-        'vi' => ['full_name' => 'Tiếng Việt', 'short_name' => 'Tiếng Việt'],
-        'en' => ['full_name' => 'English', 'short_name' => 'English'],
-
         
+        'vi' => ['full_name' => 'Vietnamese', 'short_name' => 'Tiếng Việt'],
+        'en' => ['full_name' => 'English', 'short_name' => 'English'],
+       
+        
+     
     ],
     'langs_rtl' => ['ar'],
     'non_utf8_languages' => ['ar', 'hi', 'ps'],
@@ -21,7 +23,7 @@ return [
     'document_size_limit' => '1000000', //in Bytes,
     'image_size_limit' => '500000', //in Bytes
 
-    'asset_version' => 42,
+    'asset_version' => 44,
 
     'disable_expiry' => false,
 
@@ -29,8 +31,8 @@ return [
     
     'iraqi_selling_price_adjustment' => false,
 
-    'currency_precision' => 2, //Maximum 4
-    'quantity_precision' => 2,  //Maximum 4
+    'currency_precision' => 0, //Maximum 4
+    'quantity_precision' => 0,  //Maximum 4
 
     'product_img_path' => 'img',
 

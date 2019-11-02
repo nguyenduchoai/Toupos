@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateTransactionPaymentsTable extends Migration
 {
@@ -17,7 +17,7 @@ class CreateTransactionPaymentsTable extends Migration
             $table->increments('id');
             $table->integer('transaction_id')->unsigned();
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
-            $table->decimal('amount', 8, 2)->default(0);
+            $table->decimal('amount', 22, 4)->default(0);
             $table->enum('method', ['cash', 'card', 'cheque', 'bank_transfer', 'other']);
 
             $table->string('card_transaction_number')->nullable();

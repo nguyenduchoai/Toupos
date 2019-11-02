@@ -442,7 +442,7 @@ class AccountController extends Controller
                             ->pluck('name', 'id');
 
             return view('account.transfer')
-                ->with(compact('account', 'from_account', 'to_accounts'));
+                ->with(compact('from_account', 'to_accounts'));
         }
     }
 
@@ -646,22 +646,27 @@ class AccountController extends Controller
 
         if (request()->ajax()) {
             $accounts = AccountTransaction::join(
-                'accounts as A',
-                'account_transactions.account_id',
-                '=',
-                'A.id'
-            )
-                            ->where('A.business_id', $business_id)
-                            ->with(['transaction', 'transaction.contact', 'transfer_transaction'])
-                            ->select(['type', 'amount', 'operation_date',
-                                'sub_type', 'transfer_transaction_id',
-                                DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance'),
-                                'transaction_id',
-                                'account_transactions.id',
-                                'A.name as account_name'
-                                ])
-                             ->groupBy('account_transactions.id')
-                             ->orderBy('account_transactions.operation_date', 'desc');
+                    'accounts as A',
+                    'account_transactions.account_id',
+                    '=',
+                    'A.id'
+                )
+                ->leftjoin('transaction_payments as TP', 'account_transactions.transaction_payment_id', 
+                    '=',
+                    'TP.id'
+                )
+                ->where('A.business_id', $business_id)
+                ->with(['transaction', 'transaction.contact', 'transfer_transaction'])
+                ->select(['type', 'account_transactions.amount', 'operation_date',
+                    'sub_type', 'transfer_transaction_id',
+                    DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance'),
+                    'account_transactions.transaction_id',
+                    'account_transactions.id',
+                    'A.name as account_name',
+                    'TP.payment_ref_no as payment_ref_no'
+                    ])
+                 ->groupBy('account_transactions.id')
+                 ->orderBy('account_transactions.operation_date', 'desc');
             if (!empty(request()->input('type'))) {
                 $accounts->where('type', request()->input('type'));
             }
@@ -678,52 +683,60 @@ class AccountController extends Controller
             }
 
             return DataTables::of($accounts)
-                            ->addColumn('debit', function ($row) {
-                                if ($row->type == 'debit') {
-                                    return '<span class="display_currency" data-currency_symbol="true">' . $row->amount . '</span>';
-                                }
-                                return '';
-                            })
-                            ->addColumn('credit', function ($row) {
-                                if ($row->type == 'credit') {
-                                    return '<span class="display_currency" data-currency_symbol="true">' . $row->amount . '</span>';
-                                }
-                                return '';
-                            })
-                            ->editColumn('balance', function ($row) {
-                                return '<span class="display_currency" data-currency_symbol="true">' . $row->balance . '</span>';
-                            })
-                            ->editColumn('operation_date', function ($row) {
-                                return $this->commonUtil->format_date($row->operation_date, true);
-                            })
-                            ->editColumn('sub_type', function ($row) {
-                                $details = '';
-                                if (!empty($row->sub_type)) {
-                                    $details = __('account.' . $row->sub_type);
-                                    if (in_array($row->sub_type, ['fund_transfer', 'deposit']) && !empty($row->transfer_transaction)) {
-                                        if ($row->type == 'credit') {
-                                            $details .= ' ( ' . __('account.from') .': ' . $row->transfer_transaction->account->name . ')';
-                                        } else {
-                                            $details .= ' ( ' . __('account.to') .': ' . $row->transfer_transaction->account->name . ')';
-                                        }
-                                    }
-                                } else {
-                                    if (!empty($row->transaction->type)) {
-                                        if ($row->transaction->type == 'purchase') {
-                                            $details = '<b>' . __('purchase.supplier') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                            __('purchase.ref_no') . ':</b> ' . $row->transaction->ref_no;
-                                        } elseif ($row->transaction->type == 'sell') {
-                                            $details = '<b>' . __('contact.customer') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                            __('sale.invoice_no') . ':</b> ' . $row->transaction->invoice_no;
-                                        }
-                                    }
-                                }
+                ->addColumn('debit', function ($row) {
+                    if ($row->type == 'debit') {
+                        return '<span class="display_currency" data-currency_symbol="true">' . $row->amount . '</span>';
+                    }
+                    return '';
+                })
+                ->addColumn('credit', function ($row) {
+                    if ($row->type == 'credit') {
+                        return '<span class="display_currency" data-currency_symbol="true">' . $row->amount . '</span>';
+                    }
+                    return '';
+                })
+                ->editColumn('balance', function ($row) {
+                    return '<span class="display_currency" data-currency_symbol="true">' . $row->balance . '</span>';
+                })
+                ->editColumn('operation_date', function ($row) {
+                    return $this->commonUtil->format_date($row->operation_date, true);
+                })
+                ->editColumn('sub_type', function ($row) {
+                    $details = '';
+                    if (!empty($row->sub_type)) {
+                        $details = __('account.' . $row->sub_type);
+                        if (in_array($row->sub_type, ['fund_transfer', 'deposit']) && !empty($row->transfer_transaction)) {
+                            if ($row->type == 'credit') {
+                                $details .= ' ( ' . __('account.from') .': ' . $row->transfer_transaction->account->name . ')';
+                            } else {
+                                $details .= ' ( ' . __('account.to') .': ' . $row->transfer_transaction->account->name . ')';
+                            }
+                        }
+                    } else {
+                        if (!empty($row->transaction->type)) {
+                            if ($row->transaction->type == 'purchase') {
+                                $details = '<b>' . __('purchase.supplier') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
+                                __('purchase.ref_no') . ':</b> ' . $row->transaction->ref_no;
+                            } elseif ($row->transaction->type == 'sell') {
+                                $details = '<b>' . __('contact.customer') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
+                                __('sale.invoice_no') . ':</b> ' . $row->transaction->invoice_no;
+                            }
+                        }
+                    }
 
-                                return $details;
-                            })
-                            ->removeColumn('id')
-                            ->rawColumns(['credit', 'debit', 'balance', 'sub_type'])
-                            ->make(true);
+                    if(!empty($row->payment_ref_no)){
+                        if(!empty($details)){
+                            $details .= '<br/>';
+                        }
+
+                        $details .= '<b>' . __('lang_v1.pay_reference_no') . ':</b> ' . $row->payment_ref_no;
+                    }
+
+                    return $details;
+                })
+                ->removeColumn('id')
+                ->rawColumns(['credit', 'debit', 'balance', 'sub_type'])
+                ->make(true);
         }
         $accounts = Account::forDropdown($business_id, false);
 

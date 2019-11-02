@@ -365,7 +365,9 @@
               @endcan
 
               @can('stock_report.view')
+                @if(session('business.enable_lot_number') == 1)
                 <li class="{{ $request->segment(2) == 'lot-report' ? 'active' : '' }}" ><a href="{{action('ReportController@getLotReport')}}"><i class="fa fa-hourglass-half" aria-hidden="true"></i>@lang('lang_v1.lot_report')</a></li>
+                @endif
               @endcan
 
               @can('trending_product_report.view')

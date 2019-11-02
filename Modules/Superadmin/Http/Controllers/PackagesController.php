@@ -2,16 +2,16 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
+use App\System;
+use App\Utils\BusinessUtil;
 
+use App\Utils\ModuleUtil;
+use Illuminate\Http\Request;
+
+use Illuminate\Http\Response;
 use Modules\Superadmin\Entities\Package;
 
-use App\Utils\BusinessUtil;
-use App\Utils\ModuleUtil;
-
-use App\System;
+use Modules\Superadmin\Entities\Subscription;
 
 class PackagesController extends BaseController
 {
@@ -114,9 +114,9 @@ class PackagesController extends BaseController
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0,
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
         }
 
         return redirect()
@@ -178,13 +178,33 @@ class PackagesController extends BaseController
             $package->fill($packages_details);
             $package->save();
 
+            if (!empty($request->input('update_subscriptions'))) {
+                $package_details = [
+                    'location_count' => $package->location_count,
+                    'user_count' => $package->user_count,
+                    'product_count' => $package->product_count,
+                    'invoice_count' => $package->invoice_count,
+                    'name' => $package->name
+                ];
+                if (!empty($package->custom_permissions)) {
+                    foreach ($package->custom_permissions as $name => $value) {
+                        $package_details[$name] = $value;
+                    }
+                }
+
+                //Update subscription package details
+                $subscriptions = Subscription::where('package_id', $package->id)
+                                            ->whereDate('end_date', '>=', \Carbon::now())
+                                            ->update(['package_details' => json_encode($package_details)]);
+            }
+
             $output = ['success' => 1, 'msg' => __('lang_v1.success')];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0,
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
         }
 
         return redirect()
@@ -210,9 +230,9 @@ class PackagesController extends BaseController
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
-            $output = array('success' => 0,
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
         }
 
         return redirect()

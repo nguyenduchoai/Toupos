@@ -3,18 +3,17 @@
 namespace Modules\Superadmin\Http\Controllers;
 
 use App\Business;
-use App\User;
 use App\Product;
-use App\VariationLocationDetails;
 use App\Transaction;
-use Spatie\Permission\Models\Permission;
+use App\User;
+use App\Utils\BusinessUtil;
+use App\VariationLocationDetails;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
-use App\Utils\BusinessUtil;
+use Spatie\Permission\Models\Permission;
 
 class BusinessController extends BaseController
 {
@@ -70,7 +69,7 @@ class BusinessController extends BaseController
 
         $accounting_methods = $this->businessUtil->allAccountingMethods();
 
-        $months = array();
+        $months = [];
         for ($i=1; $i<=12 ; $i++) {
             $months[$i] = __('business.months.' . $i);
         }
@@ -112,7 +111,7 @@ class BusinessController extends BaseController
             //Create the business
             $business_details['owner_id'] = $user->id;
             if (!empty($business_details['start_date'])) {
-                $business_details['start_date'] = \Carbon::createFromFormat('m/d/Y', $business_details['start_date'])->toDateString();
+                $business_details['start_date'] = $this->businessUtil->uf_date($business_details['start_date']);
             }
                 
             //upload logo
@@ -135,9 +134,9 @@ class BusinessController extends BaseController
 
             DB::commit();
 
-            $output = array('success' => 1,
+            $output = ['success' => 1,
                             'msg' => __('business.business_created_succesfully')
-                        );
+                        ];
 
             return redirect()
                 ->action('\Modules\Superadmin\Http\Controllers\BusinessController@index')
@@ -146,9 +145,9 @@ class BusinessController extends BaseController
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
-            $output = array('success' => 0,
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
 
             return back()->with('status', $output)->withInput();
         }
@@ -237,9 +236,9 @@ class BusinessController extends BaseController
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
-            $output = array('success' => 0,
+            $output = ['success' => 0,
                             'msg' => __('messages.something_went_wrong')
-                        );
+                        ];
 
             return back()->with('status', $output)->withInput();
         }

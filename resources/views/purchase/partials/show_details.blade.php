@@ -195,7 +195,7 @@
               <td>{{ @format_date($payment_line->paid_on) }}</td>
               <td>{{ $payment_line->payment_ref_no }}</td>
               <td><span class="display_currency" data-currency_symbol="true">{{ $payment_line->amount }}</span></td>
-              <td>{{ $payment_methods[$payment_line->method] }}</td>
+              <td>{{ $payment_methods[$payment_line->method] ?? '' }}</td>
               <td>@if($payment_line->note) 
                 {{ ucfirst($payment_line->note) }}
                 @else

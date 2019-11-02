@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateDiscountsTable extends Migration
 {
@@ -22,7 +22,7 @@ class CreateDiscountsTable extends Migration
             $table->integer('location_id')->nullable();
             $table->integer('priority')->nullable();
             $table->string('discount_type')->nullable();
-            $table->decimal('discount_amount', 20, 2)->default(0);
+            $table->decimal('discount_amount', 22, 4)->default(0);
             $table->dateTime('starts_at')->nullable();
             $table->dateTime('ends_at')->nullable();
             $table->boolean('is_active')->default(1);

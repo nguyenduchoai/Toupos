@@ -59,7 +59,7 @@
               <span class="input-group-addon">
                 <i class="fa fa-calendar"></i>
               </span>
-              {!! Form::text('paid_on', date('m/d/Y', strtotime($payment_line->paid_on) ), ['class' => 'form-control', 'readonly', 'required']); !!}
+              {!! Form::text('paid_on', @format_date($payment_line->paid_on), ['class' => 'form-control', 'readonly', 'required']); !!}
             </div>
           </div>
         </div>

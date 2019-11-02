@@ -5,7 +5,7 @@
 
 <div class="container">
     @include('superadmin::layouts.partials.currency')
-
+    @include('layouts.partials.logo')
     <div class="row">
         <div class="box">
             <div class="box-header">

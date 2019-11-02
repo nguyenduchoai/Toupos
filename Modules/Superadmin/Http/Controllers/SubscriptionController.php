@@ -2,29 +2,28 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
-use Modules\Superadmin\Entities\Subscription;
-use Modules\Superadmin\Entities\Package;
-use App\System;
+use \Notification;
 use App\Business;
+use App\System;
+use App\Utils\ModuleUtil;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Modules\Superadmin\Entities\Package;
+
+use Modules\Superadmin\Entities\Subscription;
 use Modules\Superadmin\Notifications\SubscriptionOfflinePaymentActivationConfirmation;
 
-use \Notification;
-use App\Utils\ModuleUtil;
-
-use Stripe\Stripe;
-use Stripe\Customer;
-use Stripe\Charge;
-use Razorpay\Api\Api;
-
-use Srmklive\PayPal\Services\ExpressCheckout;
-use Yajra\DataTables\Facades\DataTables;
-
 use Pesapal;
+use Razorpay\Api\Api;
+use Srmklive\PayPal\Services\ExpressCheckout;
+use Stripe\Charge;
+
+use Stripe\Customer;
+use Stripe\Stripe;
+
+use Yajra\DataTables\Facades\DataTables;
 
 class SubscriptionController extends BaseController
 {
@@ -287,13 +286,13 @@ class SubscriptionController extends BaseController
         
         $system_currency = System::getCurrency();
 
-        $charge = Charge::create(array(
+        $charge = Charge::create([
             'amount'   => $package->price*100,
             'currency' => strtolower($system_currency->code),
             "source" => $request->stripeToken,
             //'customer' => $customer
             'metadata' => $metadata
-        ));
+        ]);
 
         return $charge->id;
     }
@@ -317,9 +316,11 @@ class SubscriptionController extends BaseController
         $email = System::getProperty('email');
         $business = Business::find($business_id);
 
-        if(!$this->moduleUtil->IsMailConfigured()) {
+        if (!$this->moduleUtil->IsMailConfigured()) {
             return null;
         }
+        $system_currency = System::getCurrency();
+        $package->price = $system_currency->symbol . number_format($package->price, 2, $system_currency->decimal_separator, $system_currency->thousand_separator);
 
         Notification::route('mail', $email)
             ->notify(new SubscriptionOfflinePaymentActivationConfirmation($business, $package));
@@ -333,6 +334,11 @@ class SubscriptionController extends BaseController
      */
     protected function pay_paypal($business_id, $business_name, $package, $request)
     {
+        //Set config to use the currency
+        $system_currency = System::getCurrency();
+        $provider = new ExpressCheckout();
+        config(['paypal.currency' => $system_currency->code]);
+
         $provider = new ExpressCheckout();
         $response = $provider->getExpressCheckoutDetails($request->token);
 
@@ -434,7 +440,7 @@ class SubscriptionController extends BaseController
         $razorpay_payment_id = $request->razorpay_payment_id;
         $razorpay_api = new Api(env('RAZORPAY_KEY_ID'), env('RAZORPAY_KEY_SECRET'));
 
-        $payment = $razorpay_api->payment->fetch($razorpay_payment_id)->capture(array('amount'=> $package->price*100)); // Captures a payment
+        $payment = $razorpay_api->payment->fetch($razorpay_payment_id)->capture(['amount'=> $package->price*100]); // Captures a payment
 
         if (empty($payment->error_code)) {
             return $payment->id;
@@ -469,7 +475,7 @@ class SubscriptionController extends BaseController
                 'invoice_business_state',
                 'invoice_business_country'
             ]);
-        $system = array();
+        $system = [];
         foreach ($system_settings as $setting) {
             $system[$setting['key']] = $setting['value'];
         }

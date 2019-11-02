@@ -849,9 +849,12 @@ class SellPosController extends Controller
             $redeem_details['points'] += $transaction->rp_redeemed;
             $redeem_details['points'] -= $transaction->rp_earned;
         }
+
+        $edit_discount = auth()->user()->can('edit_product_discount_from_pos_screen');
+        $edit_price = auth()->user()->can('edit_product_price_from_pos_screen');
         
         return view('sale_pos.edit')
-            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters', 'redeem_details'));
+            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters', 'redeem_details', 'edit_price', 'edit_discount'));
     }
 
     /**
@@ -1258,9 +1261,17 @@ class SellPosController extends Controller
                 $is_cg = !empty($cg->id) ? true : false;
                 $is_pg = !empty($price_group) ? true : false;
                 $discount = $this->productUtil->getProductDiscount($product, $business_id, $location_id, $is_cg, $is_pg);
+                
+                if ($is_direct_sell) {
+                    $edit_discount = auth()->user()->can('edit_product_discount_from_sale_screen');
+                    $edit_price = auth()->user()->can('edit_product_price_from_sale_screen');
+                } else {
+                    $edit_discount = auth()->user()->can('edit_product_discount_from_pos_screen');
+                    $edit_price = auth()->user()->can('edit_product_price_from_pos_screen');
+                }
 
                 $output['html_content'] =  view('sale_pos.product_row')
-                            ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters'))
+                            ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters', 'edit_discount', 'edit_price'))
                             ->render();
             }
             

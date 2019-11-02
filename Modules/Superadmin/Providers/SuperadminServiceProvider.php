@@ -2,15 +2,13 @@
 
 namespace Modules\Superadmin\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Database\Eloquent\Factory;
-
-use Modules\Superadmin\Entities\Subscription;
-use Illuminate\Support\Facades\View;
-
-use Illuminate\Console\Scheduling\Schedule;
-
 use App\System;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Eloquent\Factory;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use Modules\Superadmin\Entities\Subscription;
+use Modules\Superadmin\Entities\SuperadminFrontendPage;
 
 class SuperadminServiceProvider extends ServiceProvider
 {
@@ -45,6 +43,13 @@ class SuperadminServiceProvider extends ServiceProvider
             }
 
             $view->with(compact('__subscription'));
+        });
+
+        view::composer(['layouts.partials.home_header'], function ($view) {
+            $frontend_pages = SuperadminFrontendPage::where('is_shown', 1)
+                                                ->orderBy('menu_order', 'asc')
+                                                ->get();
+            $view->with(compact('frontend_pages'));
         });
 
         //Set superadmin currency

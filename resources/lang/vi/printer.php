@@ -15,7 +15,7 @@ return [
     'add_printer' => 'Thêm máy in',
     'name' => 'Tên máy in',
     'connection_type' => 'Kiểu kết nối',
-    'capability_profile' => 'Hồ sơ năng lực',
+    'capability_profile' => 'Profile',
     'ip_address' => 'Địa chỉ IP',
     'port' => 'Port',
     'path' => 'Path',

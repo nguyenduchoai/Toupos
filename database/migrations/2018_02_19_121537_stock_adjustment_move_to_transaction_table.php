@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class StockAdjustmentMoveToTransactionTable extends Migration
 {
@@ -29,8 +29,8 @@ class StockAdjustmentMoveToTransactionTable extends Migration
             $table->integer('variation_id')->unsigned();
             $table->foreign('variation_id')->references('id')->on('variations')
             ->onDelete('cascade');
-            $table->decimal('quantity', 8, 2);
-            $table->decimal('unit_price', 20, 2)->comment("Last purchase unit price")->nullable();
+            $table->decimal('quantity', 22, 4);
+            $table->decimal('unit_price', 22, 4)->comment("Last purchase unit price")->nullable();
             $table->timestamps();
 
             //Indexing
@@ -39,7 +39,7 @@ class StockAdjustmentMoveToTransactionTable extends Migration
 
         Schema::table('transactions', function (Blueprint $table) {
             $table->enum('adjustment_type', ['normal', 'abnormal'])->nullable()->after('payment_status');
-            $table->decimal('total_amount_recovered', 20, 2)->comment("Used for stock adjustment.")->nullable()->after('exchange_rate');
+            $table->decimal('total_amount_recovered', 22, 4)->comment("Used for stock adjustment.")->nullable()->after('exchange_rate');
         });
 
         //Create & Rename stock_adjustment table.

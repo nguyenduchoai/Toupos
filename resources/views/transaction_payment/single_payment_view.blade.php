@@ -155,7 +155,7 @@
               {{$single_payment_line->amount}}
             </span><br>
             <strong>@lang('lang_v1.payment_method') :</strong>
-            {{ $payment_types[$single_payment_line->method] }}<br>
+            {{ $payment_types[$single_payment_line->method] ?? '' }}<br>
             @if($single_payment_line->method == "card")
               <strong>@lang('lang_v1.card_holder_name') :</strong>
               {{ $single_payment_line->card_holder_name }} <br>

@@ -53,7 +53,7 @@ class AddDocumentColumnToTransactionPaymentsTable extends Migration
         }
         // Cycle through all source files
         foreach ($files as $file) {
-          if (in_array($file, array(".",".."))) continue;
+          if (in_array($file, [".",".."])) continue;
           // If we copied this successfully, mark it for deletion
           if ( file_exists($source.$file) && @copy($source.$file, $destination.$file)) {
             $delete[] = $source.$file;

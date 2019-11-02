@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class AddRecurringInvoiceFieldsToTransactionsTable extends Migration
 {
@@ -15,7 +15,7 @@ class AddRecurringInvoiceFieldsToTransactionsTable extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->boolean('is_recurring')->default(0)->after('created_by');
-            $table->float('recur_interval', 8, 2)->nullable()->after('is_recurring');
+            $table->float('recur_interval', 22, 4)->nullable()->after('is_recurring');
             $table->enum('recur_interval_type', ['days', 'months', 'years'])->nullable()->after('recur_interval');
             $table->integer('recur_repetitions')->nullable()->after('recur_interval_type');
             $table->dateTime('recur_stopped_on')->nullable()->after('recur_repetitions');

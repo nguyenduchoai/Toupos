@@ -143,4 +143,24 @@ class Contact extends Authenticatable
 
         return $customers;
     }
+
+    /**
+     * Return list of contact type.
+     *
+     * @param $prepend_all = false (boolean)
+     * @return array
+     */
+    public static function typeDropdown($prepend_all = false){
+        $types = [];
+
+        if($prepend_all){
+            $types[''] = __('lang_v1.all');
+        }
+
+        $types['customer'] = __('report.customer');
+        $types['supplier'] = __('report.supplier');
+        $types['both'] = __('lang_v1.both_supplier_customer');
+
+        return $types;
+    }
 }

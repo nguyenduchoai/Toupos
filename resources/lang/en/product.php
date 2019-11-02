@@ -57,6 +57,5 @@ return [
     'variations' => 'Variations',
     'import_products' => 'Import Products',
     'file_to_import' => 'File To Import',
-    'file_imported_successfully' => 'File imported successfully',
-    'download_csv_file_template' => 'Download CSV file template',
+    'file_imported_successfully' => 'File imported successfully'
  ];

@@ -53,7 +53,7 @@
             @if(config('constants.enable_custom_payment_1'))
               <tr>
                 <td>
-                  @lang('lang_v1.custom_payment_1'):
+                  {{$payment_types['custom_pay_1']}}:
                 </td>
                 <td>
                   <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_1 }}</span>
@@ -63,7 +63,7 @@
             @if(config('constants.enable_custom_payment_2'))
               <tr>
                 <td>
-                  @lang('lang_v1.custom_payment_2'):
+                  {{$payment_types['custom_pay_2']}}:
                 </td>
                 <td>
                   <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_2 }}</span>
@@ -73,7 +73,7 @@
             @if(config('constants.enable_custom_payment_3'))
               <tr>
                 <td>
-                  @lang('lang_v1.custom_payment_3'):
+                  {{$payment_types['custom_pay_3']}}:
                 </td>
                 <td>
                   <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_3 }}</span>

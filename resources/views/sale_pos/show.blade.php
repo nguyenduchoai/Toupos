@@ -42,6 +42,18 @@
           @if($sell->contact->country)
               {{ $sell->contact->country }}
           @endif
+          @if($sell->contact->mobile)
+          <br>
+              {{__('contact.mobile')}}: {{ $sell->contact->mobile }}
+          @endif
+          @if($sell->contact->alternate_number)
+          <br>
+              {{__('contact.alternate_contact_number')}}: {{ $sell->contact->alternate_number }}
+          @endif
+          @if($sell->contact->landline)
+            <br>
+              {{__('contact.landline')}}: {{ $sell->contact->landline }}
+          @endif
         @endif
         
       </div>
@@ -106,7 +118,7 @@
                 <td>{{ $payment_line->payment_ref_no }}</td>
                 <td><span class="display_currency" data-currency_symbol="true">{{ $payment_line->amount }}</span></td>
                 <td>
-                  {{ $payment_types[$payment_line->method] or $payment_line->method }}
+                  {{ $payment_types[$payment_line->method] ?? $payment_line->method }}
                   @if($payment_line->is_return == 1)
                     <br/>
                     ( {{ __('lang_v1.change_return') }} )

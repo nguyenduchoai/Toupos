@@ -469,12 +469,12 @@ class HomeController extends Controller
         $notifications_data = [];
         foreach ($notifications as $notification) {
             $data = $notification->data;
-            if (in_array($notification->type, ['App\Notifications\RecurringInvoiceNotification'])) {
+            if (in_array($notification->type, [\App\Notifications\RecurringInvoiceNotification::class])) {
                 $msg = '';
                 $icon_class = '';
                 $link = '';
                 if ($notification->type ==
-                    'App\Notifications\RecurringInvoiceNotification') {
+                    \App\Notifications\RecurringInvoiceNotification::class) {
                     $msg = !empty($data['invoice_status']) && $data['invoice_status'] == 'draft' ?
                         __(
                             'lang_v1.recurring_invoice_error_message',

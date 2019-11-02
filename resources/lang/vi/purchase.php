@@ -44,7 +44,7 @@ return [
     'line_total' => 'Tổng giá trị',
     'unit_selling_price' => 'Giá bán ra',
     'total_before_tax' => 'Tổng số tiền, chưa tính thuế',
-    'net_total_amount' => 'Tổng số tiền ròng',
+    'net_total_amount' => 'Tổng số tiền',
     'discount_type' => 'Loại giảm giá',
     'discount_amount' => 'Số tiền giảm',
     'discount' => 'Giảm giá',

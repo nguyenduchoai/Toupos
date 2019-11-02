@@ -76,7 +76,7 @@ class TransactionPaymentController extends Controller
                 $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
                 'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
                 'cheque_number', 'bank_account_number']);
-                $inputs['paid_on'] = \Carbon::createFromFormat('m/d/Y', $request->input('paid_on'))->toDateTimeString();
+                $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
                 $inputs['transaction_id'] = $transaction->id;
                 $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
                 $inputs['created_by'] = auth()->user()->id;
@@ -217,7 +217,7 @@ class TransactionPaymentController extends Controller
             $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
             'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
             'cheque_number', 'bank_account_number']);
-            $inputs['paid_on'] = \Carbon::createFromFormat('m/d/Y', $request->input('paid_on'))->toDateTimeString();
+            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
             $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
 
             if ($inputs['method'] == 'custom_pay_1') {
@@ -503,7 +503,7 @@ class TransactionPaymentController extends Controller
             $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
                 'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
                 'cheque_number', 'bank_account_number']);
-            $inputs['paid_on'] = \Carbon::createFromFormat('m/d/Y', $request->input('paid_on'))->toDateTimeString();
+            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
             $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
             $inputs['created_by'] = auth()->user()->id;
             $inputs['payment_for'] = $contact_id;

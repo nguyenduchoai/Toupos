@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateTaxRatesTable extends Migration
 {
@@ -19,7 +19,7 @@ class CreateTaxRatesTable extends Migration
             $table->foreign('business_id')->references('id')->on('business')->onDelete('cascade');
             $table->string('name');
             //$table->enum('calculation_type', ['fixed', 'percentage']);
-            $table->float('amount', 8, 2);
+            $table->float('amount', 22, 4);
             $table->boolean('is_tax_group')->default('0');
             //$table->enum('rounding_type', ['up', 'down', 'normal']);
             $table->integer('created_by')->unsigned();
