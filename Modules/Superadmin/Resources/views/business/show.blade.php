@@ -119,7 +119,7 @@
                     <div class="col-sm-3">
                             <div>
                                 @if(!empty($business->logo))
-                                    <img class="img-responsive" src="{{ url( 'storage/business_logos/' . $business->logo ) }}" alt="Business Logo">
+                                    <img class="img-responsive" src="{{ url( 'uploads/business_logos/' . $business->logo ) }}" alt="Business Logo">
                                 @endif
                             </div>
                     </div> 
