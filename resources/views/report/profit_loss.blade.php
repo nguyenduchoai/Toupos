@@ -51,7 +51,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>{{ __('home.total_purchase') }}:</th>
+                        <th>{{ __('home.total_purchase') }}:<br><small class="text-muted">(@lang('product.exc_of_tax'), @lang('sale.discount'))</small></th>
                         <td>
                              <span class="total_purchase">
                                 <i class="fa fa-refresh fa-spin fa-fw"></i>
@@ -147,7 +147,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <th>{{ __('home.total_sell') }}:</th>
+                        <th>{{ __('home.total_sell') }}: <br><small class="text-muted">(@lang('product.exc_of_tax'), @lang('sale.discount'))</small></th>
                         <td>
                              <span class="total_sell">
                                 <i class="fa fa-refresh fa-spin fa-fw"></i>

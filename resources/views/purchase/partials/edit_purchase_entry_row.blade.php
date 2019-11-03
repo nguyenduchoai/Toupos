@@ -24,7 +24,7 @@
                 <th class="@if(!session('business.enable_editing_product_from_purchase')) hide @endif">
                     @lang( 'lang_v1.profit_margin' )
                 </th>
-                <th>@lang( 'purchase.unit_selling_price')</th>
+                <th>@lang( 'purchase.unit_selling_price') <small>(@lang('product.inc_of_tax'))</small></th>
                 @if(session('business.enable_lot_number'))
                     <th>
                         @lang('lang_v1.lot_number')
@@ -85,7 +85,7 @@
 
                 <input type="hidden" name="purchases[{{$loop->index}}][product_unit_id]" value="{{$purchase_line->product->unit->id}}">
 
-                <input type="hidden" class="base_unit_selling_price" value="{{$purchase_line->variations->default_sell_price}}">
+                <input type="hidden" class="base_unit_selling_price" value="{{$purchase_line->variations->sell_price_inc_tax}}">
             </td>
             <td>
                 {!! Form::text('purchases[' . $loop->index . '][pp_without_discount]', number_format($purchase_line->pp_without_discount/$purchase->exchange_rate, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator), ['class' => 'form-control input-sm purchase_unit_cost_without_discount input_number', 'required']); !!}
@@ -131,8 +131,8 @@
 
             <td class="@if(!session('business.enable_editing_product_from_purchase')) hide @endif">
                 @php
-                    $pp = $purchase_line->purchase_price;
-                    $sp = $purchase_line->variations->default_sell_price;
+                    $pp = $purchase_line->purchase_price_inc_tax;
+                    $sp = $purchase_line->variations->sell_price_inc_tax;
                     if(!empty($purchase_line->sub_unit->base_unit_multiplier)) {
                         $sp = $sp * $purchase_line->sub_unit->base_unit_multiplier;
                     }

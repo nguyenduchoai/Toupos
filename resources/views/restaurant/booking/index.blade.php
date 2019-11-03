@@ -187,6 +187,7 @@
                                 } else {
                                     toastr.error(result.msg);
                                 }
+                                $(form).find('button[type="submit"]').attr('disabled', false);
                             }
                         });
                     }
@@ -224,6 +225,7 @@
                                     toastr.success(result.msg);
                                     reload_calendar();
                                     todays_bookings_table.ajax.reload();
+                                    $(form).find('button[type="submit"]').attr('disabled', false);
                                 } else {
                                     toastr.error(result.msg);
                                 }
@@ -313,7 +315,7 @@
             $('select#booking_location_id').val('').change();
             $('select#booking_customer_id').val('').change();
             $('select#correspondent').val('').change();
-            $('#booking_note').val('');
+            $('#booking_note, #start_time, #end_time').val('');
         }
 
         function reload_calendar(){

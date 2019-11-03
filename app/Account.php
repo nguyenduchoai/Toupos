@@ -14,8 +14,7 @@ class Account extends Model
 
     public static function forDropdown($business_id, $prepend_none, $closed = false)
     {
-        $query = Account::where('business_id', $business_id)
-                            ->NotCapital();
+        $query = Account::where('business_id', $business_id);
 
         if (!$closed) {
             $query->where('is_closed', 0);
@@ -46,13 +45,13 @@ class Account extends Model
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopeNotCapital($query)
-    {
-        return $query->where(function ($q) {
-            $q->where('account_type', '!=', 'capital');
-            $q->orWhereNull('account_type');
-        });
-    }
+    // public function scopeNotCapital($query)
+    // {
+    //     return $query->where(function ($q) {
+    //         $q->where('account_type', '!=', 'capital');
+    //         $q->orWhereNull('account_type');
+    //     });
+    // }
 
     public static function accountTypes()
     {
@@ -61,5 +60,10 @@ class Account extends Model
             'saving_current' => __('account.saving_current'),
             'capital' => __('account.capital')
         ];
+    }
+
+    public function account_type()
+    {
+        return $this->belongsTo(\App\AccountType::class, 'account_type_id');
     }
 }

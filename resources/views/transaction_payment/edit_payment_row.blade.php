@@ -43,7 +43,7 @@
       <div class="row payment_row">
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("amount" ,'Amount:*') !!}
+            {!! Form::label("amount" , __('sale.amount') . ':*') !!}
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
@@ -54,7 +54,7 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("paid_on" ,'Paid on:*') !!}
+            {!! Form::label("paid_on" , __('lang_v1.paid_on') . ':*') !!}
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-calendar"></i>
@@ -65,7 +65,7 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            {!! Form::label("method" ,'Pay Via:*') !!}
+            {!! Form::label("method" , __('purchase.payment_method') . ':*') !!}
             <div class="input-group">
               <span class="input-group-addon">
                 <i class="fa fa-money"></i>
@@ -99,7 +99,7 @@
           @include('transaction_payment.payment_type_details')
         <div class="col-md-12">
           <div class="form-group">
-            {!! Form::label("note",'Payment Note:') !!}
+            {!! Form::label("note", __('lang_v1.payment_note') . ':') !!}
             {!! Form::textarea("note", $payment_line->note, ['class' => 'form-control', 'rows' => 3]); !!}
           </div>
         </div>

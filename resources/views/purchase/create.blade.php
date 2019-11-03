@@ -150,6 +150,7 @@
 								</th>
 								<th>
 									@lang( 'purchase.unit_selling_price' )
+									<small>(@lang('product.inc_of_tax'))</small>
 								</th>
 								@if(session('business.enable_lot_number'))
 									<th>

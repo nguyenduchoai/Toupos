@@ -27,7 +27,7 @@ return [
     'tax_2_name' => 'Tên thuế 2',
     'tax_2_no' => 'Thuế 2 No.',
     'tax_1_placeholder' => 'GST/VAT/khác',
-    'prefix' => 'Tiền tố',
+    'prefix' => 'Prefix',
     'prefix_placeholder' => 'Anh / Chị',
     'first_name' => 'Tên',
     'last_name' => 'Họ & Lót',
@@ -53,7 +53,7 @@ return [
     'sale' => 'Bán hàng',
     'sell_price_tax' => 'Gia ban',
     'product' => 'Sản phẩm',
-    'sku_prefix' => 'Tiền tố SKU',
+    'sku_prefix' => 'SKU prefix',
     'language' => 'Ngôn ngữ',
     'time_zone' => 'Múi giờ',
     'months' => [

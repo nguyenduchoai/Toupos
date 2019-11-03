@@ -67,6 +67,9 @@ class TransactionUtil extends Util
             'commission_agent' => $input['commission_agent'],
             'is_quotation' => isset($input['is_quotation']) ? $input['is_quotation'] : 0,
             'shipping_details' => isset($input['shipping_details']) ? $input['shipping_details'] : null,
+            'shipping_address' => isset($input['shipping_address']) ? $input['shipping_address'] : null,
+            'shipping_status' => isset($input['shipping_status']) ? $input['shipping_status'] : null,
+            'delivered_to' => isset($input['delivered_to']) ? $input['delivered_to'] : null,
             'shipping_charges' => isset($input['shipping_charges']) ? $uf_data ? $this->num_uf($input['shipping_charges']) : $input['shipping_charges'] : 0,
             'exchange_rate' => !empty($input['exchange_rate']) ?
                                 $uf_data ? $this->num_uf($input['exchange_rate']) : $input['exchange_rate'] : 1,
@@ -135,6 +138,9 @@ class TransactionUtil extends Util
             'is_quotation' => isset($input['is_quotation']) ? $input['is_quotation'] : 0,
             'shipping_details' => isset($input['shipping_details']) ? $input['shipping_details'] : null,
             'shipping_charges' => isset($input['shipping_charges']) ? $uf_data ? $this->num_uf($input['shipping_charges']) : $input['shipping_charges'] : 0,
+            'shipping_address' => isset($input['shipping_address']) ? $input['shipping_address'] : null,
+            'shipping_status' => isset($input['shipping_status']) ? $input['shipping_status'] : null,
+            'delivered_to' => isset($input['delivered_to']) ? $input['delivered_to'] : null,
             'exchange_rate' => !empty($input['exchange_rate']) ?
                                 $uf_data ? $this->num_uf($input['exchange_rate']) : $input['exchange_rate'] : 1,
             'selling_price_group_id' => isset($input['selling_price_group_id']) ? $input['selling_price_group_id'] : null,
@@ -265,7 +271,7 @@ class TransactionUtil extends Util
                     $line[$key] = isset($product[$value]) ? $product[$value] : '';
                 }
 
-                if (session()->has('business') && request()->session()->get('business.enable_lot_number') == 1 && !empty($product['lot_no_line_id'])) {
+                if (!empty($product['lot_no_line_id'])) {
                     $line['lot_no_line_id'] = $product['lot_no_line_id'];
                 }
 
@@ -856,6 +862,8 @@ class TransactionUtil extends Util
         //Invoice info
         $output['invoice_no'] = $transaction->invoice_no;
 
+        $output['shipping_address'] = !empty($transaction->shipping_address()) ? $transaction->shipping_address() : $transaction->shipping_address;
+
         //Heading & invoice label, when quotation use the quotation heading.
         if ($transaction_type == 'sell_return') {
             $output['invoice_heading'] = $il->cn_heading;
@@ -919,7 +927,7 @@ class TransactionUtil extends Util
                         }
                         $output['taxes'][$tax_group_detail['name']] += $tax_group_detail['calculated_tax'];
                     }
-                } elseif(!empty($line['tax_unformatted']) && $line['tax_unformatted'] != 0){
+                } elseif (!empty($line['tax_unformatted']) && $line['tax_unformatted'] != 0) {
                     if (!isset($output['taxes'][$line['tax_name']])) {
                         $output['taxes'][$line['tax_name']] = 0;
                     }
@@ -2826,8 +2834,7 @@ class TransactionUtil extends Util
         }
                     
         $query->select(
-            DB::raw("SUM(
-                            (purchase_lines.quantity -
+            DB::raw("SUM((purchase_lines.quantity - purchase_lines.quantity_returned - purchase_lines.quantity_adjusted -
                             (SELECT COALESCE(SUM(tspl.quantity - tspl.qty_returned), 0) FROM 
                             transaction_sell_lines_purchase_lines AS tspl
                             JOIN transaction_sell_lines as tsl ON 
@@ -3221,12 +3228,14 @@ class TransactionUtil extends Util
     {
         $contact_payments = Contact::where('contacts.id', $contact_id)
                     ->join('transactions AS t', 'contacts.id', '=', 't.contact_id')
-                    ->where('t.type', 'sell')
+                    ->whereIn('t.type', ['sell', 'opening_balance'])
                     ->select(
-                        DB::raw("SUM(IF(t.status = 'final', final_total, 0)) as total_invoice"),
-                        DB::raw("SUM(IF(t.status = 'final', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid")
+                        DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', final_total, 0)) as total_invoice"),
+                        DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
+                        DB::raw("SUM(IF(t.type = 'opening_balance', final_total, 0)) as opening_balance"),
+                        DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid")
                     )->first();
-        $due = $contact_payments->total_invoice - $contact_payments->total_paid;
+        $due = $contact_payments->total_invoice - $contact_payments->total_paid + $contact_payments->opening_balance - $contact_payments->opening_balance_paid;
 
         return $due;
     }

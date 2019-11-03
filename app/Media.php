@@ -30,7 +30,8 @@ class Media extends Model
      */
     public function getDisplayNameAttribute()
     {
-        return explode('_', $this->file_name, 2)[1];
+        $array = explode('_', $this->file_name, 3);
+        return !empty($array[2]) ? $array[2] : $array[1];
     }
 
     /**
@@ -107,7 +108,7 @@ class Media extends Model
             if (!empty($uploaded_files)) {
                 $media_obj = [];
                 foreach ($uploaded_files as $value) {
-                    $media_obj[] = new \App\Media(['file_name' => $value, 'business_id' => $business_id]);
+                    $media_obj[] = new \App\Media(['file_name' => $value, 'business_id' => $business_id, 'description' => !empty($request->description) ? $request->description : null, 'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
                 }
 
                 $model->media()->saveMany($media_obj);
@@ -147,5 +148,10 @@ class Media extends Model
             unlink($media_path);
         }
         $media->delete();
+    }
+
+    public function uploaded_by_user()
+    {
+        return $this->belongsTo(\App\User::class, 'uploaded_by');
     }
 }

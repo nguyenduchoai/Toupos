@@ -38,7 +38,7 @@
                                 <th>@lang('business.business_name')</th>
                                 <th>@lang('contact.name')</th>
                                 <th>@lang('lang_v1.added_on')</th>
-                                <th>@lang('contact.contact')</th>
+                                <th>@lang('contact.mobile')</th>
                                 <th>@lang('contact.total_purchase_due')</th>
                                 <th>@lang('lang_v1.total_purchase_return_due')</th>
                                 <th>@lang('messages.action')</th>
@@ -46,11 +46,11 @@
                                 <th>@lang('user.name')</th>
                                 <th>@lang('lang_v1.added_on')</th>
                                 @if($reward_enabled)
-                                    <th>{{session('business.rp_name')}}</th>
+                                    <th id="rp_col">{{session('business.rp_name')}}</th>
                                 @endif
                                 <th>@lang('lang_v1.customer_group')</th>
                                 <th>@lang('business.address')</th>
-                                <th>@lang('contact.contact')</th>
+                                <th>@lang('contact.mobile')</th>
                                 <th>@lang('contact.total_sale_due')</th>
                                 <th>@lang('lang_v1.total_sell_return_due')</th>
                                 <th>@lang('messages.action')</th>

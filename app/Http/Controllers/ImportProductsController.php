@@ -84,14 +84,16 @@ class ImportProductsController extends Controller
         try {
             //Set maximum php execution time
             ini_set('max_execution_time', 0);
+            ini_set('memory_limit', -1);
 
             if ($request->hasFile('products_csv')) {
                 $file = $request->file('products_csv');
-                $imported_data = Excel::load($file->getRealPath())
-                                ->noHeading()
-                                ->skipRows(1)
-                                ->get()
-                                ->toArray();
+
+                $parsed_array = Excel::toArray([], $file);
+
+                //Remove header row
+                $imported_data = array_splice($parsed_array[0], 1);
+
                 $business_id = $request->session()->get('user.business_id');
                 $user_id = $request->session()->get('user.id');
                 $default_profit_percent = $request->session()->get('business.default_profit_percent');
@@ -100,12 +102,12 @@ class ImportProductsController extends Controller
 
                 $is_valid = true;
                 $error_msg = '';
-                
+
                 DB::beginTransaction();
                 foreach ($imported_data as $key => $value) {
 
                     //Check if any column is missing
-                    if (count($value) != 35) {
+                    if (count($value) < 35) {
                         $is_valid =  false;
                         $error_msg = "Some of the columns are missing. Please, use latest CSV file template.";
                         break;
@@ -340,13 +342,13 @@ class ImportProductsController extends Controller
                         //Calculate purchase price
                         $dpp_inc_tax = trim($value[16]);
                         $dpp_exc_tax = trim($value[17]);
-                        if (empty($dpp_inc_tax) && empty($dpp_exc_tax)) {
+                        if ($dpp_inc_tax == '' && $dpp_exc_tax == '') {
                             $is_valid = false;
                             $error_msg = "PURCHASE PRICE is required in row no. $row_no";
                             break;
                         } else {
-                            $dpp_inc_tax = !empty($dpp_inc_tax) ? $dpp_inc_tax : 0;
-                            $dpp_exc_tax = !empty($dpp_exc_tax) ? $dpp_exc_tax : 0;
+                            $dpp_inc_tax = ($dpp_inc_tax != '') ? $dpp_inc_tax : 0;
+                            $dpp_exc_tax = ($dpp_exc_tax != '') ? $dpp_exc_tax : 0;
                         }
 
                         //Calculate Selling price
@@ -633,7 +635,7 @@ class ImportProductsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
+
             $output = ['success' => 0,
                             'msg' => $e->getMessage()
                         ];

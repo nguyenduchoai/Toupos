@@ -21,8 +21,8 @@
             </div>
 
             <div class="form-group">
-                {!! Form::label('from_account', __( 'account.deposit_from' ) .":*") !!}
-                {!! Form::select('from_account', $from_accounts, null, ['class' => 'form-control', 'required' ]); !!}
+                {!! Form::label('from_account', __( 'account.deposit_from' ) .":") !!}
+                {!! Form::select('from_account', $from_accounts, null, ['class' => 'form-control', 'placeholder' => __('messages.please_select') ]); !!}
             </div>
 
             <div class="form-group">

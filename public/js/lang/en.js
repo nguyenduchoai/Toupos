@@ -107,4 +107,8 @@ LANG = {
     'something_went_wrong': 'Something went wrong',
     'max_rp_reached_error': 'Maximum :max_points :rp_name available',
     'min_order_total_error': 'Minimum order total should be :min_order to redeem :rp_name',
+    'this_year': 'This Year',
+    'last_year': 'Last Year',
+    'last_financial_year': 'Last financial year',
+    'this_month_last_year': 'This month last year',
 };

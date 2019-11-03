@@ -27,15 +27,6 @@
         </div>
     @endif
     @can('account.access')
-     <div class="row">
-        <div class="col-sm-12">
-            <button type="button" class="btn btn-primary btn-modal pull-right" 
-                data-container=".account_model"
-                data-href="{{action('AccountController@create')}}">
-                <i class="fa fa-plus"></i> @lang( 'messages.add' )</button>
-        </div>
-    </div>
-    <br>
     <div class="row">
         <div class="col-sm-12">
             <div class="nav-tabs-custom">
@@ -53,20 +44,39 @@
                         </a>
                     </li>
                     --}}
+                    <li>
+                        <a href="#account_types" data-toggle="tab">
+                            <i class="fa fa-list"></i> <strong>
+                            @lang('lang_v1.account_types') </strong>
+                        </a>
+                    </li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="other_accounts">
-                        <table class="table table-bordered table-striped" id="other_account_table">
-                            <thead>
-                                <tr>
-                                    <th>@lang( 'lang_v1.name' )</th>
-                                    <th>@lang('account.account_number')</th>
-                                    <th>@lang( 'brand.note' )</th>
-                                    <th>@lang('lang_v1.balance')</th>
-                                    <th>@lang( 'messages.action' )</th>
-                                </tr>
-                            </thead>
-                        </table>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <button type="button" class="btn btn-primary btn-modal pull-right" 
+                                    data-container=".account_model"
+                                    data-href="{{action('AccountController@create')}}">
+                                    <i class="fa fa-plus"></i> @lang( 'messages.add' )</button>
+                            </div>
+                            <div class="col-sm-12">
+                            <br>
+                                <table class="table table-bordered table-striped" id="other_account_table">
+                                    <thead>
+                                        <tr>
+                                            <th>@lang( 'lang_v1.name' )</th>
+                                            <th>@lang( 'lang_v1.account_type' )</th>
+                                            <th>@lang( 'lang_v1.account_sub_type' )</th>
+                                            <th>@lang('account.account_number')</th>
+                                            <th>@lang( 'brand.note' )</th>
+                                            <th>@lang('lang_v1.balance')</th>
+                                            <th>@lang( 'messages.action' )</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     {{--
                     <div class="tab-pane" id="capital_accounts">
@@ -83,6 +93,65 @@
                         </table>
                     </div>
                     --}}
+                    <div class="tab-pane" id="account_types">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <button type="button" class="btn btn-primary btn-modal pull-right" 
+                                    data-href="{{action('AccountTypeController@create')}}"
+                                    data-container="#account_type_modal">
+                                    <i class="fa fa-plus"></i> @lang( 'messages.add' )</button>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table class="table table-striped table-bordered" id="account_types_table" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>@lang( 'lang_v1.name' )</th>
+                                            <th>@lang( 'messages.action' )</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($account_types as $account_type)
+                                            <tr class="account_type_{{$account_type->id}}">
+                                                <th>{{$account_type->name}}</th>
+                                                <td>
+                                                    
+                                                    {!! Form::open(['url' => action('AccountTypeController@destroy', $account_type->id), 'method' => 'delete' ]) !!}
+                                                    <button type="button" class="btn btn-primary btn-modal btn-xs" 
+                                                    data-href="{{action('AccountTypeController@edit', $account_type->id)}}"
+                                                    data-container="#account_type_modal">
+                                                    <i class="fa fa-edit"></i> @lang( 'messages.edit' )</button>
+
+                                                    <button type="button" class="btn btn-danger btn-xs delete_account_type" >
+                                                    <i class="fa fa-trash"></i> @lang( 'messages.delete' )</button>
+                                                    {!! Form::close() !!}
+                                                </td>
+                                            </tr>
+                                            @foreach($account_type->sub_types as $sub_type)
+                                                <tr>
+                                                    <td>&nbsp;&nbsp;-- {{$sub_type->name}}</td>
+                                                    <td>
+                                                        
+
+                                                        {!! Form::open(['url' => action('AccountTypeController@destroy', $sub_type->id), 'method' => 'delete' ]) !!}
+                                                            <button type="button" class="btn btn-primary btn-modal btn-xs" 
+                                                        data-href="{{action('AccountTypeController@edit', $sub_type->id)}}"
+                                                        data-container="#account_type_modal">
+                                                        <i class="fa fa-edit"></i> @lang( 'messages.edit' )</button>
+                                                            <button type="button" class="btn btn-danger btn-xs delete_account_type" >
+                                                            <i class="fa fa-trash"></i> @lang( 'messages.delete' )</button>
+                                                            {!! Form::close() !!}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -93,6 +162,9 @@
     	aria-labelledby="gridSystemModalLabel">
     </div>
 
+    <div class="modal fade" tabindex="-1" role="dialog" 
+        aria-labelledby="gridSystemModalLabel" id="account_type_modal">
+    </div>
 </section>
 <!-- /.content -->
 
@@ -180,7 +252,7 @@
                         serverSide: true,
                         ajax: '/account/account?account_type=capital',
                         columnDefs:[{
-                                "targets": 4,
+                                "targets": 5,
                                 "orderable": false,
                                 "searchable": false
                             }],
@@ -201,12 +273,14 @@
                         serverSide: true,
                         ajax: '/account/account?account_type=other',
                         columnDefs:[{
-                                "targets": 4,
+                                "targets": 6,
                                 "orderable": false,
                                 "searchable": false
                             }],
                         columns: [
                             {data: 'name', name: 'name'},
+                            {data: 'parent_account_type_name', name: 'pat.name'},
+                            {data: 'account_type_name', name: 'at.name'},
                             {data: 'account_number', name: 'account_number'},
                             {data: 'note', name: 'note'},
                             {data: 'balance', name: 'balance', searchable: false},
@@ -261,6 +335,23 @@
           }
         });
     });
+
+    $('.account_model').on('shown.bs.modal', function(e) {
+        $('.account_model .select2').select2({ dropdownParent: $(this) })
+    });
+
+    $(document).on('click', 'button.delete_account_type', function(){
+        swal({
+            title: LANG.sure,
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        }).then((willDelete)=>{
+            if(willDelete){
+                $(this).closest('form').submit();
+            }
+        });
+    })
 
 </script>
 @endsection

@@ -56,6 +56,5 @@ return [
     'variations' => 'Biến thể',
     'import_products' => 'Tải lên sản phẩm',
     'file_to_import' => 'Chọn file tải lên',
-    'file_imported_successfully' => 'Tải lên thành công',
-    'download_csv_file_template' => 'Tải xuống mẫu CSV',
+    'file_imported_successfully' => 'Tải lên thành công'
  ];

@@ -29,7 +29,7 @@ return [
     'current_register' => 'Current Register',
     'close_register' => 'Đóng đăng ký',
     'total_card_slips' => 'Tổng thanh toán thẻ',
-    'total_cheques' => 'Tổng cheque',
+    'total_cheques' => 'Tổng sec',
     'closing_note' =>'Lưu ý kết thúc',
     'close_success' => 'Đăng ký đóng thành công',
     'open' => 'Mở',

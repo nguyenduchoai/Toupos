@@ -21,6 +21,10 @@
                             <td>{{$account->name}}</td>
                         </tr>
                         <tr>
+                            <th>@lang('lang_v1.account_type'):</th>
+                            <td>@if(!empty($account->account_type->parent_account)) {{$account->account_type->parent_account->name}} - @endif {{$account->account_type->name ?? ''}}</td>
+                        </tr>
+                        <tr>
                             <th>@lang('account.account_number'):</th>
                             <td>{{$account->account_number}}</td>
                         </tr>
