@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-
 use App\Account;
 use App\AccountTransaction;
+use App\AccountType;
 use App\TransactionPayment;
+use App\Utils\Util;
+use DB;
+
+use Illuminate\Http\Request;
+
+use Illuminate\Http\Response;
 
 use Yajra\DataTables\Facades\DataTables;
-
-use App\Utils\Util;
-
-use DB;
 
 class AccountController extends Controller
 {
@@ -46,21 +46,24 @@ class AccountController extends Controller
                 $join->on('AT.account_id', '=', 'accounts.id');
                 $join->whereNull('AT.deleted_at');
             })
-                                ->where('business_id', $business_id)
-                                ->select(['name', 'account_number', 'accounts.note', 'accounts.id',
+            ->leftjoin(
+                'account_types as at',
+                'accounts.account_type_id',
+                '=',
+                'at.id'
+            )
+            ->leftjoin(
+                'account_types as pat',
+                'at.parent_account_type_id',
+                '=',
+                'pat.id'
+            )
+                                ->where('accounts.business_id', $business_id)
+                                ->select(['accounts.name', 'account_number', 'accounts.note', 'accounts.id', 'accounts.account_type_id',
+                                    'at.name as account_type_name',
+                                    'pat.name as parent_account_type_name',
                                     'is_closed', DB::raw("SUM( IF(AT.type='credit', amount, -1*amount) ) as balance")])
                                 ->groupBy('accounts.id');
-
-            $account_type = request()->input('account_type');
-
-            if ($account_type == 'capital') {
-                $accounts->where('account_type', 'capital');
-            } elseif ($account_type == 'other') {
-                $accounts->where(function ($q) {
-                    $q->where('account_type', '!=', 'capital');
-                    $q->orWhereNull('account_type');
-                });
-            }
 
             return DataTables::of($accounts)
                             ->addColumn(
@@ -85,6 +88,24 @@ class AccountController extends Controller
                             ->editColumn('balance', function ($row) {
                                 return '<span class="display_currency" data-currency_symbol="true">' . $row->balance . '</span>';
                             })
+                            ->editColumn('account_type', function ($row) {
+                                $account_type = '';
+                                if (!empty($row->account_type->parent_account)) {
+                                    $account_type .= $row->account_type->parent_account->name . ' - ';
+                                }
+                                if (!empty($row->account_type)) {
+                                    $account_type .= $row->account_type->name;
+                                }
+                                return $account_type;
+                            })
+                            ->editColumn('parent_account_type_name', function ($row) {
+                                $parent_account_type_name = empty($row->parent_account_type_name) ? $row->account_type_name : $row->parent_account_type_name;
+                                return $parent_account_type_name;
+                            })
+                            ->editColumn('account_type_name', function ($row) {
+                                $account_type_name = empty($row->parent_account_type_name) ? '' : $row->account_type_name;
+                                return $account_type_name;
+                            })
                             ->removeColumn('id')
                             ->removeColumn('is_closed')
                             ->rawColumns(['action', 'balance', 'name'])
@@ -107,8 +128,13 @@ class AccountController extends Controller
         //                             ->where('account_type', 'capital')
         //                             ->count();
 
+        $account_types = AccountType::where('business_id', $business_id)
+                                     ->whereNull('parent_account_type_id')
+                                     ->with(['sub_types'])
+                                     ->get();
+
         return view('account.index')
-                ->with(compact('not_linked_payments'));
+                ->with(compact('not_linked_payments', 'account_types'));
     }
 
     /**
@@ -121,7 +147,11 @@ class AccountController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $account_types = Account::accountTypes();
+        $business_id = session()->get('user.business_id');
+        $account_types = AccountType::where('business_id', $business_id)
+                                     ->whereNull('parent_account_type_id')
+                                     ->with(['sub_types'])
+                                     ->get();
 
         return view('account.create')
                 ->with(compact('account_types'));
@@ -140,12 +170,11 @@ class AccountController extends Controller
 
         if (request()->ajax()) {
             try {
-                $input = $request->only(['name', 'account_number', 'note']);
+                $input = $request->only(['name', 'account_number', 'note', 'account_type_id']);
                 $business_id = $request->session()->get('user.business_id');
                 $user_id = $request->session()->get('user.id');
                 $input['business_id'] = $business_id;
                 $input['created_by'] = $user_id;
-                $input['account_type'] = 'saving_current';
                
                 $account = Account::create($input);
 
@@ -278,8 +307,9 @@ class AccountController extends Controller
                             ->make(true);
         }
         $account = Account::where('business_id', $business_id)
-                            ->find($id);
-                            
+                        ->with(['account_type', 'account_type.parent_account'])
+                        ->find($id);
+
         return view('account.show')
                 ->with(compact('account'));
     }
@@ -299,7 +329,10 @@ class AccountController extends Controller
             $account = Account::where('business_id', $business_id)
                                 ->find($id);
 
-            $account_types = Account::accountTypes();
+            $account_types = AccountType::where('business_id', $business_id)
+                                     ->whereNull('parent_account_type_id')
+                                     ->with(['sub_types'])
+                                     ->get();
            
             return view('account.edit')
                 ->with(compact('account', 'account_types'));
@@ -319,7 +352,7 @@ class AccountController extends Controller
 
         if (request()->ajax()) {
             try {
-                $input = $request->only(['name', 'account_number', 'note']);
+                $input = $request->only(['name', 'account_number', 'note', 'account_type_id']);
 
                 $business_id = request()->session()->get('user.business_id');
                 $account = Account::where('business_id', $business_id)
@@ -327,6 +360,7 @@ class AccountController extends Controller
                 $account->name = $input['name'];
                 $account->account_number = $input['account_number'];
                 $account->note = $input['note'];
+                $account->account_type_id = $input['account_type_id'];
                 $account->save();
 
                 $output = ['success' => true,
@@ -561,8 +595,6 @@ class AccountController extends Controller
             $account_id = $request->input('account_id');
             $note = $request->input('note');
 
-            $from_account = $request->input('from_account');
-
             $account = Account::where('business_id', $business_id)
                             ->findOrFail($account_id);
 
@@ -578,16 +610,19 @@ class AccountController extends Controller
                 ];
                 $credit = AccountTransaction::createAccountTransaction($credit_data);
 
-                $debit_data = $credit_data;
-                $debit_data['type'] = 'debit';
-                $debit_data['account_id'] = $from_account;
-                $debit_data['transfer_transaction_id'] = $credit->id;
+                $from_account = $request->input('from_account');
+                if (!empty($from_account)) {
+                    $debit_data = $credit_data;
+                    $debit_data['type'] = 'debit';
+                    $debit_data['account_id'] = $from_account;
+                    $debit_data['transfer_transaction_id'] = $credit->id;
 
-                $debit = AccountTransaction::createAccountTransaction($debit_data);
+                    $debit = AccountTransaction::createAccountTransaction($debit_data);
 
-                $credit->transfer_transaction_id = $debit->id;
+                    $credit->transfer_transaction_id = $debit->id;
 
-                $credit->save();
+                    $credit->save();
+                }
             }
             
             $output = ['success' => true,
@@ -646,12 +681,14 @@ class AccountController extends Controller
 
         if (request()->ajax()) {
             $accounts = AccountTransaction::join(
-                    'accounts as A',
-                    'account_transactions.account_id',
-                    '=',
-                    'A.id'
+                'accounts as A',
+                'account_transactions.account_id',
+                '=',
+                'A.id'
                 )
-                ->leftjoin('transaction_payments as TP', 'account_transactions.transaction_payment_id', 
+                ->leftjoin(
+                    'transaction_payments as TP',
+                    'account_transactions.transaction_payment_id',
                     '=',
                     'TP.id'
                 )
@@ -724,8 +761,8 @@ class AccountController extends Controller
                         }
                     }
 
-                    if(!empty($row->payment_ref_no)){
-                        if(!empty($details)){
+                    if (!empty($row->payment_ref_no)) {
+                        if (!empty($details)) {
                             $details .= '<br/>';
                         }
 

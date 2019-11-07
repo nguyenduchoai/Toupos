@@ -91,7 +91,6 @@ class RoleController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        //Get all locations
         $business_id = request()->session()->get('user.business_id');
 
         $selling_price_groups = SellingPriceGroup::where('business_id', $business_id)
@@ -100,7 +99,7 @@ class RoleController extends Controller
         $module_permissions = $this->moduleUtil->getModuleData('user_permissions');
 
         return view('role.create')
-                ->with(compact('locations', 'selling_price_groups', 'module_permissions'));
+                ->with(compact('selling_price_groups', 'module_permissions'));
     }
 
     /**
@@ -202,7 +201,7 @@ class RoleController extends Controller
         $module_permissions = $this->moduleUtil->getModuleData('user_permissions');
 
         return view('role.edit')
-            ->with(compact('role', 'role_permissions', 'locations', 'selling_price_groups', 'module_permissions'));
+            ->with(compact('role', 'role_permissions', 'selling_price_groups', 'module_permissions'));
     }
 
     /**

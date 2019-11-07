@@ -11,7 +11,14 @@
 					<div class="col-md-6">
 				        <div class="form-group">
 				            {!! Form::label('shipping_details_modal', __('sale.shipping_details') . ':*' ) !!}
-				            {!! Form::textarea('shipping_details_modal',$shipping_details, ['class' => 'form-control','placeholder' => __('sale.shipping_details'), 'required' ,'rows' => '4']); !!}
+				            {!! Form::textarea('shipping_details_modal', !empty($transaction->shipping_details) ? $transaction->shipping_details : '', ['class' => 'form-control','placeholder' => __('sale.shipping_details'), 'required' ,'rows' => '4']); !!}
+				        </div>
+				    </div>
+
+				    <div class="col-md-6">
+				        <div class="form-group">
+				            {!! Form::label('shipping_address_modal', __('lang_v1.shipping_address') . ':' ) !!}
+				            {!! Form::textarea('shipping_address_modal',!empty($transaction->shipping_address) ? $transaction->shipping_address : '', ['class' => 'form-control','placeholder' => __('lang_v1.shipping_address') ,'rows' => '4']); !!}
 				        </div>
 				    </div>
 
@@ -22,8 +29,22 @@
 				                <span class="input-group-addon">
 				                    <i class="fa fa-info"></i>
 				                </span>
-				                {!! Form::text('shipping_charges_modal', @num_format($shipping_charges), ['class' => 'form-control input_number','placeholder' => __('sale.shipping_charges')]); !!}
+				                {!! Form::text('shipping_charges_modal', !empty($transaction->shipping_charges) ? @num_format($transaction->shipping_charges) : 0, ['class' => 'form-control input_number','placeholder' => __('sale.shipping_charges')]); !!}
 				            </div>
+				        </div>
+				    </div>
+
+				    <div class="col-md-6">
+				        <div class="form-group">
+				            {!! Form::label('shipping_status_modal', __('lang_v1.shipping_status') . ':' ) !!}
+				            {!! Form::select('shipping_status_modal',$shipping_statuses, !empty($transaction->shipping_status) ? $transaction->shipping_status : null, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
+				        </div>
+				    </div>
+
+				    <div class="col-md-6">
+				        <div class="form-group">
+				            {!! Form::label('delivered_to_modal', __('lang_v1.delivered_to') . ':' ) !!}
+				            {!! Form::text('delivered_to_modal', !empty($transaction->delivered_to) ? $transaction->delivered_to : null, ['class' => 'form-control','placeholder' => __('lang_v1.delivered_to')]); !!}
 				        </div>
 				    </div>
 

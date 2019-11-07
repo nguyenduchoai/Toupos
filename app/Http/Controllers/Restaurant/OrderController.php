@@ -82,10 +82,13 @@ class OrderController extends Controller
             $business_id = request()->session()->get('user.business_id');
             $user_id = request()->session()->get('user.id');
 
-            $transaction = Transaction::where('business_id', $business_id)
-                            ->where('type', 'sell')
-                            ->where('res_waiter_id', $user_id)
-                            ->find($id);
+            $query = Transaction::where('business_id', $business_id)
+                            ->where('type', 'sell');
+            if($this->restUtil->is_service_staff($user_id)){
+                $query->where('res_waiter_id', $user_id);
+            }
+            $transaction = $query->find($id);
+
             if (!empty($transaction)) {
                 $transaction->res_order_status = 'served';
                 $transaction->save();

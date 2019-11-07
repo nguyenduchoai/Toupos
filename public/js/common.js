@@ -151,6 +151,12 @@ $(document).ready(function() {
                 stripHtml: false,
             },
             footer: true,
+            customize: function ( win ) {
+                if ($('.print_table_part').length > 0 ) {
+                    $($('.print_table_part').html()).insertBefore($(win.document.body).find( 'table' ));
+                }
+                __currency_convert_recursively($(win.document.body).find( 'table' ));
+            }
         },
         {
             extend: 'colvis',
@@ -190,7 +196,7 @@ $(document).ready(function() {
             },
         ],
         aLengthMenu: [[25, 50, 100, 200, 500, 1000, -1], [25, 50, 100, 200, 500, 1000, LANG.all]],
-        iDisplayLength: 25,
+        iDisplayLength: __default_datatable_page_entries,
         language: {
             search: LANG.search + ':',
             lengthMenu: LANG.show + ' _MENU_ ' + LANG.entries,
@@ -276,7 +282,25 @@ ranges[LANG.last_month] = [
         .subtract(1, 'month')
         .endOf('month'),
 ];
+ranges[LANG.this_month_last_year] = [
+    moment()
+        .subtract(1, 'year')
+        .startOf('month'),
+    moment()
+        .subtract(1, 'year')
+        .endOf('month'),
+];
+ranges[LANG.this_year] = [moment().startOf('year'), moment().endOf('year')];
+ranges[LANG.last_year] = [
+    moment().startOf('year').subtract(1, 'year'), 
+    moment().endOf('year').subtract(1, 'year') 
+];
 ranges[LANG.this_financial_year] = [financial_year.start, financial_year.end];
+ranges[LANG.last_financial_year] = [
+    moment(financial_year.start._i).subtract(1, 'year'), 
+    moment(financial_year.end._i).subtract(1, 'year')
+];
+
 var dateRangeSettings = {
     ranges: ranges,
     startDate: financial_year.start,

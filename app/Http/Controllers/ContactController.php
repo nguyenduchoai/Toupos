@@ -148,8 +148,8 @@ class ContactController extends Controller
             ->removeColumn('purchase_paid')
             ->removeColumn('total_purchase_return')
             ->removeColumn('purchase_return_paid')
-            ->rawColumns([5, 6, 7])
-            ->make(false);
+            ->rawColumns(['due', 'return_due', 'action'])
+            ->make(true);
     }
 
     /**
@@ -169,7 +169,7 @@ class ContactController extends Controller
                     ->leftjoin('customer_groups AS cg', 'contacts.customer_group_id', '=', 'cg.id')
                     ->where('contacts.business_id', $business_id)
                     ->onlyCustomers()
-                    ->addSelect(['contacts.contact_id', 'contacts.name', 'contacts.created_at', 'total_rp', 'cg.name as customer_group', 'city', 'state', 'country', 'landmark', 'mobile', 'contacts.id', 'is_default',
+                    ->select(['contacts.contact_id', 'contacts.name', 'contacts.created_at', 'total_rp', 'cg.name as customer_group', 'city', 'state', 'country', 'landmark', 'mobile', 'contacts.id', 'is_default',
                         DB::raw("SUM(IF(t.type = 'sell' AND t.status = 'final', final_total, 0)) as total_invoice"),
                         DB::raw("SUM(IF(t.type = 'sell' AND t.status = 'final', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as invoice_received"),
                         DB::raw("SUM(IF(t.type = 'sell_return', final_total, 0)) as total_sell_return"),
@@ -180,10 +180,7 @@ class ContactController extends Controller
                     ->groupBy('contacts.id');
 
         $contacts = Datatables::of($query)
-            ->editColumn(
-                'landmark',
-                '{{implode(array_filter([$landmark, $city, $state, $country]), ", ")}}'
-            )
+            ->addColumn('address', '{{implode(array_filter([$landmark, $city, $state, $country]), ", ")}}')
             ->addColumn(
                 'due',
                 '<span class="display_currency contact_due" data-orig-value="{{$total_invoice - $invoice_received}}" data-currency_symbol=true data-highlight=true>{{($total_invoice - $invoice_received)}}</span>'
@@ -233,15 +230,16 @@ class ContactController extends Controller
             ->removeColumn('id')
             ->removeColumn('is_default')
             ->removeColumn('total_sell_return')
-            ->removeColumn('sell_return_paid');
+            ->removeColumn('sell_return_paid')
+            ->filterColumn('address', function ($query, $keyword) {
+                $query->whereRaw("CONCAT(COALESCE(landmark, ''), ', ', COALESCE(city, ''), ', ', COALESCE(state, ''), ', ', COALESCE(country, '') ) like ?", ["%{$keyword}%"]);
+            });
         $reward_enabled = (request()->session()->get('business.enable_rp') == 1) ? true : false;
-        $raw = [7, 8, 9];
         if (!$reward_enabled) {
             $contacts->removeColumn('total_rp');
-            $raw = [6, 7, 8];
         }
-        return $contacts->rawColumns($raw)
-                        ->make(false);
+        return $contacts->rawColumns(['due', 'return_due', 'action'])
+                        ->make(true);
     }
 
     /**
@@ -687,11 +685,10 @@ class ContactController extends Controller
 
             if ($request->hasFile('contacts_csv')) {
                 $file = $request->file('contacts_csv');
-                $imported_data = Excel::load($file->getRealPath())
-                                ->noHeading()
-                                ->skipRows(1)
-                                ->get()
-                                ->toArray();
+                $parsed_array = Excel::toArray([], $file);
+                //Remove header row
+                $imported_data = array_splice($parsed_array[0], 1);
+                
                 $business_id = $request->session()->get('user.business_id');
                 $user_id = $request->session()->get('user.id');
 

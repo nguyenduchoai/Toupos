@@ -302,6 +302,17 @@
 				</div>
 				<div class="col-md-4">
 					<div class="form-group">
+			            {!! Form::label('shipping_address', __('lang_v1.shipping_address')) !!}
+			            <div class="input-group">
+							<span class="input-group-addon">
+			                    <i class="fa fa-map-marker"></i>
+			                </span>
+			                {!! Form::textarea('shipping_address', $transaction->shipping_address, ['class' => 'form-control','placeholder' => __('lang_v1.shipping_address') ,'rows' => '1', 'cols'=>'30']); !!}
+			            </div>
+			        </div>
+				</div>
+				<div class="col-md-4">
+					<div class="form-group">
 						{!!Form::label('shipping_charges', __('sale.shipping_charges'))!!}
 						<div class="input-group">
 						<span class="input-group-addon">
@@ -311,6 +322,18 @@
 						</div>
 					</div>
 				</div>
+				<div class="col-md-4">
+					<div class="form-group">
+			            {!! Form::label('shipping_status', __('lang_v1.shipping_status')) !!}
+			            {!! Form::select('shipping_status',$shipping_statuses, $transaction->shipping_status, ['class' => 'form-control','placeholder' => __('messages.please_select')]); !!}
+			        </div>
+				</div>
+				<div class="col-md-4">
+			        <div class="form-group">
+			            {!! Form::label('delivered_to', __('lang_v1.delivered_to') . ':' ) !!}
+			            {!! Form::text('delivered_to', $transaction->delivered_to, ['class' => 'form-control','placeholder' => __('lang_v1.delivered_to')]); !!}
+			        </div>
+			    </div>
 			    <div class="col-md-4 col-md-offset-8">
 			    	<div><b>@lang('sale.total_payable'): </b>
 						<input type="hidden" name="final_total" id="final_total_input">

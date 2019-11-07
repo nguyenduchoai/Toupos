@@ -119,6 +119,10 @@ class Util
      */
     public function get_percent($base, $number)
     {
+        if ($base == 0) {
+            return 0;
+        }
+
         $diff = $number - $base;
         return ($diff / $base) * 100;
     }
@@ -138,16 +142,18 @@ class Util
     {
         $payment_types = ['cash' => __('lang_v1.cash'), 'card' => __('lang_v1.card'), 'cheque' => __('lang_v1.cheque'), 'bank_transfer' => __('lang_v1.bank_transfer'), 'other' => __('lang_v1.other')];
 
+        $custom_labels = !empty(session('business.custom_labels')) ? json_decode(session('business.custom_labels'), true) : [];
+
         if (config('constants.enable_custom_payment_1')) {
-            $payment_types['custom_pay_1'] = __('lang_v1.custom_payment_1');
+            $payment_types['custom_pay_1'] = !empty($custom_labels['payments']['custom_pay_1']) ? $custom_labels['payments']['custom_pay_1'] : __('lang_v1.custom_payment_1');
         }
 
         if (config('constants.enable_custom_payment_2')) {
-            $payment_types['custom_pay_2'] = __('lang_v1.custom_payment_2');
+            $payment_types['custom_pay_2'] = !empty($custom_labels['payments']['custom_pay_2']) ? $custom_labels['payments']['custom_pay_2'] : __('lang_v1.custom_payment_2');
         }
 
         if (config('constants.enable_custom_payment_3')) {
-            $payment_types['custom_pay_3'] = __('lang_v1.custom_payment_3');
+            $payment_types['custom_pay_3'] = !empty($custom_labels['payments']['custom_pay_3']) ? $custom_labels['payments']['custom_pay_3'] : __('lang_v1.custom_payment_3');
         }
 
         return $payment_types;
@@ -203,7 +209,7 @@ class Util
             $mysql_format = 'Y-m-d H:i:s';
         }
 
-        return \Carbon::createFromFormat($date_format, $date)->format($mysql_format);
+        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -218,7 +224,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return \Carbon::createFromFormat($time_format, $time)->format('H:i');
+        return !empty($time_format) ? \Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
     }
 
     /**
@@ -233,7 +239,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return \Carbon::createFromFormat('H:i:s', $time)->format($time_format);
+        return !empty($time) ? \Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
     }
 
     /**
@@ -255,7 +261,7 @@ class Util
             }
         }
         
-        return \Carbon::createFromTimestamp(strtotime($date))->format($format);
+        return !empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
     }
 
     /**
@@ -369,177 +375,52 @@ class Util
     public function sendSms($data)
     {
         $sms_settings = $data['sms_settings'];
-        //02/10/19 DanhVT add
-        if($sms_settings['checked'] == 'tousms'){
-            $this->sendTousms($sms_settings['tousms'], $data['mobile_number'], $data['sms_body']);
-        } else if($sms_settings['checked'] == 'esms'){
-            $this->sendEsms($sms_settings['esms'], $data['mobile_number'], $data['sms_body']);
-        } else if($sms_settings['checked'] == 'vht'){
-            $this->sendVHT($sms_settings['vht'], $data['mobile_number'], $data['sms_body']);
-        }
-        //02/10/19 DanhVT end
-
-        //02/10/19 DanhVT remove
-        // $request_data = [
-        //     $sms_settings['send_to_param_name'] => $data['mobile_number'],
-        //     $sms_settings['msg_param_name'] => $data['sms_body'],
-        // ];
-
-        // if (!empty($sms_settings['param_1'])) {
-        //     $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
-        // }
-        // if (!empty($sms_settings['param_2'])) {
-        //     $request_data[$sms_settings['param_2']] = $sms_settings['param_val_2'];
-        // }
-        // if (!empty($sms_settings['param_3'])) {
-        //     $request_data[$sms_settings['param_3']] = $sms_settings['param_val_3'];
-        // }
-        // if (!empty($sms_settings['param_4'])) {
-        //     $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
-        // }
-        // if (!empty($sms_settings['param_5'])) {
-        //     $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
-        // }
-        // if (!empty($sms_settings['param_6'])) {
-        //     $request_data[$sms_settings['param_6']] = $sms_settings['param_val_6'];
-        // }
-        // if (!empty($sms_settings['param_7'])) {
-        //     $request_data[$sms_settings['param_7']] = $sms_settings['param_val_7'];
-        // }
-        // if (!empty($sms_settings['param_8'])) {
-        //     $request_data[$sms_settings['param_8']] = $sms_settings['param_val_8'];
-        // }
-        // if (!empty($sms_settings['param_9'])) {
-        //     $request_data[$sms_settings['param_9']] = $sms_settings['param_val_9'];
-        // }
-        // if (!empty($sms_settings['param_10'])) {
-        //     $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
-        // }
-
-        // $client = new Client();
-
-        // if ($sms_settings['request_method'] == 'get') {
-        //     $response = $client->get($sms_settings['url'] . '?'. http_build_query($request_data));
-        // } else {
-        //     $response = $client->post($sms_settings['url'], [
-        //         'form_params' => $request_data
-        //     ]);
-        // }
-        //02/10/19 DanhVT end
-    }
-
-    //02/10/19 DanhVT add
-    public function sendVHT($sms_settings, $number, $message)
-    {
-        $xmlcontent = '<?xml version="1.0" encoding="utf-8"?>
-        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-        <soap:Body>
-            <SendSMS xmlns="http://203.162.168.170/SendMTAuth/">
-            <account_name>'.$sms_settings['account'].'</account_name>
-            <account_password>'.$sms_settings['password'].'</account_password>
-            <User_ID>'.$number.'</User_ID>
-            <Content>'.$message.'</Content>
-            <Service_ID>VHT</Service_ID>
-            <Command_Code>VHT</Command_Code>
-            <Request_ID>0</Request_ID>
-            <Message_Type>0</Message_Type>
-            <Total_Message>1</Total_Message>
-            <Message_Index>1</Message_Index>
-            <IsMore>0</IsMore>
-            <Content_Type>0</Content_Type>
-            </SendSMS>
-        </soap:Body>
-        </soap:Envelope>';
-
-        $ch = curl_init('http://sms2.vht.com.vn/SendMTAuth/SendMT2.asmx?wsdl');
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/xml'));
-        curl_setopt($ch, CURLOPT_POSTFIELDS, "$xmlcontent");
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($ch);
-        curl_close($ch);
-
-        // print_r($output);
-        if ($output == 0) return true;
-        else return false;
-        //return true;
-    }
-    public function sendTousms($sms_settings, $number, $message)
-    {
-        $error  = false;
-        $url = 'https://tousms.com/services/send.php';
-        $postData = [
-            'number' => $number,
-            'message' => $message,
-            'key' => $sms_settings['apikey']
+        $request_data = [
+            $sms_settings['send_to_param_name'] => $data['mobile_number'],
+            $sms_settings['msg_param_name'] => $data['sms_body'],
         ];
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if (curl_errno($ch)) {
-            $error = curl_error($ch);
+
+        if (!empty($sms_settings['param_1'])) {
+            $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
         }
-        curl_close($ch);
-        if ($httpCode == 200) {
-            $json = json_decode($response, true);
-            if ($json == false) {
-                if (empty($response)) {
-                    $error = "Missing data in request. Please provide all the required information to send messages.";
-                } else {
-                    $error = $response;
-                }
-            } else {
-                if ($json["success"]) {
-                    return true;
-                } else {
-                    $error = $json["error"]["message"];
-                }
-            }
+        if (!empty($sms_settings['param_2'])) {
+            $request_data[$sms_settings['param_2']] = $sms_settings['param_val_2'];
+        }
+        if (!empty($sms_settings['param_3'])) {
+            $request_data[$sms_settings['param_3']] = $sms_settings['param_val_3'];
+        }
+        if (!empty($sms_settings['param_4'])) {
+            $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
+        }
+        if (!empty($sms_settings['param_5'])) {
+            $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
+        }
+        if (!empty($sms_settings['param_6'])) {
+            $request_data[$sms_settings['param_6']] = $sms_settings['param_val_6'];
+        }
+        if (!empty($sms_settings['param_7'])) {
+            $request_data[$sms_settings['param_7']] = $sms_settings['param_val_7'];
+        }
+        if (!empty($sms_settings['param_8'])) {
+            $request_data[$sms_settings['param_8']] = $sms_settings['param_val_8'];
+        }
+        if (!empty($sms_settings['param_9'])) {
+            $request_data[$sms_settings['param_9']] = $sms_settings['param_val_9'];
+        }
+        if (!empty($sms_settings['param_10'])) {
+            $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
+        }
+
+        $client = new Client();
+
+        if ($sms_settings['request_method'] == 'get') {
+            $response = $client->get($sms_settings['url'] . '?'. http_build_query($request_data));
         } else {
-            $error = "HTTP Error Code : {$httpCode}";
+            $response = $client->post($sms_settings['url'], [
+                'form_params' => $request_data
+            ]);
         }
-        if ($error !== false && $error !== null) {
-            // $this->set_error($error);
-        }
-
-        return false;
     }
-    public function sendEsms($sms_settings, $number, $message)
-    {
-        $SendContent=urlencode($message);
-        $data='http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get'."?Phone=$number&ApiKey=".$sms_settings['apikey']."&SecretKey=".$sms_settings['secretkey']."&Content=$SendContent";
-        if($sms_settings['brandname'] != ''){
-            $data.="&Brandname=".$sms_settings['brandname']."&SmsType=2";
-        }
-        $curl = curl_init($data); 
-        curl_setopt($curl, CURLOPT_FAILONERROR, true); 
-        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); 
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
-        $result = curl_exec($curl); 
-            
-        $obj = json_decode($result,true);
-        if($obj['CodeResult']==100)
-        {
-            return true;
-        }
-        else
-        {
-            $error = "ErrorMessage:".$obj['ErrorMessage'];
-        }
-        
-        // if ($error !== false && $error !== null) {
-        //     $this->set_error($error);
-        // }
-
-        return false;
-    }
-    //02/10/19 DanhVT end
 
     /**
     * Retrieves sub units of a base unit
@@ -678,21 +559,18 @@ class Util
                             ->where('is_service_staff', 1)
                             ->get();
 
-        $service_staff_roles = [];
-
-        if (!empty($location_id)) {
-            foreach ($service_staff_roles_obj as $role) {
-                if ($role->hasPermissionTo('location.' . $location_id) || $role->hasPermissionTo('access_all_locations')) {
-                    $service_staff_roles[] = $role->name;
-                }
-            }
-        } else {
-            $service_staff_roles = $service_staff_roles_obj->pluck('name')->toArray();
-        }
+        $service_staff_roles = $service_staff_roles_obj->pluck('name')->toArray();
         
         //Get all users of service staff roles
         if (!empty($service_staff_roles)) {
-            $waiters = User::where('business_id', $business_id)->role($service_staff_roles)->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
+            $waiters = User::where('business_id', $business_id)
+                        ->role($service_staff_roles);
+
+            if (!empty($location_id)) {
+                $waiters->permission(['location.'.$location_id, 'access_all_locations']);
+            }
+
+            $waiters = $waiters->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
         }
 
         return $waiters;
@@ -767,7 +645,7 @@ class Util
             //Replace business_logo
             if (strpos($value, '{business_logo}') !== false) {
                 $logo_name = $business->logo;
-                $business_logo = !empty($logo_name) ? '<img src="' . url('storage/business_logos/' . $logo_name) . '" alt="Business Logo" >' : '';
+                $business_logo = !empty($logo_name) ? '<img src="' . url('uploads/business_logos/' . $logo_name) . '" alt="Business Logo" >' : '';
 
                 $data[$key] = str_replace('{business_logo}', $business_logo, $data[$key]);
             }
@@ -957,5 +835,18 @@ class Util
         $string = $table_name . "quantity_sold + " . $table_name . "quantity_adjusted + " . $table_name . "quantity_returned + " . $table_name . "mfg_quantity_used";
         
         return $string;
+    }
+
+    public function shipping_statuses()
+    {
+        $statuses = [
+            'ordered' => __('lang_v1.ordered'),
+            'packed' => __('lang_v1.packed'),
+            'shipped' => __('lang_v1.shipped'),
+            'delivered' => __('lang_v1.delivered'),
+            'cancelled' => __('restaurant.cancelled')
+        ];
+
+        return $statuses;
     }
 }

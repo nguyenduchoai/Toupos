@@ -189,7 +189,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::resource('expenses', 'ExpenseController');
 
     //Transaction payments...
-    Route::get('/payments/opening-balance/{contact_id}', 'TransactionPaymentController@getOpeningBalancePayments');
+    // Route::get('/payments/opening-balance/{contact_id}', 'TransactionPaymentController@getOpeningBalancePayments');
     Route::get('/payments/show-child-payments/{payment_id}', 'TransactionPaymentController@showChildPayments');
     Route::get('/payments/view-payment/{payment_id}', 'TransactionPaymentController@viewPayment');
     Route::get('/payments/add_payment/{transaction_id}', 'TransactionPaymentController@addPayment');
@@ -243,6 +243,8 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
         'index', 'create', 'store'
     ]]);
 
+    Route::get('export-selling-price-group', 'SellingPriceGroupController@export');
+    Route::post('import-selling-price-group', 'SellingPriceGroupController@import');
 
     Route::resource('selling-price-group', 'SellingPriceGroupController');
 
@@ -279,6 +281,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
         Route::get('/cash-flow', 'AccountController@cashFlow');
     });
     
+    Route::resource('account-types', 'AccountTypeController');
 
     //Restaurant module
     Route::group(['prefix' => 'modules'], function () {
@@ -305,6 +308,10 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::get('bookings/get-todays-bookings', 'Restaurant\BookingController@getTodaysBookings');
     Route::resource('bookings', 'Restaurant\BookingController');
+
+    Route::get('sells/edit-shipping/{id}', 'SellController@editShipping');
+    Route::put('sells/update-shipping/{id}', 'SellController@updateShipping');
+    Route::get('shipments', 'SellController@shipments');
 });
 
 Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {

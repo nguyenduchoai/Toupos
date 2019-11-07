@@ -50,6 +50,14 @@ class SellController extends Controller
 
         $this->dummyPaymentLine = ['method' => 'cash', 'amount' => 0, 'note' => '', 'card_transaction_number' => '', 'card_number' => '', 'card_type' => '', 'card_holder_name' => '', 'card_month' => '', 'card_year' => '', 'card_security' => '', 'cheque_number' => '', 'bank_account_number' => '',
         'is_return' => 0, 'transaction_no' => ''];
+
+        $this->shipping_status_colors = [
+            'ordered' => 'bg-yellow',
+            'packed' => 'bg-info',
+            'shipped' => 'bg-navy',
+            'delivered' => 'bg-green',
+            'cancelled' => 'bg-red',
+        ];
     }
 
     /**
@@ -67,7 +75,7 @@ class SellController extends Controller
         $is_woocommerce = $this->moduleUtil->isModuleInstalled('Woocommerce');
         if (request()->ajax()) {
             $with = [];
-
+            $shipping_statuses = $this->transactionUtil->shipping_statuses();
             $sells = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                 ->leftJoin('transaction_payments as tp', 'transactions.id', '=', 'tp.transaction_id')
                 ->join(
@@ -100,6 +108,7 @@ class SellController extends Controller
                     'transactions.rp_redeemed',
                     'transactions.rp_redeemed_amount',
                     'transactions.rp_earned',
+                    'transactions.shipping_status',
                     DB::raw('SUM(IF(tp.is_return = 1,-1*tp.amount,tp.amount)) as total_paid'),
                     'bl.name as business_location',
                     DB::raw('COUNT(SR.id) as return_exists'),
@@ -209,6 +218,14 @@ class SellController extends Controller
             if (!empty(request()->input('service_staffs'))) {
                 $sells->where('transactions.res_waiter_id', request()->input('service_staffs'));
             }
+            $only_shipments = request()->only_shipments == 'true' ? true : false;
+            if ($only_shipments && auth()->user()->can('access_shipping')) {
+                $sells->whereNotNull('transactions.shipping_status');
+            }
+
+            if (!empty(request()->input('shipping_status'))) {
+                $sells->where('transactions.shipping_status', request()->input('shipping_status'));
+            }
             
             $sells->groupBy('transactions.id');
 
@@ -244,7 +261,7 @@ class SellController extends Controller
             $datatable = Datatables::of($sells)
                 ->addColumn(
                     'action',
-                    function ($row) {
+                    function ($row) use ($only_shipments) {
                         $html = '<div class="btn-group">
                                     <button type="button" class="btn btn-info dropdown-toggle btn-xs" 
                                         data-toggle="dropdown" aria-expanded="false">' .
@@ -257,42 +274,47 @@ class SellController extends Controller
                         if (auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access") || auth()->user()->can("view_own_sell_only")) {
                             $html .= '<li><a href="#" data-href="' . action("SellController@show", [$row->id]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-external-link" aria-hidden="true"></i> ' . __("messages.view") . '</a></li>';
                         }
-
-                        if ($row->is_direct_sale == 0) {
-                            if (auth()->user()->can("sell.update")) {
-                                $html .= '<li><a target="_blank" href="' . action('SellPosController@edit', [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> ' . __("messages.edit") . '</a></li>';
+                        if (!$only_shipments) {
+                            if ($row->is_direct_sale == 0) {
+                                if (auth()->user()->can("sell.update")) {
+                                    $html .= '<li><a target="_blank" href="' . action('SellPosController@edit', [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> ' . __("messages.edit") . '</a></li>';
+                                }
+                            } else {
+                                if (auth()->user()->can("direct_sell.access")) {
+                                    $html .= '<li><a target="_blank" href="' . action('SellController@edit', [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> ' . __("messages.edit") . '</a></li>';
+                                }
                             }
-                        } else {
-                            if (auth()->user()->can("direct_sell.access")) {
-                                $html .= '<li><a target="_blank" href="' . action('SellController@edit', [$row->id]) . '"><i class="glyphicon glyphicon-edit"></i> ' . __("messages.edit") . '</a></li>';
+
+                            if (auth()->user()->can("direct_sell.delete") || auth()->user()->can("sell.delete")) {
+                                $html .= '<li><a href="' . action('SellPosController@destroy', [$row->id]) . '" class="delete-sale"><i class="fa fa-trash"></i> ' . __("messages.delete") . '</a></li>';
                             }
                         }
-
-                        if (auth()->user()->can("direct_sell.delete") || auth()->user()->can("sell.delete")) {
-                            $html .= '<li><a href="' . action('SellPosController@destroy', [$row->id]) . '" class="delete-sale"><i class="fa fa-trash"></i> ' . __("messages.delete") . '</a></li>';
-                        }
-
                         if (auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access")) {
                             $html .= '<li><a href="#" class="print-invoice" data-href="' . route('sell.printInvoice', [$row->id]) . '"><i class="fa fa-print" aria-hidden="true"></i> ' . __("messages.print") . '</a></li>
                                 <li><a href="#" class="print-invoice" data-href="' . route('sell.printInvoice', [$row->id]) . '?package_slip=true"><i class="fa fa-file-text-o" aria-hidden="true"></i> ' . __("lang_v1.packing_slip") . '</a></li>';
                         }
-                        $html .= '<li class="divider"></li>';
-                        if ($row->payment_status != "paid" && (auth()->user()->can("sell.create") || auth()->user()->can("direct_sell.access"))) {
-                            $html .= '<li><a href="' . action('TransactionPaymentController@addPayment', [$row->id]) . '" class="add_payment_modal"><i class="fa fa-money"></i> ' . __("purchase.add_payment") . '</a></li>';
+                        if (auth()->user()->can("access_shipping")) {
+                            $html .= '<li><a href="#" data-href="' . action('SellController@editShipping', [$row->id]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-truck" aria-hidden="true"></i>' . __("lang_v1.edit_shipping") . '</a></li>';
                         }
+                        if (!$only_shipments) {
+                            $html .= '<li class="divider"></li>';
+                            if ($row->payment_status != "paid" && (auth()->user()->can("sell.create") || auth()->user()->can("direct_sell.access"))) {
+                                $html .= '<li><a href="' . action('TransactionPaymentController@addPayment', [$row->id]) . '" class="add_payment_modal"><i class="fa fa-money"></i> ' . __("purchase.add_payment") . '</a></li>';
+                            }
 
-                        $html .= '<li><a href="' . action('TransactionPaymentController@show', [$row->id]) . '" class="view_payment_modal"><i class="fa fa-money"></i> ' . __("purchase.view_payments") . '</a></li>';
+                            $html .= '<li><a href="' . action('TransactionPaymentController@show', [$row->id]) . '" class="view_payment_modal"><i class="fa fa-money"></i> ' . __("purchase.view_payments") . '</a></li>';
 
-                        if (auth()->user()->can("sell.create")) {
-                            $html .= '<li><a href="' . action('SellController@duplicateSell', [$row->id]) . '"><i class="fa fa-copy"></i> ' . __("lang_v1.duplicate_sell") . '</a></li>
+                            if (auth()->user()->can("sell.create")) {
+                                $html .= '<li><a href="' . action('SellController@duplicateSell', [$row->id]) . '"><i class="fa fa-copy"></i> ' . __("lang_v1.duplicate_sell") . '</a></li>
 
-                            <li><a href="' . action('SellReturnController@add', [$row->id]) . '"><i class="fa fa-undo"></i> ' . __("lang_v1.sell_return") . '</a></li>
+                                <li><a href="' . action('SellReturnController@add', [$row->id]) . '"><i class="fa fa-undo"></i> ' . __("lang_v1.sell_return") . '</a></li>
 
-                            <li><a href="' . action('SellPosController@showInvoiceUrl', [$row->id]) . '" class="view_invoice_url"><i class="fa fa-external-link"></i> ' . __("lang_v1.view_invoice_url") . '</a></li>';
-                        }
+                                <li><a href="' . action('SellPosController@showInvoiceUrl', [$row->id]) . '" class="view_invoice_url"><i class="fa fa-external-link"></i> ' . __("lang_v1.view_invoice_url") . '</a></li>';
+                            }
 
-                        if (auth()->user()->can("send_notification")) {
-                            $html .= '<li><a href="#" data-href="' . action('NotificationController@getTemplate', ["transaction_id" => $row->id,"template_for" => "new_sale"]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-envelope" aria-hidden="true"></i>' . __("lang_v1.new_sale_notification") . '</a></li>';
+                            if (auth()->user()->can("send_notification")) {
+                                $html .= '<li><a href="#" data-href="' . action('NotificationController@getTemplate', ["transaction_id" => $row->id,"template_for" => "new_sale"]) . '" class="btn-modal" data-container=".view_modal"><i class="fa fa-envelope" aria-hidden="true"></i>' . __("lang_v1.new_sale_notification") . '</a></li>';
+                            }
                         }
 
                         $html .= '</ul></div>';
@@ -366,6 +388,15 @@ class SellController extends Controller
 
                      return $invoice_no;
                  })
+                 ->editColumn('shipping_status', function ($row) use ($shipping_statuses) {
+                     $status_color = !empty($this->shipping_status_colors[$row->shipping_status]) ? $this->shipping_status_colors[$row->shipping_status] : 'bg-gray';
+                     $status = !empty($row->shipping_status) ? '<a href="#" class="btn-modal no-print" data-href="' . action('SellController@editShipping', [$row->id]) . '" data-container=".view_modal"><span class="label ' . $status_color .'">' . $shipping_statuses[$row->shipping_status] . '</span></a>' : '';
+                     if (!empty($row->shipping_status)) {
+                         $status .= '<span class="print_section">' . $shipping_statuses[$row->shipping_status] . '</span>';
+                     }
+                     
+                     return $status;
+                 })
                 ->setRowAttr([
                     'data-href' => function ($row) {
                         if (auth()->user()->can("sell.view") || auth()->user()->can("view_own_sell_only")) {
@@ -375,7 +406,7 @@ class SellController extends Controller
                         }
                     }]);
 
-            $rawColumns = ['final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax'];
+            $rawColumns = ['final_total', 'action', 'total_paid', 'total_remaining', 'payment_status', 'invoice_no', 'discount_amount', 'tax_amount', 'total_before_tax', 'shipping_status'];
                 
             return $datatable->rawColumns($rawColumns)
                       ->make(true);
@@ -470,6 +501,7 @@ class SellController extends Controller
 
         $invoice_schemes = InvoiceScheme::forDropdown($business_id);
         $default_invoice_schemes = InvoiceScheme::getDefault($business_id);
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
 
         return view('sell.create')
             ->with(compact(
@@ -488,7 +520,8 @@ class SellController extends Controller
                 'default_datetime',
                 'pos_settings',
                 'invoice_schemes',
-                'default_invoice_schemes'
+                'default_invoice_schemes',
+                'shipping_statuses'
             ));
     }
 
@@ -550,9 +583,18 @@ class SellController extends Controller
 
         $business_details = $this->businessUtil->getDetails($business_id);
         $pos_settings = empty($business_details->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business_details->pos_settings, true);
-
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+        $shipping_status_colors = $this->shipping_status_colors;
         return view('sale_pos.show')
-            ->with(compact('taxes', 'sell', 'payment_types', 'order_taxes', 'pos_settings'));
+            ->with(compact(
+                'taxes',
+                'sell',
+                'payment_types',
+                'order_taxes',
+                'pos_settings',
+                'shipping_statuses',
+                'shipping_status_colors'
+            ));
     }
 
     /**
@@ -732,8 +774,10 @@ class SellController extends Controller
 
         $edit_discount = auth()->user()->can('edit_product_discount_from_sale_screen');
         $edit_price = auth()->user()->can('edit_product_price_from_sale_screen');
+
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
         return view('sell.edit')
-            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings', 'waiters', 'invoice_schemes', 'default_invoice_schemes', 'redeem_details', 'edit_discount', 'edit_price'));
+            ->with(compact('business_details', 'taxes', 'sell_details', 'transaction', 'commission_agent', 'types', 'customer_groups', 'price_groups', 'pos_settings', 'waiters', 'invoice_schemes', 'default_invoice_schemes', 'redeem_details', 'edit_discount', 'edit_price', 'shipping_statuses'));
     }
 
     /**
@@ -938,5 +982,80 @@ class SellController extends Controller
         } else {
             abort(404, 'Not Found.');
         }
+    }
+
+    /**
+     * Shows modal to edit shipping details.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function editShipping($id)
+    {
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = request()->session()->get('user.business_id');
+
+        $transaction = Transaction::where('business_id', $business_id)
+                                ->findorfail($id);
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        return view('sell.partials.edit_shipping')
+               ->with(compact('transaction', 'shipping_statuses'));
+    }
+
+    /**
+     * Update shipping.
+     *
+     * @param  Request $request, int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function updateShipping(Request $request, $id)
+    {
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $input = $request->only([
+                    'shipping_details', 'shipping_address',
+                    'shipping_status', 'delivered_to'
+                ]);
+            $business_id = $request->session()->get('user.business_id');
+
+            $transaction = Transaction::where('business_id', $business_id)
+                                ->where('id', $id)
+                                ->update($input);
+
+            $output = ['success' => 1,
+                            'msg' => trans("lang_v1.updated_success")
+                        ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            $output = ['success' => 0,
+                            'msg' => trans("messages.something_went_wrong")
+                        ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * Display list of shipments.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function shipments()
+    {
+        if (!auth()->user()->can('access_shipping')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        return view('sell.shipments')->with(compact('shipping_statuses'));
     }
 }

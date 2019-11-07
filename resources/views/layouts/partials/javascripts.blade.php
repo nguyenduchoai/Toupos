@@ -79,6 +79,10 @@
         $moment_time_format = 'hh:mm A';
     }
 
+    $common_settings = !empty(session('business.common_settings')) ? json_decode(session('business.common_settings'), true) : [];
+
+    $default_datatable_page_entries = !empty($common_settings['default_datatable_page_entries']) ? $common_settings['default_datatable_page_entries'] : 25;
+
 @endphp
 <script>
     moment.tz.setDefault('{{ Session::get("business.time_zone") }}');
@@ -113,6 +117,8 @@
         "{{$const}}",
         @endforeach
     ];
+
+    var __default_datatable_page_entries = "{{$default_datatable_page_entries}}";
 </script>
 
 <!-- Scripts -->

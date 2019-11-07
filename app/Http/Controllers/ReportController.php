@@ -89,7 +89,7 @@ class ReportController extends Controller
                 $end_date,
                 $location_id
             );
-
+            
             //Get Purchase details
             $purchase_details = $this->transactionUtil->getPurchaseTotals(
                 $business_id,
@@ -175,7 +175,7 @@ class ReportController extends Controller
 
             $data['total_adjustment'] = $transaction_totals['total_adjustment'];
 
-            $data['closing_stock'] = $data['closing_stock'] - $data['total_adjustment'];
+            // $data['closing_stock'] = $data['closing_stock'] - $data['total_adjustment'];
 
             $data['total_recovered'] = $transaction_totals['total_recovered'];
 
@@ -190,7 +190,7 @@ class ReportController extends Controller
 
             $data['total_sell_return'] = $transaction_totals['total_sell_return_exc_tax'];
 
-            $data['closing_stock'] = $data['closing_stock'] - $data['total_sell_return'];
+            // $data['closing_stock'] = $data['closing_stock'] - $data['total_sell_return'];
 
             $data['net_profit'] = $data['total_sell'] + $data['closing_stock'] -
                                 $data['total_purchase'] - $data['total_sell_discount'] - $data['total_reward_amount'] -
@@ -441,7 +441,7 @@ class ReportController extends Controller
             }
 
             //TODO::Check if result is correct after changing LEFT JOIN to INNER JOIN
-            
+            $pl_query_string = $this->productUtil->get_pl_quantity_sum_string('pl');
             $products = $query->select(
                 // DB::raw("(SELECT SUM(quantity) FROM transaction_sell_lines LEFT JOIN transactions ON transaction_sell_lines.transaction_id=transactions.id WHERE transactions.status='final' $location_filter AND
                 //     transaction_sell_lines.product_id=products.id) as total_sold"),
@@ -458,6 +458,10 @@ class ReportController extends Controller
                         JOIN stock_adjustment_lines AS SAL ON transactions.id=SAL.transaction_id
                         WHERE transactions.status='received' AND transactions.type='stock_adjustment' $location_filter 
                         AND (SAL.variation_id=variations.id)) as total_adjusted"),
+                DB::raw("(SELECT SUM( COALESCE(pl.quantity - ($pl_query_string), 0) * purchase_price_inc_tax) FROM transactions 
+                        JOIN purchase_lines AS pl ON transactions.id=pl.transaction_id
+                        WHERE transactions.status='received' $location_filter 
+                        AND (pl.variation_id=variations.id)) as stock_price"),
                 DB::raw("SUM(vld.qty_available) as stock"),
                 'variations.sub_sku as sku',
                 'p.name as product',
@@ -534,12 +538,19 @@ class ReportController extends Controller
 
                     return $html;
                 })
+                ->editColumn('stock_price', function ($row) {
+                    $html = '<span class="display_currency total_stock_price" data-currency_symbol=true data-orig-value="'
+                        . $row->stock_price . '">'
+                        . $row->stock_price . '</span>';
+
+                    return $html;
+                })
                 ->removeColumn('enable_stock')
                 ->removeColumn('unit')
                 ->removeColumn('id');
 
             $raw_columns  = ['unit_price', 'total_transfered', 'total_sold',
-                    'total_adjusted', 'stock'];
+                    'total_adjusted', 'stock', 'stock_price'];
 
             if ($is_mfg_installed) {
                 $datatable->editColumn('total_mfg_stock', function ($row) {

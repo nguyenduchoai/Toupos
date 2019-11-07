@@ -9,9 +9,7 @@ use App\Product;
 use App\Transaction;
 use App\Utils\ProductUtil;
 use App\Variation;
-
 use DB;
-
 use Excel;
 use Illuminate\Http\Request;
 
@@ -80,14 +78,15 @@ class ImportOpeningStockController extends Controller
         try {
             //Set maximum php execution time
             ini_set('max_execution_time', 0);
+            ini_set('memory_limit', -1);
 
             if ($request->hasFile('products_csv')) {
                 $file = $request->file('products_csv');
-                $imported_data = Excel::load($file->getRealPath())
-                                ->noHeading()
-                                ->skipRows(1)
-                                ->get()
-                                ->toArray();
+                
+                $parsed_array = Excel::toArray([], $file);
+                //Remove header row
+                $imported_data = array_splice($parsed_array[0], 1);
+
                 $business_id = $request->session()->get('user.business_id');
                 $user_id = $request->session()->get('user.id');
 

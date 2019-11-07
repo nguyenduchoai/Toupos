@@ -2,7 +2,7 @@
     @if(empty($header))
         @if(!empty($title) || !empty($tool))
         <div class="box-header">
-            {{$icon ?? ''}}
+            {!!$icon ?? '' !!}
             <h3 class="box-title">{{ $title ?? '' }}</h3>
             {{$tool ?? ''}}
         </div>

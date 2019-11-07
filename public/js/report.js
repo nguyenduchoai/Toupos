@@ -16,11 +16,17 @@ $(document).ready(function() {
         updatePurchaseSell();
     }
 
-    //Supplier report
+    //contact report
     supplier_report_tbl = $('#supplier_report_tbl').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '/reports/customer-supplier',
+        ajax: {
+            url: '/reports/customer-supplier',
+            data: function(d) {
+                d.customer_group_id = $('#cnt_customer_group_id').val();
+                d.contact_type = $('#contact_type').val();
+            }
+        },
         columnDefs: [
             { targets: [5], orderable: false, searchable: false },
             { targets: [1, 2, 3, 4], searchable: false },
@@ -62,12 +68,18 @@ $(document).ready(function() {
             __currency_convert_recursively($('#supplier_report_tbl'));
         },
     });
+    if($('#supplier_report_tbl').length != 0){
+        $('#customer_group_id, #contact_type').change(function() {
+            supplier_report_tbl.ajax.reload();
+        });
+    }
 
     var stock_report_cols = [
             { data: 'sku', name: 'variations.sub_sku' },
             { data: 'product', name: 'p.name' },
             { data: 'unit_price', name: 'variations.sell_price_inc_tax' },
             { data: 'stock', name: 'stock', searchable: false },
+            { data: 'stock_price', name: 'stock_price', searchable: false },
             { data: 'total_sold', name: 'total_sold', searchable: false },
             { data: 'total_transfered', name: 'total_transfered', searchable: false },
             { data: 'total_adjusted', name: 'total_adjusted', searchable: false }
@@ -101,6 +113,9 @@ $(document).ready(function() {
             $('#footer_total_adjusted').html(
                 __sum_stock($('#stock_report_table'), 'total_adjusted')
             );
+            var total_stock_price = sum_table_col($('#stock_report_table'), 'total_stock_price');
+            $('#footer_total_stock_price').text(total_stock_price);
+            
             __currency_convert_recursively($('#stock_report_table'));
             if ($('th.current_stock_mfg').length) {
                 $('#footer_total_mfg_stock').html(
@@ -150,8 +165,7 @@ $(document).ready(function() {
         });
     }
 
-    $(
-        '#stock_report_filter_form #location_id, #stock_report_filter_form #category_id, #stock_report_filter_form #sub_category_id, #stock_report_filter_form #brand, #stock_report_filter_form #unit,#stock_report_filter_form #view_stock_filter'
+    $('#stock_report_filter_form #location_id, #stock_report_filter_form #category_id, #stock_report_filter_form #sub_category_id, #stock_report_filter_form #brand, #stock_report_filter_form #unit,#stock_report_filter_form #view_stock_filter'
     ).change(function() {
         stock_report_table.ajax.reload();
         stock_expiry_report_table.ajax.reload();

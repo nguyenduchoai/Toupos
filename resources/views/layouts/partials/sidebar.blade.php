@@ -200,7 +200,7 @@
         @endif
 
         @if(auth()->user()->can('sell.view') || auth()->user()->can('sell.create') || auth()->user()->can('direct_sell.access') ||  auth()->user()->can('view_own_sell_only'))
-          <li class="treeview {{  in_array( $request->segment(1), ['sells', 'pos', 'sell-return', 'ecommerce', 'discount']) ? 'active active-sub' : '' }}" id="tour_step7">
+          <li class="treeview {{  in_array( $request->segment(1), ['sells', 'pos', 'sell-return', 'ecommerce', 'discount', 'shipments']) ? 'active active-sub' : '' }}" id="tour_step7">
             <a href="#" id="tour_step7_menu"><i class="fa fa-arrow-circle-up"></i> <span>@lang('sale.sale')</span>
               <span class="pull-right-container">
                 <i class="fa fa-angle-left pull-right"></i>
@@ -228,6 +228,10 @@
               @endcan
               @can('sell.view')
                 <li class="{{ $request->segment(1) == 'sell-return' && $request->segment(2) == null ? 'active' : '' }}" ><a href="{{action('SellReturnController@index')}}"><i class="fa fa-undo"></i>@lang('lang_v1.list_sell_return')</a></li>
+              @endcan
+
+              @can('access_shipping')
+                <li class="{{ $request->segment(1) == 'shipments' ? 'active' : '' }}" ><a href="{{action('SellController@shipments')}}"><i class="fa fa-truck"></i>@lang('lang_v1.shipments')</a></li>
               @endcan
               
               @can('discount.access')

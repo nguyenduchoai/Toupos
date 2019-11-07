@@ -621,7 +621,7 @@ $(document).ready(function() {
         var row = $(this).closest('tr');
         var profit_percent = __read_number($(this), true);
 
-        var purchase_unit_cost = __read_number(row.find('input.purchase_unit_cost'), true);
+        var purchase_unit_cost = __read_number(row.find('input.purchase_unit_cost_after_tax'), true);
         var default_sell_price =
             parseFloat(purchase_unit_cost) +
             __calculate_amount('percentage', profit_percent, purchase_unit_cost);
@@ -847,8 +847,8 @@ function update_inline_profit_percentage(row) {
     var exchange_rate = $('input#exchange_rate').val();
     default_sell_price_in_base_currency = default_sell_price / parseFloat(exchange_rate);
 
-    var purchase_before_tax = __read_number(row.find('input.purchase_unit_cost'), true);
-    var profit_percent = __get_rate(purchase_before_tax, default_sell_price_in_base_currency);
+    var purchase_after_tax = __read_number(row.find('input.purchase_unit_cost_after_tax'), true);
+    var profit_percent = __get_rate(purchase_after_tax, default_sell_price_in_base_currency);
     __write_number(row.find('input.profit_percent'), profit_percent, true);
 }
 

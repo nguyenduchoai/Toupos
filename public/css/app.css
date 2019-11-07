@@ -5,7 +5,9 @@
 .input_inline input, .input_inline span {
   width: 50%;
 }
-
+.bg-manufacturing {
+  background-color: #ff851b;
+}
 .img-thumbnail {
   position: relative;
   width: 70px;
@@ -388,6 +390,9 @@ tr.details td.details-control {
     ::-webkit-scrollbar{
         display: none !important;
     }
+    #toast-container {
+      display: none;
+    }
 }
 
 .input-number .btn-default{
@@ -583,3 +588,6 @@ table.table-text-center td, table.table-text-center th{
     vertical-align: middle !important;
 }
 
+.bg-woocommerce{
+  background-color: #9E458B !important;
+}

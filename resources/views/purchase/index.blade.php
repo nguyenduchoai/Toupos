@@ -122,8 +122,8 @@
         }
     );
     $('#purchase_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
-        purchase_table.ajax.reload();
         $('#purchase_list_filter_date_range').val('');
+        purchase_table.ajax.reload();
     });
 </script>
 	

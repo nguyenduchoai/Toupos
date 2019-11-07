@@ -38,18 +38,19 @@
     </div>
     @endif
     <div class="clearfix"></div>
-    <div class="col-sm-4">
+    <div class="col-sm-6">
         <div class="form-group">
             <div class="checkbox">
               <label>
                 {!! Form::checkbox('enable_editing_product_from_purchase', 1, $business->enable_editing_product_from_purchase , 
                 [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.enable_editing_product_from_purchase' ) }}
               </label>
+              @show_tooltip(__('lang_v1.enable_updating_product_price_tooltip'))
             </div>
         </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-6">
         <div class="form-group">
             <div class="checkbox">
                 <label>
@@ -59,8 +60,8 @@
             </div>
         </div>
     </div>
-
-    <div class="col-sm-4">
+<div class="clearfix"></div>
+    <div class="col-sm-6">
         <div class="form-group">
             <div class="checkbox">
                 <label>

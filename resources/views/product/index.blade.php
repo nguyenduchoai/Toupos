@@ -22,7 +22,7 @@
         <div class="col-md-3">
             <div class="form-group">
                 {!! Form::label('type', __('product.product_type') . ':') !!}
-                {!! Form::select('type', ['single' => 'Single', 'variable' => 'Variable'], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_type', 'placeholder' => __('lang_v1.all')]); !!}
+                {!! Form::select('type', ['single' => __('lang_v1.single'), 'variable' => __('lang_v1.variable')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_type', 'placeholder' => __('lang_v1.all')]); !!}
             </div>
         </div>
         <div class="col-md-3">
@@ -139,7 +139,8 @@
                         { data: 'mass_delete'  },
                         { data: 'image', name: 'products.image'  },
                         { data: 'product', name: 'products.name'  },
-                        { data: 'price', name: 'max_price', searchable: false},
+                        { data: 'purchase_price', name: 'max_purchase_price', searchable: false},
+                        { data: 'selling_price', name: 'max_price', searchable: false},
                         { data: 'current_stock', searchable: false},
                         { data: 'type', name: 'products.type'},
                         { data: 'category', name: 'c1.name'},
@@ -321,6 +322,7 @@
                         { data: 'product', name: 'p.name' },
                         { data: 'unit_price', name: 'variations.sell_price_inc_tax' },
                         { data: 'stock', name: 'stock', searchable: false },
+                        { data: 'stock_price', name: 'stock_price', searchable: false },
                         { data: 'total_sold', name: 'total_sold', searchable: false },
                         { data: 'total_transfered', name: 'total_transfered', searchable: false },
                         { data: 'total_adjusted', name: 'total_adjusted', searchable: false }
@@ -351,6 +353,8 @@
                             $('#footer_total_adjusted').html(
                                 __sum_stock($('#stock_report_table'), 'total_adjusted')
                             );
+                            var total_stock_price = sum_table_col($('#stock_report_table'), 'total_stock_price');
+                            $('#footer_total_stock_price').text(total_stock_price);
                             __currency_convert_recursively($('#stock_report_table'));
                         },
                     });

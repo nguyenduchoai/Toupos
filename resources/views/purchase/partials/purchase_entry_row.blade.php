@@ -22,7 +22,7 @@
             @endphp
             {!! Form::text('purchases[' . $row_count . '][quantity]', number_format(1, $quantity_precision, $currency_details->decimal_separator, $currency_details->thousand_separator), ['class' => 'form-control input-sm purchase_quantity input_number mousetrap', 'required', 'data-rule-abs_digit' => $check_decimal, 'data-msg-abs_digit' => __('lang_v1.decimal_value_not_allowed')]); !!}
             <input type="hidden" class="base_unit_cost" value="{{$variation->default_purchase_price}}">
-            <input type="hidden" class="base_unit_selling_price" value="{{$variation->default_sell_price}}">
+            <input type="hidden" class="base_unit_selling_price" value="{{$variation->sell_price_inc_tax}}">
 
             <input type="hidden" name="purchases[{{$row_count}}][product_unit_id]" value="{{$product->unit->id}}">
             @if(!empty($sub_units))
@@ -86,9 +86,9 @@
         </td>
         <td>
             @if(session('business.enable_editing_product_from_purchase'))
-                {!! Form::text('purchases[' . $row_count . '][default_sell_price]', number_format($variation->default_sell_price, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator), ['class' => 'form-control input-sm input_number default_sell_price', 'required']); !!}
+                {!! Form::text('purchases[' . $row_count . '][default_sell_price]', number_format($variation->sell_price_inc_tax, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator), ['class' => 'form-control input-sm input_number default_sell_price', 'required']); !!}
             @else
-                {{ number_format($variation->default_sell_price, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator)}}
+                {{ number_format($variation->sell_price_inc_tax, $currency_precision, $currency_details->decimal_separator, $currency_details->thousand_separator)}}
             @endif
         </td>
         @if(session('business.enable_lot_number'))

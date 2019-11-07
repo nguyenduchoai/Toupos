@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-use App\Product;
 use App\Barcode;
 
-use App\Utils\TransactionUtil;
+use App\Product;
 use App\Utils\ProductUtil;
+
+use App\Utils\TransactionUtil;
+use Illuminate\Http\Request;
 
 class LabelsController extends Controller
 {

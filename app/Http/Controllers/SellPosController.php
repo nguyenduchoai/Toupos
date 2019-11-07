@@ -213,6 +213,8 @@ class SellPosController extends Controller
         //Selling Price Group Dropdown
         $price_groups = SellingPriceGroup::forDropdown($business_id);
 
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+        
         return view('sale_pos.create')
             ->with(compact(
                 'business_details',
@@ -232,7 +234,8 @@ class SellPosController extends Controller
                 'types',
                 'customer_groups',
                 'accounts',
-                'price_groups'
+                'price_groups',
+                'shipping_statuses'
             ));
     }
 
@@ -852,9 +855,10 @@ class SellPosController extends Controller
 
         $edit_discount = auth()->user()->can('edit_product_discount_from_pos_screen');
         $edit_price = auth()->user()->can('edit_product_price_from_pos_screen');
-        
+        $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
         return view('sale_pos.edit')
-            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters', 'redeem_details', 'edit_price', 'edit_discount'));
+            ->with(compact('business_details', 'taxes', 'payment_types', 'walk_in_customer', 'sell_details', 'transaction', 'payment_lines', 'location_printer_type', 'shortcuts', 'commission_agent', 'categories', 'pos_settings', 'change_return', 'types', 'customer_groups', 'brands', 'accounts', 'price_groups', 'waiters', 'redeem_details', 'edit_price', 'edit_discount', 'shipping_statuses'));
     }
 
     /**
