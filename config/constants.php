@@ -39,7 +39,7 @@ return [
     
     'iraqi_selling_price_adjustment' => false,
 
-    'currency_precision' => 2, //Maximum 4
+    'currency_precision' => 0, //Maximum 4
     'quantity_precision' => 2,  //Maximum 4
 
     'product_img_path' => 'img',
