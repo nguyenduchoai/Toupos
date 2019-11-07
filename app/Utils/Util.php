@@ -375,52 +375,177 @@ class Util
     public function sendSms($data)
     {
         $sms_settings = $data['sms_settings'];
-        $request_data = [
-            $sms_settings['send_to_param_name'] => $data['mobile_number'],
-            $sms_settings['msg_param_name'] => $data['sms_body'],
-        ];
+        //02/10/19 DanhVT add
+        if($sms_settings['checked'] == 'tousms'){
+            $this->sendTousms($sms_settings['tousms'], $data['mobile_number'], $data['sms_body']);
+        } else if($sms_settings['checked'] == 'esms'){
+            $this->sendEsms($sms_settings['esms'], $data['mobile_number'], $data['sms_body']);
+        } else if($sms_settings['checked'] == 'vht'){
+            $this->sendVHT($sms_settings['vht'], $data['mobile_number'], $data['sms_body']);
+        }
+        //02/10/19 DanhVT end
 
-        if (!empty($sms_settings['param_1'])) {
-            $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
-        }
-        if (!empty($sms_settings['param_2'])) {
-            $request_data[$sms_settings['param_2']] = $sms_settings['param_val_2'];
-        }
-        if (!empty($sms_settings['param_3'])) {
-            $request_data[$sms_settings['param_3']] = $sms_settings['param_val_3'];
-        }
-        if (!empty($sms_settings['param_4'])) {
-            $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
-        }
-        if (!empty($sms_settings['param_5'])) {
-            $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
-        }
-        if (!empty($sms_settings['param_6'])) {
-            $request_data[$sms_settings['param_6']] = $sms_settings['param_val_6'];
-        }
-        if (!empty($sms_settings['param_7'])) {
-            $request_data[$sms_settings['param_7']] = $sms_settings['param_val_7'];
-        }
-        if (!empty($sms_settings['param_8'])) {
-            $request_data[$sms_settings['param_8']] = $sms_settings['param_val_8'];
-        }
-        if (!empty($sms_settings['param_9'])) {
-            $request_data[$sms_settings['param_9']] = $sms_settings['param_val_9'];
-        }
-        if (!empty($sms_settings['param_10'])) {
-            $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
-        }
+        //02/10/19 DanhVT remove
+        // $request_data = [
+        //     $sms_settings['send_to_param_name'] => $data['mobile_number'],
+        //     $sms_settings['msg_param_name'] => $data['sms_body'],
+        // ];
 
-        $client = new Client();
+        // if (!empty($sms_settings['param_1'])) {
+        //     $request_data[$sms_settings['param_1']] = $sms_settings['param_val_1'];
+        // }
+        // if (!empty($sms_settings['param_2'])) {
+        //     $request_data[$sms_settings['param_2']] = $sms_settings['param_val_2'];
+        // }
+        // if (!empty($sms_settings['param_3'])) {
+        //     $request_data[$sms_settings['param_3']] = $sms_settings['param_val_3'];
+        // }
+        // if (!empty($sms_settings['param_4'])) {
+        //     $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
+        // }
+        // if (!empty($sms_settings['param_5'])) {
+        //     $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
+        // }
+        // if (!empty($sms_settings['param_6'])) {
+        //     $request_data[$sms_settings['param_6']] = $sms_settings['param_val_6'];
+        // }
+        // if (!empty($sms_settings['param_7'])) {
+        //     $request_data[$sms_settings['param_7']] = $sms_settings['param_val_7'];
+        // }
+        // if (!empty($sms_settings['param_8'])) {
+        //     $request_data[$sms_settings['param_8']] = $sms_settings['param_val_8'];
+        // }
+        // if (!empty($sms_settings['param_9'])) {
+        //     $request_data[$sms_settings['param_9']] = $sms_settings['param_val_9'];
+        // }
+        // if (!empty($sms_settings['param_10'])) {
+        //     $request_data[$sms_settings['param_10']] = $sms_settings['param_val_10'];
+        // }
 
-        if ($sms_settings['request_method'] == 'get') {
-            $response = $client->get($sms_settings['url'] . '?'. http_build_query($request_data));
-        } else {
-            $response = $client->post($sms_settings['url'], [
-                'form_params' => $request_data
-            ]);
-        }
+        // $client = new Client();
+
+        // if ($sms_settings['request_method'] == 'get') {
+        //     $response = $client->get($sms_settings['url'] . '?'. http_build_query($request_data));
+        // } else {
+        //     $response = $client->post($sms_settings['url'], [
+        //         'form_params' => $request_data
+        //     ]);
+        // }
+        //02/10/19 DanhVT end
     }
+
+    //02/10/19 DanhVT add
+    public function sendVHT($sms_settings, $number, $message)
+    {
+        $xmlcontent = '<?xml version="1.0" encoding="utf-8"?>
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+            <SendSMS xmlns="http://203.162.168.170/SendMTAuth/">
+            <account_name>'.$sms_settings['account'].'</account_name>
+            <account_password>'.$sms_settings['password'].'</account_password>
+            <User_ID>'.$number.'</User_ID>
+            <Content>'.$message.'</Content>
+            <Service_ID>VHT</Service_ID>
+            <Command_Code>VHT</Command_Code>
+            <Request_ID>0</Request_ID>
+            <Message_Type>0</Message_Type>
+            <Total_Message>1</Total_Message>
+            <Message_Index>1</Message_Index>
+            <IsMore>0</IsMore>
+            <Content_Type>0</Content_Type>
+            </SendSMS>
+        </soap:Body>
+        </soap:Envelope>';
+
+        $ch = curl_init('http://sms2.vht.com.vn/SendMTAuth/SendMT2.asmx?wsdl');
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/xml'));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, "$xmlcontent");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        // print_r($output);
+        if ($output == 0) return true;
+        else return false;
+        //return true;
+    }
+    public function sendTousms($sms_settings, $number, $message)
+    {
+        $error  = false;
+        $url = 'https://tousms.com/services/send.php';
+        $postData = [
+            'number' => $number,
+            'message' => $message,
+            'key' => $sms_settings['apikey']
+        ];
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if (curl_errno($ch)) {
+            $error = curl_error($ch);
+        }
+        curl_close($ch);
+        if ($httpCode == 200) {
+            $json = json_decode($response, true);
+            if ($json == false) {
+                if (empty($response)) {
+                    $error = "Missing data in request. Please provide all the required information to send messages.";
+                } else {
+                    $error = $response;
+                }
+            } else {
+                if ($json["success"]) {
+                    return true;
+                } else {
+                    $error = $json["error"]["message"];
+                }
+            }
+        } else {
+            $error = "HTTP Error Code : {$httpCode}";
+        }
+        if ($error !== false && $error !== null) {
+            // $this->set_error($error);
+        }
+
+        return false;
+    }
+    public function sendEsms($sms_settings, $number, $message)
+    {
+        $SendContent=urlencode($message);
+        $data='http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get'."?Phone=$number&ApiKey=".$sms_settings['apikey']."&SecretKey=".$sms_settings['secretkey']."&Content=$SendContent";
+        if($sms_settings['brandname'] != ''){
+            $data.="&Brandname=".$sms_settings['brandname']."&SmsType=2";
+        }
+        $curl = curl_init($data); 
+        curl_setopt($curl, CURLOPT_FAILONERROR, true); 
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); 
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
+        $result = curl_exec($curl); 
+            
+        $obj = json_decode($result,true);
+        if($obj['CodeResult']==100)
+        {
+            return true;
+        }
+        else
+        {
+            $error = "ErrorMessage:".$obj['ErrorMessage'];
+        }
+        
+        // if ($error !== false && $error !== null) {
+        //     $this->set_error($error);
+        // }
+
+        return false;
+    }
+    //02/10/19 DanhVT end
 
     /**
     * Retrieves sub units of a base unit

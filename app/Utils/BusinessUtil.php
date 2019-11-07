@@ -430,6 +430,24 @@ class BusinessUtil extends Util
      */
     public function defaultSmsSettings()
     {
-        return ['url' => '', 'send_to_param_name' => 'to', 'msg_param_name' => 'text', 'request_method' => 'post', 'param_1' => '', 'param_val_1' => '', 'param_2' => '', 'param_val_2' => '','param_3' => '', 'param_val_3' => '','param_4' => '', 'param_val_4' => '','param_5' => '', 'param_val_5' => '', ];
+        //02/10/19 DanhVT add
+        // return ['url' => '', 'send_to_param_name' => 'to', 'msg_param_name' => 'text', 'request_method' => 'post', 'param_1' => '', 'param_val_1' => '', 'param_2' => '', 'param_val_2' => '','param_3' => '', 'param_val_3' => '','param_4' => '', 'param_val_4' => '','param_5' => '', 'param_val_5' => '', ];
+        return [
+            'checked' => 'tousms',
+            'tousms' => [
+                'apikey' => ''
+            ],
+            'esms' => [
+                'apikey' => '',
+                'secretkey' => '',
+                'brandname' => ''
+            ],
+            'vht' => [
+                'account' => '',
+                'password' => '',
+                'brandname' => ''
+            ]
+        ];
+        //02/10/19 DanhVT end
     }
 }
