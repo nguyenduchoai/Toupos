@@ -221,6 +221,11 @@ class BusinessController extends Controller
 
             DB::commit();
 
+            //Module function to be called after after business is created
+            if (config('app.env') != 'demo') {
+                $this->moduleUtil->getModuleData('after_business_created', ['business' => $business]);
+            }
+
             //Process payment information if superadmin is installed & package information is present
             $is_installed_superadmin = $this->moduleUtil->isSuperadminInstalled();
             $package_id = $request->get('package_id', null);
@@ -242,7 +247,7 @@ class BusinessController extends Controller
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
             $output = ['success' => 0,
-                            'msg' => "File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage()
+                            'msg' => __('messages.something_went_wrong')
                         ];
 
             return back()->with('status', $output)->withInput();
@@ -348,7 +353,9 @@ class BusinessController extends Controller
 
         $custom_labels = !empty($business->custom_labels) ? json_decode($business->custom_labels, true) : [];
 
-        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings', 'custom_labels'));
+        $common_settings = !empty($business->common_settings) ? json_decode($business->common_settings, true) : [];
+
+        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings', 'custom_labels', 'common_settings'));
     }
 
     /**
@@ -455,6 +462,10 @@ class BusinessController extends Controller
             $business_details['pos_settings'] = json_encode($pos_settings);
 
             $business_details['custom_labels'] = json_encode($business_details['custom_labels']);
+
+            $common_settings = !empty($request->input('common_settings')) ? $request->input('common_settings') : [];
+
+            $business_details['common_settings'] = json_encode($common_settings);
 
             //Enabled modules
             $enabled_modules = $request->input('enabled_modules');

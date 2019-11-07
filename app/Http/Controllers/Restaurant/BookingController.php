@@ -63,6 +63,12 @@ class BookingController extends Controller
             $events = [];
 
             foreach ($bookings as $booking) {
+
+                //Skip event if customer not found
+                if (empty($booking->customer)) {
+                    continue;
+                }
+
                 $customer_name = $booking->customer->name;
                 $table_name = optional($booking->table)->name;
 
@@ -138,14 +144,18 @@ class BookingController extends Controller
                 $date_range = [$booking_start, $booking_end];
 
                 //Check if booking is available for the required input
-                $existing_booking = Booking::where('business_id', $business_id)
+                $query = Booking::where('business_id', $business_id)
                                     ->where('location_id', $input['location_id'])
-                                    ->where('table_id', $input['res_table_id'])
                                     ->where(function ($q) use ($date_range) {
                                         $q->whereBetween('booking_start', $date_range)
                                         ->orWhereBetween('booking_end', $date_range);
-                                    })
-                                    ->first();
+                                    });
+
+                if (isset($input['res_waiter_id'])) {
+                    $query->where('table_id', $input['res_table_id']);
+                }
+                
+                $existing_booking = $query->first();
                 if (empty($existing_booking)) {
                     $data = [
                         'contact_id' => $input['contact_id'],

@@ -119,6 +119,10 @@ class Util
      */
     public function get_percent($base, $number)
     {
+        if ($base == 0) {
+            return 0;
+        }
+
         $diff = $number - $base;
         return ($diff / $base) * 100;
     }
@@ -138,16 +142,18 @@ class Util
     {
         $payment_types = ['cash' => __('lang_v1.cash'), 'card' => __('lang_v1.card'), 'cheque' => __('lang_v1.cheque'), 'bank_transfer' => __('lang_v1.bank_transfer'), 'other' => __('lang_v1.other')];
 
+        $custom_labels = !empty(session('business.custom_labels')) ? json_decode(session('business.custom_labels'), true) : [];
+
         if (config('constants.enable_custom_payment_1')) {
-            $payment_types['custom_pay_1'] = __('lang_v1.custom_payment_1');
+            $payment_types['custom_pay_1'] = !empty($custom_labels['payments']['custom_pay_1']) ? $custom_labels['payments']['custom_pay_1'] : __('lang_v1.custom_payment_1');
         }
 
         if (config('constants.enable_custom_payment_2')) {
-            $payment_types['custom_pay_2'] = __('lang_v1.custom_payment_2');
+            $payment_types['custom_pay_2'] = !empty($custom_labels['payments']['custom_pay_2']) ? $custom_labels['payments']['custom_pay_2'] : __('lang_v1.custom_payment_2');
         }
 
         if (config('constants.enable_custom_payment_3')) {
-            $payment_types['custom_pay_3'] = __('lang_v1.custom_payment_3');
+            $payment_types['custom_pay_3'] = !empty($custom_labels['payments']['custom_pay_3']) ? $custom_labels['payments']['custom_pay_3'] : __('lang_v1.custom_payment_3');
         }
 
         return $payment_types;
@@ -203,7 +209,7 @@ class Util
             $mysql_format = 'Y-m-d H:i:s';
         }
 
-        return \Carbon::createFromFormat($date_format, $date)->format($mysql_format);
+        return !empty($date_format) ? \Carbon::createFromFormat($date_format, $date)->format($mysql_format) : null;
     }
 
     /**
@@ -218,7 +224,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return \Carbon::createFromFormat($time_format, $time)->format('H:i');
+        return !empty($time_format) ? \Carbon::createFromFormat($time_format, $time)->format('H:i') : null;
     }
 
     /**
@@ -233,7 +239,7 @@ class Util
         if (session('business.time_format') == 12) {
             $time_format = 'h:i A';
         }
-        return \Carbon::createFromFormat('H:i:s', $time)->format($time_format);
+        return !empty($time) ? \Carbon::createFromFormat('H:i:s', $time)->format($time_format) : null;
     }
 
     /**
@@ -255,7 +261,7 @@ class Util
             }
         }
         
-        return \Carbon::createFromTimestamp(strtotime($date))->format($format);
+        return !empty($date) ? \Carbon::createFromTimestamp(strtotime($date))->format($format) : null;
     }
 
     /**
@@ -678,21 +684,18 @@ class Util
                             ->where('is_service_staff', 1)
                             ->get();
 
-        $service_staff_roles = [];
-
-        if (!empty($location_id)) {
-            foreach ($service_staff_roles_obj as $role) {
-                if ($role->hasPermissionTo('location.' . $location_id) || $role->hasPermissionTo('access_all_locations')) {
-                    $service_staff_roles[] = $role->name;
-                }
-            }
-        } else {
-            $service_staff_roles = $service_staff_roles_obj->pluck('name')->toArray();
-        }
+        $service_staff_roles = $service_staff_roles_obj->pluck('name')->toArray();
         
         //Get all users of service staff roles
         if (!empty($service_staff_roles)) {
-            $waiters = User::where('business_id', $business_id)->role($service_staff_roles)->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
+            $waiters = User::where('business_id', $business_id)
+                        ->role($service_staff_roles);
+
+            if (!empty($location_id)) {
+                $waiters->permission(['location.'.$location_id, 'access_all_locations']);
+            }
+
+            $waiters = $waiters->select('id', DB::raw('CONCAT(COALESCE(first_name, ""), " ", COALESCE(last_name, "")) as full_name'))->get()->pluck('full_name', 'id');
         }
 
         return $waiters;
@@ -767,7 +770,7 @@ class Util
             //Replace business_logo
             if (strpos($value, '{business_logo}') !== false) {
                 $logo_name = $business->logo;
-                $business_logo = !empty($logo_name) ? '<img src="' . url('storage/business_logos/' . $logo_name) . '" alt="Business Logo" >' : '';
+                $business_logo = !empty($logo_name) ? '<img src="' . url('uploads/business_logos/' . $logo_name) . '" alt="Business Logo" >' : '';
 
                 $data[$key] = str_replace('{business_logo}', $business_logo, $data[$key]);
             }
@@ -957,5 +960,18 @@ class Util
         $string = $table_name . "quantity_sold + " . $table_name . "quantity_adjusted + " . $table_name . "quantity_returned + " . $table_name . "mfg_quantity_used";
         
         return $string;
+    }
+
+    public function shipping_statuses()
+    {
+        $statuses = [
+            'ordered' => __('lang_v1.ordered'),
+            'packed' => __('lang_v1.packed'),
+            'shipped' => __('lang_v1.shipped'),
+            'delivered' => __('lang_v1.delivered'),
+            'cancelled' => __('restaurant.cancelled')
+        ];
+
+        return $statuses;
     }
 }

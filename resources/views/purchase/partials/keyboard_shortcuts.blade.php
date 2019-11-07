@@ -27,24 +27,24 @@
 			});
 
 			//On focus of quantity field go back to search when stop typing
-			var timeout = null;
-			$('table#purchase_entry_table').on('focus', 'input.purchase_quantity', function () {
-			    var that = this;
+			// var timeout = null;
+			// $('table#purchase_entry_table').on('focus', 'input.purchase_quantity', function () {
+			//     var that = this;
 
-			    $(this).on('keyup', function(e){
+			//     $(this).on('keyup', function(e){
 
-			    	if (timeout !== null) {
-			        	clearTimeout(timeout);
-			    	}
+			//     	if (timeout !== null) {
+			//         	clearTimeout(timeout);
+			//     	}
 
-			    	var code = e.keyCode || e.which;
-			    	if (code != '9') {
-    					timeout = setTimeout(function () {
-			        		$('input#search_product').focus().select();
-			    		}, 5000);
-    				}
-			    });
-			});
+			//     	var code = e.keyCode || e.which;
+			//     	if (code != '9') {
+   //  					timeout = setTimeout(function () {
+			//         		$('input#search_product').focus().select();
+			//     		}, 5000);
+   //  				}
+			//     });
+			// });
 		@endif
 
 		//shortcut to go to add new products

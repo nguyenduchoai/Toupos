@@ -707,6 +707,10 @@ $(document).ready(function() {
         //update shipping details
         $('input#shipping_details').val($('#shipping_details_modal').val());
 
+        $('input#shipping_address').val($('#shipping_address_modal').val());
+        $('input#shipping_status').val($('#shipping_status_modal').val());
+        $('input#delivered_to').val($('#delivered_to_modal').val());
+
         //Update shipping charges
         __write_number(
             $('input#shipping_charges'),
@@ -1275,6 +1279,9 @@ function pos_product_row(variation_id) {
                             .find('td:first')
                             .append(result.html_modifier);
                     }
+
+                    //scroll bottom of items list
+                    $(".pos_product_div").animate({ scrollTop: $('.pos_product_div').prop("scrollHeight")}, 1000);
                 } else {
                     toastr.error(result.msg);
                     $('input#search_product')

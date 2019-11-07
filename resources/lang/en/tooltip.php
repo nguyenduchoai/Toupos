@@ -91,7 +91,7 @@ return [
 
     'print_receipt_on_invoice' => 'Enable or Disable auto-printing of invoice on finalizing',
 
-    'receipt_printer_type' => "<i>Impressão Baseada em Navegador</i>: Mostrar caixa de diálogo de impressão no navegador com visualização da fatura <br/> <br/> <i> Usar Impressora de Recibos Configurada </i>: Selecionar um recibo configurado / impressora térmica para impressão",
+    'receipt_printer_type' => "<i>Browser Based Printing</i>: Show Browser Print Dialog Box with Invoice Preview<br/><br/> <i>Use Configured Receipt Printer</i>: Select a Configured Receipt / Thermal printer for printing",
 
     'adjustment_type' => '<i>Normal</i>: Adjustment for normal reasons like Leakage, Damage etc. <br/><br/> <i>Abnormal</i>: Adjustment for reasons like Fire, Accident etc.',
 

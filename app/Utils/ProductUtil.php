@@ -807,8 +807,12 @@ class ProductUtil extends Util
             $tax_rate = $variation_details->product->product_tax->amount;
         }
 
+        if (!isset($variation_data['sell_price_inc_tax'])) {
+            $variation_data['sell_price_inc_tax'] = $variation_details->sell_price_inc_tax;
+        }
+        
         if (($variation_details->default_purchase_price != $variation_data['pp_without_discount']) ||
-            ($variation_details->default_sell_price != $variation_data['default_sell_price'])
+            ($variation_details->sell_price_inc_tax != $variation_data['sell_price_inc_tax'])
             ) {
             //Set default purchase price exc. tax
             $variation_details->default_purchase_price = $variation_data['pp_without_discount'];
@@ -816,15 +820,15 @@ class ProductUtil extends Util
             //Set default purchase price inc. tax
             $variation_details->dpp_inc_tax = $this->calc_percentage($variation_details->default_purchase_price, $tax_rate, $variation_details->default_purchase_price);
        
-            //Set default sell price exc. tax
-            $variation_details->default_sell_price = $variation_data['default_sell_price'];
+            //Set default sell price inc. tax
+            $variation_details->sell_price_inc_tax = $variation_data['sell_price_inc_tax'];
+
+            //set sell price inc. tax
+            $variation_details->default_sell_price = $this->calc_percentage_base($variation_details->sell_price_inc_tax, $tax_rate);
 
             //set profit margin
             $variation_details->profit_percent = $this->get_percent($variation_details->default_purchase_price, $variation_details->default_sell_price);
 
-            //set sell price inc. tax
-            $variation_details->sell_price_inc_tax = $this->calc_percentage($variation_details->default_sell_price, $tax_rate, $variation_details->default_sell_price);
-            
             $variation_details->save();
         }
     }
@@ -1148,7 +1152,9 @@ class ProductUtil extends Util
 
             //Edit product price
             if ($enable_product_editing == 1) {
-                $variation_data['default_sell_price'] = ($this->num_uf($data['default_sell_price'], $currency_details)) / $multiplier;
+                if (isset($data['default_sell_price'])) {
+                    $variation_data['sell_price_inc_tax'] = ($this->num_uf($data['default_sell_price'], $currency_details)) / $multiplier;
+                }
                 $variation_data['pp_without_discount'] = ($this->num_uf($data['pp_without_discount'], $currency_details)*$exchange_rate) / $multiplier;
                 $variation_data['variation_id'] = $purchase_line->variation_id;
                 $variation_data['purchase_price'] = $purchase_line->purchase_price;

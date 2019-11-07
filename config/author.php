@@ -16,7 +16,7 @@ return [
     'vendor' => 'Ultimate Fosters',
     'vendor_url' => 'http://ultimatefosters.com',
     'email' => 'thewebfosters@gmail.com',
-    'app_version' => "2.16.3",
+    'app_version' => "2.17",
     'lic1' => 'aHR0cHM6Ly9sLnVsdGltYXRlZm9zdGVycy5jb20vYXBpL3R5cGVfMQ==',
     'pid' => 1,
 ];

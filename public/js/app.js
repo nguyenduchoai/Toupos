@@ -358,21 +358,40 @@ $(document).ready(function() {
     //Start: CRUD for Contacts
     //contacts table
     var contact_table_type = $('#contact_type').val();
-    var targets = 5;
     if (contact_table_type == 'supplier') {
-        targets = [5, 6, 7];
+        var columns = [
+            { data: 'contact_id', name: 'contact_id' },
+            { data: 'supplier_business_name', name: 'supplier_business_name' },
+            { data: 'name', name: 'name' },
+            { data: 'created_at', name: 'contacts.created_at' },
+            { data: 'mobile', name: 'mobile' },
+            { data: 'due', searchable: false, orderable: false },
+            { data: 'return_due', searchable: false, orderable: false },
+            { data: 'action', searchable: false, orderable: false },
+        ];
+    } else if (contact_table_type == 'customer') {
+        var columns = [
+            { data: 'contact_id', name: 'contact_id' },
+            { data: 'name', name: 'name' },
+            { data: 'created_at', name: 'contacts.created_at' }
+        ];
+
+        if ($('#rp_col').length) {
+            columns.push({ data: 'total_rp', name: 'total_rp' });
+        }
+        Array.prototype.push.apply(columns, [{ data: 'customer_group', name: 'cg.name' },
+            { data: 'address', name: 'address', orderable: false },
+            { data: 'mobile', name: 'mobile' },
+            { data: 'due', searchable: false, orderable: false },
+            { data: 'return_due', searchable: false, orderable: false },
+            { data: 'action', searchable: false, orderable: false }]);
     }
+    
     var contact_table = $('#contact_table').DataTable({
         processing: true,
         serverSide: true,
         ajax: '/contacts?type=' + $('#contact_type').val(),
-        columnDefs: [
-            {
-                targets: targets,
-                orderable: false,
-                searchable: false,
-            },
-        ],
+        columns: columns,
         fnDrawCallback: function(oSettings) {
             var total_due = sum_table_col($('#contact_table'), 'contact_due');
             $('#footer_contact_due').text(total_due);
@@ -2192,5 +2211,28 @@ $(document).on('click', 'a.delete_purchase_return', function(e) {
                 },
             });
         }
+    });
+});
+
+$(document).on('submit', 'form#edit_shipping_form', function(e){
+    e.preventDefault();
+    var data = $(this).serialize();
+    $(this)
+    .find('button[type="submit"]')
+    .attr('disabled', true);
+    $.ajax({
+        method: $(this).attr('method'),
+        url: $(this).attr('action'),
+        dataType: 'json',
+        data: data,
+        success: function(result) {
+            if (result.success == true) {
+                $('div.view_modal').modal('hide');
+                toastr.success(result.msg);
+                sell_table.ajax.reload();
+            } else {
+                toastr.error(result.msg);
+            }
+        },
     });
 });

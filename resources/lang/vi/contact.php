@@ -18,7 +18,7 @@ return [
     'all_your_contact' => 'Tất cả của bạn :contacts',
     'add_contact' => 'Thêm một liên hệ mới',
     'contact_type' => 'Loại liên hệ',
-    'tax_no' => 'Mã số thuế',
+    'tax_no' => 'Số thuế',
     'pay_term' => 'Thời hạn thanh toán',
     'pay_term_period' => 'Thời hạn thanh toán',
     'mobile' => 'Số di động',

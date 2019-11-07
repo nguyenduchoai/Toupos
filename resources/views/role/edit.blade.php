@@ -460,6 +460,14 @@
               </label>
             </div>
           </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'access_shipping', in_array('access_shipping', $role_permissions), ['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.access_shipping') }}
+              </label>
+            </div>
+          </div>
         </div>
         </div>
         <hr>

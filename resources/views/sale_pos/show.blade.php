@@ -67,9 +67,15 @@
           {{$sell->service_staff->user_full_name ?? ''}}<br>
       @endif
 
+      <strong>@lang('sale.shipping'):</strong>
+      <span class="label @if(!empty($shipping_status_colors[$sell->shipping_status])) {{$shipping_status_colors[$sell->shipping_status]}} @else {{'bg-gray'}} @endif">{{$shipping_statuses[$sell->shipping_status] ?? '' }}</span><br>
       @if(!empty($sell->shipping_address()))
-        <strong>@lang('sale.shipping'):</strong><br>
-          {{$sell->shipping_address()}}
+        {{$sell->shipping_address()}}
+      @else
+        {{$sell->shipping_address ?? '--'}}
+      @endif
+      @if(!empty($sell->delivered_to))
+        <br><strong>@lang('lang_v1.delivered_to'): </strong> {{$sell->delivered_to}}
       @endif
       </div>
     </div>

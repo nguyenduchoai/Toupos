@@ -50,13 +50,6 @@ class ProductController extends Controller
 
         //barcode types
         $this->barcode_types = $this->productUtil->barcode_types();
-
-        //Product types also includes modifier.
-        //TODO: uncomment combo
-        $this->product_types = ['single' => __('lang_v1.single'),
-                            'variable' => __('lang_v1.variable')
-                            //, 'combo' => __('lang_v1.combo')
-                        ];
     }
 
     /**
@@ -98,7 +91,10 @@ class ProductController extends Controller
                     'products.not_for_selling',
                     DB::raw('SUM(vld.qty_available) as current_stock'),
                     DB::raw('MAX(v.sell_price_inc_tax) as max_price'),
-                    DB::raw('MIN(v.sell_price_inc_tax) as min_price')
+                    DB::raw('MIN(v.sell_price_inc_tax) as min_price'),
+                    DB::raw('MAX(v.dpp_inc_tax) as max_purchase_price'),
+                    DB::raw('MIN(v.dpp_inc_tax) as min_purchase_price')
+
                 )->groupBy('products.id');
 
             $type = request()->get('type', null);
@@ -197,7 +193,11 @@ class ProductController extends Controller
                 })
                 ->editColumn('current_stock', '@if($enable_stock == 1) {{@number_format($current_stock)}} @else -- @endif {{$unit}}')
                 ->addColumn(
-                    'price',
+                    'purchase_price',
+                    '<div style="white-space: nowrap;"><span class="display_currency" data-currency_symbol="true">{{$min_purchase_price}}</span> @if($max_purchase_price != $min_purchase_price && $type == "variable") -  <span class="display_currency" data-currency_symbol="true">{{$max_purchase_price}}</span>@endif </div>'
+                )
+                ->addColumn(
+                    'selling_price',
                     '<div style="white-space: nowrap;"><span class="display_currency" data-currency_symbol="true">{{$min_price}}</span> @if($max_price != $min_price && $type == "variable") -  <span class="display_currency" data-currency_symbol="true">{{$max_price}}</span>@endif </div>'
                 )
                 ->setRowAttr([
@@ -208,7 +208,7 @@ class ProductController extends Controller
                             return '';
                         }
                     }])
-                ->rawColumns(['action', 'image', 'mass_delete', 'product', 'price'])
+                ->rawColumns(['action', 'image', 'mass_delete', 'product', 'selling_price', 'purchase_price'])
                 ->make(true);
         }
 
@@ -299,10 +299,19 @@ class ProductController extends Controller
         $selling_price_group_count = SellingPriceGroup::countSellingPriceGroups($business_id);
 
         $module_form_parts = $this->moduleUtil->getModuleData('product_form_part');
-        $product_types = $this->product_types;
+        $product_types = $this->product_types();
 
         return view('product.create')
             ->with(compact('categories', 'brands', 'units', 'taxes', 'barcode_types', 'default_profit_percent', 'tax_attributes', 'barcode_default', 'business_locations', 'duplicate_product', 'sub_categories', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types'));
+    }
+
+    private function product_types()
+    {
+        //Product types also includes modifier.
+        return ['single' => __('lang_v1.single'),
+                'variable' => __('lang_v1.variable'), 
+		'combo' => __('lang_v1.combo')
+            ];
     }
 
     /**
@@ -499,7 +508,7 @@ class ProductController extends Controller
         $selling_price_group_count = SellingPriceGroup::countSellingPriceGroups($business_id);
 
         $module_form_parts = $this->moduleUtil->getModuleData('product_form_part');
-        $product_types = $this->product_types;
+        $product_types = $this->product_types();
 
         return view('product.edit')
                 ->with(compact('categories', 'brands', 'units', 'sub_units', 'taxes', 'tax_attributes', 'barcode_types', 'product', 'sub_categories', 'default_profit_percent', 'business_locations', 'rack_details', 'selling_price_group_count', 'module_form_parts', 'product_types'));
@@ -587,7 +596,17 @@ class ProductController extends Controller
             //upload document
             $file_name = $this->productUtil->uploadFile($request, 'image', config('constants.product_img_path'));
             if (!empty($file_name)) {
+
+                //If previous image found then remove
+                if (!empty($product->image_path)) {
+                    unlink($product->image_path);
+                }
+                
                 $product->image = $file_name;
+                //If product image is updated update woocommerce media id
+                if (!empty($product->woocommerce_media_id)) {
+                    $product->woocommerce_media_id = null;
+                }
             }
 
             $product->save();

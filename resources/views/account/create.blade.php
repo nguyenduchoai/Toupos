@@ -19,12 +19,20 @@
                 {!! Form::text('account_number', null, ['class' => 'form-control', 'required','placeholder' => __( 'account.account_number' ) ]); !!}
             </div>
 
-            {{--
             <div class="form-group">
-                {!! Form::label('account_type', __( 'account.account_type' ) .":") !!}
-                {!! Form::select('account_type', $account_types, null, ['class' => 'form-control']); !!}
+                {!! Form::label('account_type_id', __( 'account.account_type' ) .":") !!}
+                <select name="account_type_id" class="form-control select2">\
+                    <option>@lang('messages.please_select')</option>
+                    @foreach($account_types as $account_type)
+                        <optgroup label="{{$account_type->name}}">
+                            <option value="{{$account_type->id}}">{{$account_type->name}}</option>
+                            @foreach($account_type->sub_types as $sub_type)
+                                <option value="{{$sub_type->id}}">{{$sub_type->name}}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
             </div>
-            --}}
 
             <div class="form-group">
                 {!! Form::label('opening_balance', __( 'account.opening_balance' ) .":") !!}

@@ -109,6 +109,10 @@
 			<strong>{{ $receipt_details->sales_person_label }}</strong> {{ $receipt_details->sales_person }}
 		@endif
 	</div>
+	<div class="col-md-6 invoice-col width-50 word-wrap">
+		<strong>@lang('lang_v1.shipping_address'):</strong><br>
+		{!! $receipt_details->shipping_address !!}
+	</div>
 </div>
 
 <div class="row color-555">
