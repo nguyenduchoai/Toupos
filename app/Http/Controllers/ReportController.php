@@ -161,42 +161,57 @@ class ReportController extends Controller
             $total_sell_discount = $transaction_totals['total_sell_discount'];
             $total_reward_amount = $transaction_totals['total_reward_amount'];
 
+            //Stocks
             $data['opening_stock'] = !empty($opening_stock) ? $opening_stock : 0;
             $data['closing_stock'] = !empty($closing_stock) ? $closing_stock : 0;
+
+            //Purchase
             $data['total_purchase'] = !empty($purchase_details['total_purchase_exc_tax']) ? $purchase_details['total_purchase_exc_tax'] : 0;
+            $data['total_purchase_discount'] = !empty($total_purchase_discount) ? $total_purchase_discount : 0;
+            $data['total_purchase_return'] = $transaction_totals['total_purchase_return_exc_tax'];
+
+            //Sales
             $data['total_sell'] = !empty($sell_details['total_sell_exc_tax']) ? $sell_details['total_sell_exc_tax'] : 0;
+            $data['total_sell_discount'] = !empty($total_sell_discount) ? $total_sell_discount : 0;
+            $data['total_sell_return'] = $transaction_totals['total_sell_return_exc_tax'];
+
+            //Expense
             $data['total_expense'] =  $transaction_totals['total_expense'];
 
+            //Payroll
             $total_payroll = 0;
             if ($show_total_payroll) {
                 $data['total_payroll'] =  $transaction_totals['total_payroll'];
                 $total_payroll = $transaction_totals['total_payroll'];
             }
 
+            //Stock adjustments
             $data['total_adjustment'] = $transaction_totals['total_adjustment'];
+            $data['total_recovered'] = $transaction_totals['total_recovered'];
 
             // $data['closing_stock'] = $data['closing_stock'] - $data['total_adjustment'];
 
-            $data['total_recovered'] = $transaction_totals['total_recovered'];
-
+            //Shipping
             $data['total_transfer_shipping_charges'] = $total_transfer_shipping_charges;
-
-            $data['total_purchase_discount'] = !empty($total_purchase_discount) ? $total_purchase_discount : 0;
-            $data['total_sell_discount'] = !empty($total_sell_discount) ? $total_sell_discount : 0;
-
+            
             $data['total_reward_amount'] = !empty($total_reward_amount) ? $total_reward_amount : 0;
-
-            $data['total_purchase_return'] = $transaction_totals['total_purchase_return_exc_tax'];
-
-            $data['total_sell_return'] = $transaction_totals['total_sell_return_exc_tax'];
 
             // $data['closing_stock'] = $data['closing_stock'] - $data['total_sell_return'];
 
-            $data['net_profit'] = $data['total_sell'] + $data['closing_stock'] -
-                                $data['total_purchase'] - $data['total_sell_discount'] - $data['total_reward_amount'] -
-                                $data['opening_stock'] - $data['total_expense'] - $data['total_production_cost'] - $total_payroll + $data['total_recovered'] -
-                                $data['total_transfer_shipping_charges'] + $data['total_purchase_discount']
-                                + $data['total_purchase_return'];
+            $data['net_profit'] = $data['total_sell'] 
+                                    + $data['closing_stock'] 
+                                    - $data['total_purchase'] 
+                                    - $data['total_sell_discount'] 
+                                    - $data['total_reward_amount'] 
+                                    - $data['opening_stock'] 
+                                    - $data['total_expense'] 
+                                    - $data['total_production_cost'] 
+                                    - $total_payroll 
+                                    + $data['total_recovered'] 
+                                    - $data['total_transfer_shipping_charges']
+                                    + $data['total_purchase_discount']
+                                    + $data['total_purchase_return']
+                                    - $data['total_sell_return'];
 
             $data['gross_profit'] = $gross_profit;
             return $data;
@@ -1532,6 +1547,7 @@ class ReportController extends Controller
                     'pv.name as product_variation',
                     'v.name as variation_name',
                     'c.name as customer',
+                    'c.contact_id',
                     't.id as transaction_id',
                     't.invoice_no',
                     't.transaction_date as transaction_date',

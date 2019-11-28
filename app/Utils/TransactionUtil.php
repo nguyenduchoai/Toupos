@@ -3544,7 +3544,13 @@ class TransactionUtil extends Util
 
         $gross_profit = !empty($gross_profit_obj->gross_profit) ? $gross_profit_obj->gross_profit : 0;
         
-        return $gross_profit;
+        //Deduct the sell transaction discounts.
+        $transaction_totals = $this->getTransactionTotals($business_id, ['sell'], $start_date, $end_date, $location_id);
+        $sell_discount = !empty($transaction_totals['total_sell_discount']) ? $transaction_totals['total_sell_discount'] : 0;
+
+        //KNOWS ISSUE: If products are returned then also the discount gets applied for it.
+
+        return $gross_profit - $sell_discount;
     }
 
     /**

@@ -130,7 +130,7 @@
                     }
                 },
                 columnDefs: [ {
-                    "targets": [0, 1, 11],
+                    "targets": [0, 1, 12],
                     "orderable": false,
                     "searchable": false
                 } ],

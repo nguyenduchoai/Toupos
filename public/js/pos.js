@@ -93,6 +93,11 @@ $(document).ready(function() {
         .autocomplete({
             source: function(request, response) {
                 var price_group = '';
+                var search_fields = [];
+                $('.search_fields:checked').each(function(i){
+                  search_fields[i] = $(this).val();
+                });
+
                 if ($('#price_group').length > 0) {
                     price_group = $('#price_group').val();
                 }
@@ -102,7 +107,8 @@ $(document).ready(function() {
                         price_group: price_group,
                         location_id: $('input#location_id').val(),
                         term: request.term,
-                        not_for_selling: 0
+                        not_for_selling: 0,
+                        search_fields: search_fields
                     },
                     response
                 );
@@ -128,6 +134,7 @@ $(document).ready(function() {
                 }
             },
             select: function(event, ui) {
+                var searched_term = $(this).val();
                 var is_overselling_allowed = false;
                 if($('input#is_overselling_allowed').length) {
                     is_overselling_allowed = true;
@@ -135,7 +142,10 @@ $(document).ready(function() {
 
                 if (ui.item.enable_stock != 1 || ui.item.qty_available > 0 || is_overselling_allowed) {
                     $(this).val(null);
-                    pos_product_row(ui.item.variation_id);
+
+                    //Pre select lot number only if the searched term is same as the lot number
+                    var purchase_line_id = ui.item.purchase_line_id && searched_term == ui.item.lot_number ? ui.item.purchase_line_id : null;
+                    pos_product_row(ui.item.variation_id, purchase_line_id);
                 } else {
                     alert(LANG.out_of_stock);
                 }
@@ -1153,7 +1163,7 @@ function get_recent_transactions(status, element_obj) {
     });
 }
 
-function pos_product_row(variation_id) {
+function pos_product_row(variation_id, purchase_line_id = null) {
     //Get item addition method
     var item_addtn_method = 0;
     var add_via_ajax = true;
@@ -1232,6 +1242,7 @@ function pos_product_row(variation_id) {
                 customer_id: customer_id,
                 is_direct_sell: is_direct_sell,
                 price_group: price_group,
+                purchase_line_id: purchase_line_id
             },
             dataType: 'json',
             success: function(result) {

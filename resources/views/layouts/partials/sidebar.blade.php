@@ -524,6 +524,10 @@
           </ul>
         </li>
         @endif
+        <!-- call Project module if defined -->
+        @if(Module::has('Project'))
+          @includeIf('project::layouts.partials.sidebar')
+        @endif
         <!-- call Essentials module if defined -->
         @if(Module::has('Essentials'))
           @includeIf('essentials::layouts.partials.sidebar_hrm')

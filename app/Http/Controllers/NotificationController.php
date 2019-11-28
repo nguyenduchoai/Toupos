@@ -37,9 +37,9 @@ class NotificationController extends Controller
      */
     public function getTemplate($transaction_id, $template_for)
     {
-        if (!auth()->user()->can('send_notification')) {
-            abort(403, 'Unauthorized action.');
-        }
+        // if (!auth()->user()->can('send_notification')) {
+        //     abort(403, 'Unauthorized action.');
+        // }
 
         $business_id = request()->session()->get('user.business_id');
 
@@ -82,9 +82,9 @@ class NotificationController extends Controller
      */
     public function send(Request $request)
     {
-        if (!auth()->user()->can('send_notification')) {
-            abort(403, 'Unauthorized action.');
-        }
+        // if (!auth()->user()->can('send_notification')) {
+        //     abort(403, 'Unauthorized action.');
+        // }
         $notAllowed = $this->notificationUtil->notAllowedInDemo();
         if (!empty($notAllowed)) {
             return $notAllowed;

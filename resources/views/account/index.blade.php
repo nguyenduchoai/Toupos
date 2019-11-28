@@ -278,11 +278,11 @@
                                 "searchable": false
                             }],
                         columns: [
-                            {data: 'name', name: 'name'},
+                            {data: 'name', name: 'accounts.name'},
                             {data: 'parent_account_type_name', name: 'pat.name'},
-                            {data: 'account_type_name', name: 'at.name'},
-                            {data: 'account_number', name: 'account_number'},
-                            {data: 'note', name: 'note'},
+                            {data: 'account_type_name', name: 'ats.name'},
+                            {data: 'account_number', name: 'accounts.account_number'},
+                            {data: 'note', name: 'accounts.note'},
                             {data: 'balance', name: 'balance', searchable: false},
                             {data: 'action', name: 'action'}
                         ],

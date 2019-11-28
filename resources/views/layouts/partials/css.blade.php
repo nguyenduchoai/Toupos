@@ -44,7 +44,6 @@
 <link rel="stylesheet" href="{{ asset('plugins/calculator/calculator.css?v='.$asset_v) }}">
 
 <link rel="stylesheet" href="{{ asset('plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css?v='.$asset_v) }}">
-
 @yield('css')
 <!-- app css -->
 <link rel="stylesheet" href="{{ asset('css/app.css?v='.$asset_v) }}">

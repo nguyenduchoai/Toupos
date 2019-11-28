@@ -92,27 +92,21 @@ class Media extends Model
             //If multiple files present
             if (is_array($files)) {
                 foreach ($files as $file) {
-                    $uploaded_file = self::uploadFile($file);
+                    $uploaded_file = Media::uploadFile($file);
 
                     if (!empty($uploaded_file)) {
                         $uploaded_files[] = $uploaded_file;
                     }
                 }
             } else {
-                $uploaded_file = self::uploadFile($files);
+                $uploaded_file = Media::uploadFile($files);
                 if (!empty($uploaded_file)) {
                     $uploaded_files[] = $uploaded_file;
                 }
             }
 
-            if (!empty($uploaded_files)) {
-                $media_obj = [];
-                foreach ($uploaded_files as $value) {
-                    $media_obj[] = new \App\Media(['file_name' => $value, 'business_id' => $business_id, 'description' => !empty($request->description) ? $request->description : null, 'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
-                }
-
-                $model->media()->saveMany($media_obj);
-            }
+            // attach media to model
+            Media::attachMediaToModel($model, $business_id, $uploaded_files, $request);
         }
     }
 
@@ -120,7 +114,7 @@ class Media extends Model
      * Uploads requested file to storage.
      *
      */
-    private static function uploadFile($file)
+    public static function uploadFile($file)
     {
         $file_name = null;
         if ($file->getSize() <= config('constants.document_size_limit')) {
@@ -153,5 +147,21 @@ class Media extends Model
     public function uploaded_by_user()
     {
         return $this->belongsTo(\App\User::class, 'uploaded_by');
+    }
+
+    public static function attachMediaToModel($model, $business_id, $uploaded_files, $request = null)
+    {
+        if (!empty($uploaded_files)) {
+            $media_obj = [];
+            foreach ($uploaded_files as $value) {
+                $media_obj[] = new \App\Media([
+                        'file_name' => $value,
+                        'business_id' => $business_id,
+                        'description' => !empty($request->description) ? $request->description : null,
+                        'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
+            }
+            
+            $model->media()->saveMany($media_obj);
+        }
     }
 }

@@ -159,7 +159,7 @@ $(document).ready( function(){
             __currency_convert_recursively($('#sell_table'));
         },
         createdRow: function( row, data, dataIndex ) {
-            $( row ).find('td:eq(4)').attr('class', 'clickable_td');
+            //$( row ).find('td:eq(4)').attr('class', 'clickable_td');
         }
     });
 

@@ -309,8 +309,8 @@ class ProductController extends Controller
     {
         //Product types also includes modifier.
         return ['single' => __('lang_v1.single'),
-                'variable' => __('lang_v1.variable'), 
-		'combo' => __('lang_v1.combo')
+                'variable' => __('lang_v1.variable'),
+        'combo' => __('lang_v1.combo')
             ];
     }
 
@@ -1004,6 +1004,8 @@ class ProductController extends Controller
     {
         if (request()->ajax()) {
             $term = request()->input('term', '');
+            $search_fields = request()->has('search_fields') ? request()->input('search_fields') : ['name', 'sku'];
+
             $location_id = request()->input('location_id', '');
 
             $check_qty = request()->input('check_qty', false);
@@ -1050,12 +1052,26 @@ class ProductController extends Controller
             if (request()->has('product_types')) {
                 $products->whereIn('products.type', request()->get('product_types'));
             }
+            $search_lot = request()->session()->get('business.enable_lot_number') == 1 && in_array('lot_number', $search_fields) ? true : false;
+            if ($search_lot) {
+                $products->leftjoin('purchase_lines as pl', 'variations.id', '=', 'pl.variation_id');
+            }
+
             //Include search
             if (!empty($term)) {
-                $products->where(function ($query) use ($term) {
-                    $query->where('products.name', 'like', '%' . $term .'%');
-                    $query->orWhere('sku', 'like', '%' . $term .'%');
-                    $query->orWhere('sub_sku', 'like', '%' . $term .'%');
+                $products->where(function ($query) use ($term, $search_lot, $search_fields) {
+                    if (in_array('name', $search_fields)) {
+                        $query->where('products.name', 'like', '%' . $term .'%');
+                    }
+                    
+                    if (in_array('sku', $search_fields)) {
+                        $query->orWhere('sku', 'like', '%' . $term .'%');
+                        $query->orWhere('sub_sku', 'like', '%' . $term .'%');
+                    }
+                    
+                    if ($search_lot) {
+                        $query->orWhere('pl.lot_number', 'like', '%' . $term .'%');
+                    }
                 });
             }
 
@@ -1079,6 +1095,11 @@ class ProductController extends Controller
             if (!empty($price_group_id)) {
                 $products->addSelect('VGP.price_inc_tax as variation_group_price');
             }
+
+            if ($search_lot) {
+                $products->addSelect('pl.id as purchase_line_id', 'pl.lot_number');
+            }
+            $products->groupBy('variations.id');
             $result = $products->orderBy('VLD.qty_available', 'desc')
                         ->get();
             return json_encode($result);

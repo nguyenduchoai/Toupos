@@ -665,7 +665,7 @@ $(document).ready(function() {
     product_sell_report = $('table#product_sell_report_table').DataTable({
         processing: true,
         serverSide: true,
-        aaSorting: [[3, 'desc']],
+        aaSorting: [[4, 'desc']],
         ajax: {
             url: '/reports/product-sell-report',
             data: function(d) {
@@ -690,6 +690,7 @@ $(document).ready(function() {
         columns: [
             { data: 'product_name', name: 'p.name' },
             { data: 'customer', name: 'c.name' },
+            { data: 'contact_id', name: 'c.contact_id' },
             { data: 'invoice_no', name: 't.invoice_no' },
             { data: 'transaction_date', name: 't.transaction_date' },
             { data: 'sell_qty', name: 'transaction_sell_lines.quantity' },
@@ -1424,71 +1425,6 @@ function salesRepresentativeTotalCommission() {
     } else {
         $('div#total_commission_div').addClass('hide');
     }
-}
-
-function updateProfitLoss() {
-    var start = $('#profit_loss_date_filter')
-        .data('daterangepicker')
-        .startDate.format('YYYY-MM-DD');
-    var end = $('#profit_loss_date_filter')
-        .data('daterangepicker')
-        .endDate.format('YYYY-MM-DD');
-    var location_id = $('#profit_loss_location_filter').val();
-
-    var data = { start_date: start, end_date: end, location_id: location_id };
-
-    var loader = __fa_awesome();
-    $(
-        '.opening_stock, .total_transfer_shipping_charges, .closing_stock, .total_sell, .total_purchase, \
-        .total_expense, .net_profit, .total_adjustment, .total_recovered, .total_sell_discount, \
-        .total_purchase_discount, .total_purchase_return, .total_sell_return, .gross_profit, \
-        .total_reward_amount, .total_payroll'
-    ).html(loader);
-
-    $.ajax({
-        method: 'GET',
-        url: '/reports/profit-loss',
-        dataType: 'json',
-        data: data,
-        success: function(data) {
-            $('.opening_stock').html(__currency_trans_from_en(data.opening_stock, true));
-            $('.closing_stock').html(__currency_trans_from_en(data.closing_stock, true));
-            $('.total_sell').html(__currency_trans_from_en(data.total_sell, true));
-            $('.total_purchase').html(__currency_trans_from_en(data.total_purchase, true));
-            $('.total_expense').html(__currency_trans_from_en(data.total_expense, true));
-
-            if($('.total_payroll').length > 0) {
-                $('.total_payroll').html(__currency_trans_from_en(data.total_payroll, true));
-            }
-
-            if($('.total_production_cost').length > 0) {
-                $('.total_production_cost').html(__currency_trans_from_en(data.total_production_cost, true));
-            }
-
-            $('.net_profit').html(__currency_trans_from_en(data.net_profit, true));
-            $('.gross_profit').html(__currency_trans_from_en(data.gross_profit, true));
-            $('.total_adjustment').html(__currency_trans_from_en(data.total_adjustment, true));
-            $('.total_recovered').html(__currency_trans_from_en(data.total_recovered, true));
-            $('.total_purchase_return').html(
-                __currency_trans_from_en(data.total_purchase_return, true)
-            );
-            $('.total_transfer_shipping_charges').html(
-                __currency_trans_from_en(data.total_transfer_shipping_charges, true)
-            );
-            $('.total_purchase_discount').html(
-                __currency_trans_from_en(data.total_purchase_discount, true)
-            );
-            $('.total_sell_discount').html(
-                __currency_trans_from_en(data.total_sell_discount, true)
-            );
-            $('.total_reward_amount').html(
-                __currency_trans_from_en(data.total_reward_amount, true)
-            );
-            $('.total_sell_return').html(__currency_trans_from_en(data.total_sell_return, true));
-            __highlight(data.net_profit, $('.net_profit'));
-            __highlight(data.net_profit, $('.gross_profit'));
-        },
-    });
 }
 
 function show_child_payments(rowData) {

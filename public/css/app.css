@@ -1,3 +1,62 @@
+.text-white {
+  color: #fff;
+}
+.wizard > .steps > ul > li {
+  width: 33.33% !important;
+}
+.wizard > .content {
+  background: #445867 !important;
+}
+legend {
+  color: #fff;
+  margin-bottom: 6px;
+  border-bottom: none;
+}
+.left-col {
+  background: linear-gradient(0deg,rgba(0, 0, 0, 0.76),rgba(51, 51, 51, 0.32)),url(../img/home-bg.jpg); 
+  text-align: center;
+  background-size: cover;
+  background-position: center;
+}
+.left-col-content {
+  color: #1A7BF9;
+  width: 100%;
+}
+.login-header {
+  font-size: 27px;
+  font-weight: 600;
+}
+.login-header a {
+  color: #fff;
+}
+.form-header {
+  font-size: 18px;
+  margin: 16px 0;
+}
+.btn-login {
+  padding: 6px 52px !important;
+}
+.right-col {
+  background-color: #243949;
+  color: #fff; height: 100%;
+  min-height: 100vh;
+}
+.right-col a, .text-white a {
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px
+}
+.right-col a:hover, .text-white a:hover {
+  color: #ccc;
+}
+.right-col-content {
+  padding: 10% 16%;
+  padding-bottom: 3%;
+}
+.right-col-content-register {
+  padding: 2% 8%;
+}
+
 .input_inline {
   width: 100%;
   display: inline-flex;

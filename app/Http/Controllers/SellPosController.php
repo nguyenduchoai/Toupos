@@ -214,6 +214,8 @@ class SellPosController extends Controller
         $price_groups = SellingPriceGroup::forDropdown($business_id);
 
         $shipping_statuses = $this->transactionUtil->shipping_statuses();
+
+        $default_datetime = $this->businessUtil->format_date('now', true);
         
         return view('sale_pos.create')
             ->with(compact(
@@ -235,7 +237,8 @@ class SellPosController extends Controller
                 'customer_groups',
                 'accounts',
                 'price_groups',
-                'shipping_statuses'
+                'shipping_statuses',
+                'default_datetime'
             ));
     }
 
@@ -1239,6 +1242,8 @@ class SellPosController extends Controller
             }
             $product->lot_numbers = $lot_numbers;
 
+            $purchase_line_id = request()->get('purchase_line_id');
+
             $price_group = request()->input('price_group');
             if (!empty($price_group)) {
                 $variation_group_prices = $this->productUtil->getVariationGroupPrice($variation_id, $price_group, $product->tax_id);
@@ -1251,7 +1256,7 @@ class SellPosController extends Controller
 
             $output['success'] = true;
 
-            $waiters = null;
+            $waiters = [];
             if ($this->productUtil->isModuleEnabled('service_staff') && !empty($pos_settings['inline_service_staff'])) {
                 $waiters_enabled = true;
                 $waiters = $this->productUtil->serviceStaffDropdown($business_id, $location_id);
@@ -1275,7 +1280,7 @@ class SellPosController extends Controller
                 }
 
                 $output['html_content'] =  view('sale_pos.product_row')
-                            ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters', 'edit_discount', 'edit_price'))
+                            ->with(compact('product', 'row_count', 'tax_dropdown', 'enabled_modules', 'pos_settings', 'sub_units', 'discount', 'waiters', 'edit_discount', 'edit_price', 'purchase_line_id'))
                             ->render();
             }
             

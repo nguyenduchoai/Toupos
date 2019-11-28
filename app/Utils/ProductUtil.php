@@ -12,6 +12,7 @@ use App\ProductVariation;
 use App\PurchaseLine;
 use App\TaxRate;
 use App\Transaction;
+use App\TransactionSellLine;
 use App\TransactionSellLinesPurchaseLines;
 use App\Unit;
 use App\Variation;
@@ -225,9 +226,44 @@ class ProductUtil extends Util
                     $variations_ids[] = $k;
                 }
             }
-            Variation::whereNotIn('id', $variations_ids)
+
+            //Check if purchase or sell exist for the deletable variations
+            $count_purchase = PurchaseLine::join(
+                'transactions as T',
+                'purchase_lines.transaction_id',
+                '=',
+                'T.id'
+                )
+                  ->where('T.type', 'purchase')
+                  ->where('T.status', 'received')
+                  ->where('T.business_id', $product->business_id)
+                  ->where('purchase_lines.product_id', $product->id)
+                  ->whereNotIn('purchase_lines.variation_id', $variations_ids)
+                  ->count();
+
+            $count_sell = TransactionSellLine::join(
+                'transactions as T',
+                'transaction_sell_lines.transaction_id',
+                '=',
+                'T.id'
+                )
+                  ->where('T.type', 'sell')
+                  ->where('T.status', 'final')
+                  ->where('T.business_id', $product->business_id)
+                  ->where('transaction_sell_lines.product_id', $product->id)
+                  ->whereNotIn('transaction_sell_lines.variation_id', $variations_ids)
+                  ->count();
+
+            $is_variation_delatable = $count_purchase > 0 || $count_sell > 0? false : true;
+            
+            if ($is_variation_delatable) {
+                Variation::whereNotIn('id', $variations_ids)
                     ->where('product_variation_id', $key)
                     ->delete();
+            } else {
+                throw new \Exception(__('lang_v1.purchase_already_exist'));
+            }
+            
 
             //Add new variations
             if (!empty($value['variations'])) {

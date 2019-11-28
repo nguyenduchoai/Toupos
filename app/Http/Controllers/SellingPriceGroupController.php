@@ -252,6 +252,8 @@ class SellingPriceGroupController extends Controller
             $export_data[] = $temp;
         }
 
+        ob_end_clean();
+        ob_start();
         return collect($export_data)->downloadExcel(
             'product_group_prices.xlsx',
             null,

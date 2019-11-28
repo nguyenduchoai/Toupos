@@ -2,43 +2,136 @@
 	<thead>
 		<tr>
 			<td>
+				<p class="text-right">
+					<small class="text-muted-imp">
+						@if(!empty($receipt_details->invoice_no_prefix))
+							{!! $receipt_details->invoice_no_prefix !!}
+						@endif
 
-			@if(!empty($receipt_details->invoice_heading))
-				<p class="text-right text-muted-imp" style="font-weight: bold; font-size: 18px !important">{!! $receipt_details->invoice_heading !!}</p>
-			@endif
-
-			<p class="text-right">
-				@if(!empty($receipt_details->invoice_no_prefix))
-					{!! $receipt_details->invoice_no_prefix !!}
-				@endif
-
-				{{$receipt_details->invoice_no}}
-			</p>
-
+						{{$receipt_details->invoice_no}}
+					</small>
+				</p>
 			</td>
 		</tr>
 	</thead>
 
 	<tbody>
 		<tr>
-			<td>
+			<td class="text-center">
+				@if(!empty($receipt_details->header_text))
+					{!! $receipt_details->header_text !!}
+				@endif
 
-@if(!empty($receipt_details->header_text))
-	<div class="row invoice-info">
-		<div class="col-xs-12">
-			{!! $receipt_details->header_text !!}
-		</div>
-	</div>
-@endif
+				@php
+					$sub_headings = implode('<br/>', array_filter([$receipt_details->sub_heading_line1, $receipt_details->sub_heading_line2, $receipt_details->sub_heading_line3, $receipt_details->sub_heading_line4, $receipt_details->sub_heading_line5]));
+				@endphp
+
+				@if(!empty($sub_headings))
+					<span>{!! $sub_headings !!}</span>
+				@endif
+
+				@if(!empty($receipt_details->invoice_heading))
+					<p class="" style="font-weight: bold; font-size: 35px !important">{!! $receipt_details->invoice_heading !!}</p>
+				@endif
+			</td>
+		</tr>
+
+		<tr>
+			<td>
 
 <!-- business information here -->
 <div class="row invoice-info">
+
+	<div class="col-md-6 invoice-col width-50">
+
+		<div class="text-right font-23">
+			@if(!empty($receipt_details->invoice_no_prefix))
+				<span class="pull-left">{!! $receipt_details->invoice_no_prefix !!}</span>
+			@endif
+
+			{{$receipt_details->invoice_no}}
+		</div>
+
+		<!-- Total Due-->
+		@if(!empty($receipt_details->total_due))
+			<div class="bg-light-blue-active text-right font-23 padding-5">
+				<span class="pull-left bg-light-blue-active">
+					{!! $receipt_details->total_due_label !!}
+				</span>
+
+				{{$receipt_details->total_due}}
+			</div>
+		@endif
+
+		@if(!empty($receipt_details->all_due))
+			<div class="bg-light-blue-active text-right font-23 padding-5">
+				<span class="pull-left bg-light-blue-active">
+					{!! $receipt_details->all_bal_label !!}
+				</span>
+
+				{{$receipt_details->all_due}}
+			</div>
+		@endif
+		
+		<!-- Total Paid-->
+		@if(!empty($receipt_details->total_paid))
+			<div class="text-right font-23 color-555">
+				<span class="pull-left">{!! $receipt_details->total_paid_label !!}</span>
+				{{$receipt_details->total_paid}}
+			</div>
+		@endif
+		<!-- Date-->
+		@if(!empty($receipt_details->date_label))
+			<div class="text-right font-23 color-555">
+				<span class="pull-left">
+					{{$receipt_details->date_label}}
+				</span>
+
+				{{$receipt_details->invoice_date}}
+			</div>
+		@endif
+
+		<div class="word-wrap">
+			@if(!empty($receipt_details->customer_label))
+				<b>{{ $receipt_details->customer_label }}</b><br/>
+			@endif
+
+			<!-- customer info -->
+			@if(!empty($receipt_details->customer_name))
+				{{ $receipt_details->customer_name }}<br>
+			@endif
+			@if(!empty($receipt_details->customer_info))
+				{!! $receipt_details->customer_info !!}
+			@endif
+			@if(!empty($receipt_details->client_id_label))
+				<br/>
+				<strong>{{ $receipt_details->client_id_label }}</strong> {{ $receipt_details->client_id }}
+			@endif
+			@if(!empty($receipt_details->customer_tax_label))
+				<br/>
+				<strong>{{ $receipt_details->customer_tax_label }}</strong> {{ $receipt_details->customer_tax_number }}
+			@endif
+			@if(!empty($receipt_details->customer_custom_fields))
+				<br/>{!! $receipt_details->customer_custom_fields !!}
+			@endif
+			@if(!empty($receipt_details->sales_person_label))
+				<br/>
+				<strong>{{ $receipt_details->sales_person_label }}</strong> {{ $receipt_details->sales_person }}
+			@endif
+
+			@if(!empty($receipt_details->customer_rp_label))
+				<br/>
+				<strong>{{ $receipt_details->customer_rp_label }}</strong> {{ $receipt_details->customer_total_rp }}
+			@endif
+		</div>
+
+	</div>
 
 	<div class="col-md-6 invoice-col width-50 color-555">
 		
 		<!-- Logo -->
 		@if(!empty($receipt_details->logo))
-			<img src="{{$receipt_details->logo}}" class="img">
+			<img src="{{$receipt_details->logo}}" class="img center-block">
 			<br/>
 		@endif
 
@@ -91,144 +184,40 @@
 				{{$receipt_details->service_staff}}
 			</p>
         @endif
-	</div>
 
-	<div class="col-md-6 invoice-col width-50">
 
-		<p class="text-right font-30">
-			@if(!empty($receipt_details->invoice_no_prefix))
-				<span class="pull-left">{!! $receipt_details->invoice_no_prefix !!}</span>
-			@endif
 
-			{{$receipt_details->invoice_no}}
-		</p>
+        <div class="word-wrap">
 
-		<!-- Total Due-->
-		@if(!empty($receipt_details->total_due))
-			<p class="bg-light-blue-active text-right font-23 padding-5">
-				<span class="pull-left bg-light-blue-active">
-					{!! $receipt_details->total_due_label !!}
-				</span>
-
-				{{$receipt_details->total_due}}
-			</p>
-		@endif
-
-		@if(!empty($receipt_details->all_due))
-			<p class="bg-light-blue-active text-right font-23 padding-5">
-				<span class="pull-left bg-light-blue-active">
-					{!! $receipt_details->all_bal_label !!}
-				</span>
-
-				{{$receipt_details->all_due}}
-			</p>
-		@endif
-		
-		<!-- Total Paid-->
-		@if(!empty($receipt_details->total_paid))
-			<p class="text-right font-23 color-555">
-				<span class="pull-left">{!! $receipt_details->total_paid_label !!}</span>
-				{{$receipt_details->total_paid}}
-			</p>
-		@endif
-		<!-- Date-->
-		@if(!empty($receipt_details->date_label))
-			<p class="text-right font-23 color-555">
-				<span class="pull-left">
-					{{$receipt_details->date_label}}
-				</span>
-
-				{{$receipt_details->invoice_date}}
-			</p>
-		@endif
-	</div>
-</div>
-
-<div class="row invoice-info color-555">
-	<br/>
-	<div class="col-md-6 invoice-col width-50 word-wrap">
-		@if(!empty($receipt_details->customer_label))
-			<b>{{ $receipt_details->customer_label }}</b><br/>
-		@endif
-
-		<!-- customer info -->
-		@if(!empty($receipt_details->customer_name))
-			{{ $receipt_details->customer_name }}<br>
-		@endif
-		@if(!empty($receipt_details->customer_info))
-			{!! $receipt_details->customer_info !!}
-		@endif
-		@if(!empty($receipt_details->client_id_label))
-			<br/>
-			<strong>{{ $receipt_details->client_id_label }}</strong> {{ $receipt_details->client_id }}
-		@endif
-		@if(!empty($receipt_details->customer_tax_label))
-			<br/>
-			<strong>{{ $receipt_details->customer_tax_label }}</strong> {{ $receipt_details->customer_tax_number }}
-		@endif
-		@if(!empty($receipt_details->customer_custom_fields))
-			<br/>{!! $receipt_details->customer_custom_fields !!}
-		@endif
-		@if(!empty($receipt_details->sales_person_label))
-			<br/>
-			<strong>{{ $receipt_details->sales_person_label }}</strong> {{ $receipt_details->sales_person }}
-		@endif
-
-		@if(!empty($receipt_details->customer_rp_label))
-			<br/>
-			<strong>{{ $receipt_details->customer_rp_label }}</strong> {{ $receipt_details->customer_total_rp }}
-		@endif
-	</div>
-
-	
-	<div class="col-md-6 invoice-col width-50 word-wrap">
-		<p>
-			@if(!empty($receipt_details->sub_heading_line1))
-				{{ $receipt_details->sub_heading_line1 }}
-			@endif
-			@if(!empty($receipt_details->sub_heading_line2))
-				<br>{{ $receipt_details->sub_heading_line2 }}
-			@endif
-			@if(!empty($receipt_details->sub_heading_line3))
-				<br>{{ $receipt_details->sub_heading_line3 }}
-			@endif
-			@if(!empty($receipt_details->sub_heading_line4))
-				<br>{{ $receipt_details->sub_heading_line4 }}
-			@endif		
-			@if(!empty($receipt_details->sub_heading_line5))
-				<br>{{ $receipt_details->sub_heading_line5 }}
-			@endif
-		</p>
-
-		<p class="text-right color-555">
-		@if(!empty($receipt_details->serial_no_label) || !empty($receipt_details->repair_serial_no))
-			@if(!empty($receipt_details->serial_no_label))
-				<span class="pull-left">
-					<strong>{!! $receipt_details->serial_no_label !!}</strong>
-				</span>
-			@endif
-			{{$receipt_details->repair_serial_no}}<br>
-        @endif
-		@if(!empty($receipt_details->repair_status_label) || !empty($receipt_details->repair_status))
-			@if(!empty($receipt_details->repair_status_label))
-				<span class="pull-left">
-					<strong>{!! $receipt_details->repair_status_label !!}</strong>
-				</span>
-			@endif
-			{{$receipt_details->repair_status}}<br>
-        @endif
-        
-        @if(!empty($receipt_details->repair_warranty_label) || !empty($receipt_details->repair_warranty))
-			@if(!empty($receipt_details->repair_warranty_label))
-				<span class="pull-left">
-					<strong>{!! $receipt_details->repair_warranty_label !!}</strong>
-				</span>
-			@endif
-			{{$receipt_details->repair_warranty}}
-			<br>
-        @endif
-        </p>
-	</div>
+			<p class="text-right color-555">
+			@if(!empty($receipt_details->serial_no_label) || !empty($receipt_details->repair_serial_no))
+				@if(!empty($receipt_details->serial_no_label))
+					<span class="pull-left">
+						<strong>{!! $receipt_details->serial_no_label !!}</strong>
+					</span>
+				@endif
+				{{$receipt_details->repair_serial_no}}<br>
+	        @endif
+			@if(!empty($receipt_details->repair_status_label) || !empty($receipt_details->repair_status))
+				@if(!empty($receipt_details->repair_status_label))
+					<span class="pull-left">
+						<strong>{!! $receipt_details->repair_status_label !!}</strong>
+					</span>
+				@endif
+				{{$receipt_details->repair_status}}<br>
+	        @endif
+	        
+	        @if(!empty($receipt_details->repair_warranty_label) || !empty($receipt_details->repair_warranty))
+				@if(!empty($receipt_details->repair_warranty_label))
+					<span class="pull-left">
+						<strong>{!! $receipt_details->repair_warranty_label !!}</strong>
+					</span>
+				@endif
+				{{$receipt_details->repair_warranty}}
+				<br>
+	        @endif
+	        </p>
+		</div>
 	@if(!empty($receipt_details->defects_label) || !empty($receipt_details->repair_defects))
 		<div class="col-xs-12">
 			<p class="color-555">
@@ -240,6 +229,8 @@
 			</p>
 		</div>
     @endif
+
+	</div>
 </div>
 
 <div class="row color-555">
@@ -307,7 +298,7 @@
 							{{$line['quantity']}} {{$line['units']}}
 						</td>
 						<td class="text-right">
-							{{$line['unit_price_exc_tax']}}
+							{{$line['unit_price_inc_tax']}}
 						</td>
 						<td class="text-right">
 							{{$line['line_total']}}

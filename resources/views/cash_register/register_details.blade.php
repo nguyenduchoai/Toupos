@@ -88,14 +88,6 @@
                 <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_other }}</span>
               </td>
             </tr>
-            <tr>
-              <td>
-                @lang('cash_register.total_sales'):
-              </td>
-              <td>
-                <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_sale }}</span>
-              </td>
-            </tr>
             <tr class="success">
               <th>
                 @lang('cash_register.total_refund')
@@ -132,10 +124,26 @@
             </tr>
             <tr class="success">
               <th>
-                @lang('cash_register.total_cash')
+                @lang('lang_v1.total_payment')
               </th>
               <td>
                 <b><span class="display_currency" data-currency_symbol="true">{{ $register_details->cash_in_hand + $register_details->total_cash - $register_details->total_cash_refund }}</span></b>
+              </td>
+            </tr>
+            <tr class="success">
+              <th>
+                @lang('lang_v1.credit_sales'):
+              </th>
+              <td>
+                <b><span class="display_currency" data-currency_symbol="true">{{ $details['transaction_details']->total_sales - $register_details->total_sale }}</span></b>
+              </td>
+            </tr>
+            <tr class="success">
+              <th>
+                @lang('cash_register.total_sales'):
+              </th>
+              <td>
+                <b><span class="display_currency" data-currency_symbol="true">{{ $details['transaction_details']->total_sales }}</span></b>
               </td>
             </tr>
           </table>

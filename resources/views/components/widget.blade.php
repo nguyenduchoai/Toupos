@@ -9,7 +9,7 @@
         @endif
     @else
         <div class="box-header">
-            {{$header}}
+            {!! $header !!}
         </div>
     @endif
 

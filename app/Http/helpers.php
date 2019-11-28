@@ -21,7 +21,7 @@ function pos_boot($ul, $pt, $lc, $em, $un, $type = 1, $pid = null){
             'license_code' => $lc,
             'email' => $em,
             'username' => $un,
-            'product_id' => config('author.pid')
+            'product_id' => $pid
         ]
     ];
     curl_setopt_array($ch, $curlConfig);

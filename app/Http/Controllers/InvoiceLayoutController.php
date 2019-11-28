@@ -20,7 +20,8 @@ class InvoiceLayoutController extends Controller
         $this->designs = ['classic' => 'Classic',
                 'elegant' => 'Elegant',
                 'detailed' => 'Detailed',
-                'columnize-taxes' => 'Columnize Taxes'
+                'columnize-taxes' => 'Columnize Taxes',
+                'slim' => 'Slim'
             ];
     }
 

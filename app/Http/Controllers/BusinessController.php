@@ -4,22 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Business;
 use App\Currency;
+use App\Notifications\TestEmailNotification;
 use App\System;
 use App\TaxRate;
 use App\Unit;
 use App\User;
 use App\Utils\BusinessUtil;
-
 use App\Utils\ModuleUtil;
 use App\Utils\RestaurantUtil;
 use Carbon\Carbon;
 use DateTimeZone;
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Facades\DB;
-
 use Spatie\Permission\Models\Permission;
 
 class BusinessController extends Controller
@@ -188,6 +185,9 @@ class BusinessController extends Controller
 
             //Create owner.
             $owner_details = $request->only(['surname', 'first_name', 'last_name', 'username', 'email', 'password', 'language']);
+
+            $owner_details['language'] = empty($owner_details['language']) ? config('app.locale') : $owner_details['language'];
+
             $user = User::create_user($owner_details);
 
             $business_details = $request->only(['name', 'start_date', 'currency_id', 'time_zone']);
@@ -323,25 +323,11 @@ class BusinessController extends Controller
 
         $shortcuts = json_decode($business->keyboard_shortcuts, true);
         
-        if (empty($business->pos_settings)) {
-            $pos_settings = $this->businessUtil->defaultPosSettings();
-        } else {
-            $pos_settings = json_decode($business->pos_settings, true);
-        }
+        $pos_settings = empty($business->pos_settings) ? $this->businessUtil->defaultPosSettings() : json_decode($business->pos_settings, true);
 
-        $email_settings = [];
-        if (empty($business->email_settings)) {
-            $email_settings = $this->businessUtil->defaultEmailSettings();
-        } else {
-            $email_settings = $business->email_settings;
-        }
+        $email_settings = empty($business->email_settings) ? $this->businessUtil->defaultEmailSettings() : $business->email_settings;
 
-        $sms_settings = [];
-        if (empty($business->sms_settings)) {
-            $sms_settings = $this->businessUtil->defaultSmsSettings();
-        } else {
-            $sms_settings = $business->sms_settings;
-        }
+        $sms_settings = empty($business->sms_settings) ? $this->businessUtil->defaultSmsSettings() : $business->sms_settings;
 
         $modules = $this->avlble_modules;
 
@@ -553,5 +539,70 @@ class BusinessController extends Controller
         }
 
         return $this->respond($settings_array);
+    }
+
+    /**
+     * Handles the testing of email configuration
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function testEmailConfiguration(Request $request)
+    {
+        try {
+            $email_settings = $request->input();
+
+            $data['email_settings'] = $email_settings;
+            \Notification::route('mail', $email_settings['mail_from_address'])
+            ->notify(new TestEmailNotification($data));
+
+            $output = [
+                'success' => 1,
+                'msg' => __('lang_v1.email_tested_successfully')
+            ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            $output = [
+                'success' => 0,
+                'msg' => $e->getMessage()
+            ];
+        }
+
+        return $output;
+    }
+
+    /**
+     * Handles the testing of sms configuration
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function testSmsConfiguration(Request $request)
+    {
+        try {
+            $sms_settings = $request->input();
+            
+            $data = [
+                'sms_settings' => $sms_settings,
+                'mobile_number' => $sms_settings['test_number'],
+                'sms_body' => 'This is a test SMS',
+            ];
+            if (!empty($sms_settings['test_number'])) {
+                $response = $this->businessUtil->sendSms($data);
+            } else {
+                $response = __('lang_v1.test_number_is_required');
+            }
+
+            $output = [
+                'success' => 1,
+                'msg' => $response
+            ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            $output = [
+                'success' => 0,
+                'msg' => $e->getMessage()
+            ];
+        }
+
+        return $output;
     }
 }

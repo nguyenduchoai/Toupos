@@ -8,11 +8,8 @@ use App\AccountType;
 use App\TransactionPayment;
 use App\Utils\Util;
 use DB;
-
 use Illuminate\Http\Request;
-
 use Illuminate\Http\Response;
-
 use Yajra\DataTables\Facades\DataTables;
 
 class AccountController extends Controller
@@ -47,20 +44,20 @@ class AccountController extends Controller
                 $join->whereNull('AT.deleted_at');
             })
             ->leftjoin(
-                'account_types as at',
+                'account_types as ats',
                 'accounts.account_type_id',
                 '=',
-                'at.id'
+                'ats.id'
             )
             ->leftjoin(
                 'account_types as pat',
-                'at.parent_account_type_id',
+                'ats.parent_account_type_id',
                 '=',
                 'pat.id'
             )
                                 ->where('accounts.business_id', $business_id)
-                                ->select(['accounts.name', 'account_number', 'accounts.note', 'accounts.id', 'accounts.account_type_id',
-                                    'at.name as account_type_name',
+                                ->select(['accounts.name', 'accounts.account_number', 'accounts.note', 'accounts.id', 'accounts.account_type_id',
+                                    'ats.name as account_type_name',
                                     'pat.name as parent_account_type_name',
                                     'is_closed', DB::raw("SUM( IF(AT.type='credit', amount, -1*amount) ) as balance")])
                                 ->groupBy('accounts.id');
@@ -233,11 +230,12 @@ class AccountController extends Controller
                             ->with(['transaction', 'transaction.contact', 'transfer_transaction'])
                             ->select(['type', 'amount', 'operation_date',
                                 'sub_type', 'transfer_transaction_id',
-                                DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.account_id  =account_transactions.account_id AND AT.deleted_at IS NULL) as balance'),
+                                DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.account_id  =account_transactions.account_id AND AT.deleted_at IS NULL AND AT.id <= account_transactions.id) as balance'),
                                 'transaction_id',
                                 'account_transactions.id'
                                 ])
                              ->groupBy('account_transactions.id')
+                             ->orderBy('account_transactions.id', 'desc')
                              ->orderBy('account_transactions.operation_date', 'desc');
             if (!empty(request()->input('type'))) {
                 $accounts->where('type', request()->input('type'));

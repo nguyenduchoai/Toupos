@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Discount;
 use App\Brands;
-use App\Category;
 use App\BusinessLocation;
-
-use Illuminate\Http\Request;
-
+use App\Category;
+use App\Discount;
 use App\Utils\Util;
-
-use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Yajra\DataTables\Facades\DataTables;
 
 class DiscountController extends Controller
 {

@@ -17,8 +17,8 @@
         <style>
             body {
                 min-height: 100vh;
-                background-color: #fff;
-                color: #636b6f;
+                background-color: #243949;
+                color: #fff;
                 background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.12'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             }
             .navbar-default {
@@ -27,6 +27,17 @@
             }
             .navbar-static-top {
                 margin-bottom: 19px;
+            }
+            .navbar-default .navbar-nav>li>a {
+                color: #fff;
+                font-weight: 600;
+                font-size: 15px
+            }
+            .navbar-default .navbar-nav>li>a:hover{
+                color: #ccc;
+            }
+            .navbar-default .navbar-brand {
+                color: #ccc;
             }
         </style>
     </head>
@@ -38,10 +49,13 @@
                 @yield('content')
             </div>
         </div>
-        <!-- jQuery 2.2.3 -->
-        <script src="{{ asset('AdminLTE/plugins/jQuery/jquery-2.2.3.min.js?v=' . $asset_v) }}"></script>
-        <script src="{{ asset('plugins/jquery-ui/jquery-ui.min.js?v=' . $asset_v) }}"></script>
-        <!-- Bootstrap 3.3.6 -->
-        <script src="{{ asset('bootstrap/js/bootstrap.min.js?v=' . $asset_v) }}"></script>
+        @include('layouts.partials.javascripts')
+    <script src="{{ asset('plugins/jquery.steps/jquery.steps.min.js?v=' . $asset_v) }}"></script>
+
+    <!-- Scripts -->
+    <script src="{{ asset('js/login.js?v=' . $asset_v) }}"></script>
+    <!-- iCheck -->
+    <script src="{{ asset('AdminLTE/plugins/iCheck/icheck.min.js?v=' . $asset_v) }}"></script>
+    @yield('javascript')
     </body>
 </html>

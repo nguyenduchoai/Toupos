@@ -14,7 +14,7 @@ class AddMfgQuantityUsedColumnToPurchaseLinesTable extends Migration
     public function up()
     {
         Schema::table('purchase_lines', function (Blueprint $table) {
-            $table->decimal('mfg_quantity_used', 20, 4)->default(0)->after('quantity_returned');
+            $table->decimal('mfg_quantity_used', 22, 4)->default(0)->after('quantity_returned');
         });
     }
 

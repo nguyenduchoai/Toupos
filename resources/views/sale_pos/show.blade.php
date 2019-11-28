@@ -18,10 +18,11 @@
           @if($sell->status == 'draft' && $sell->is_quotation == 1)
             {{ __('lang_v1.quotation') }}
           @else
-            {{ ucfirst( $sell->status ) }}
+            {{ __('sale.' . $sell->status) }}
           @endif
         <br>
-        <b>{{ __('sale.payment_status') }}:</b> {{ ucfirst( $sell->payment_status ) }}<br>
+        <b>{{ __('sale.payment_status') }}:</b> @if(!empty($sell->payment_status)){{ __('lang_v1.' . $sell->payment_status) }}<br>
+        @endif
       </div>
       <div class="col-sm-4">
         <b>{{ __('sale.customer_name') }}:</b> {{ $sell->contact->name }}<br>

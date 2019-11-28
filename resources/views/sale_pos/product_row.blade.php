@@ -112,6 +112,14 @@
 								$expiry_text = '(' . __('report.expired') . ')';
 							}
 						}
+
+						//preselected lot number if product searched by lot number
+						if(!empty($purchase_line_id) && $purchase_line_id == $lot_number->purchase_line_id) {
+							$selected = "selected";
+
+							$max_qty_rule = $lot_number->qty_available;
+							$max_qty_msg = __('lang_v1.quantity_error_msg_in_lot', ['qty'=> $lot_number->qty_formated, 'unit' => $product->unit  ]);
+						}
 					@endphp
 					<option value="{{$lot_number->purchase_line_id}}" data-qty_available="{{$lot_number->qty_available}}" data-msg-max="@lang('lang_v1.quantity_error_msg_in_lot', ['qty'=> $lot_number->qty_formated, 'unit' => $product->unit  ])" {{$selected}}>@if(!empty($lot_number->lot_number) && $lot_enabled == 1){{$lot_number->lot_number}} @endif @if($lot_enabled == 1 && $exp_enabled == 1) - @endif @if($exp_enabled == 1 && !empty($lot_number->exp_date)) @lang('product.exp_date'): {{@format_date($lot_number->exp_date)}} @endif {{$expiry_text}}</option>
 				@endforeach

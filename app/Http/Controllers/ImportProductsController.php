@@ -10,6 +10,7 @@ use App\Product;
 use App\TaxRate;
 use App\Transaction;
 use App\Unit;
+use App\Utils\ModuleUtil;
 use App\Utils\ProductUtil;
 use App\Variation;
 use App\VariationValueTemplate;
@@ -26,6 +27,7 @@ class ImportProductsController extends Controller
      *
      */
     protected $productUtil;
+    protected $moduleUtil;
 
     private $barcode_types;
 
@@ -35,9 +37,10 @@ class ImportProductsController extends Controller
      * @param ProductUtils $product
      * @return void
      */
-    public function __construct(ProductUtil $productUtil)
+    public function __construct(ProductUtil $productUtil, ModuleUtil $moduleUtil)
     {
         $this->productUtil = $productUtil;
+        $this->moduleUtil = $moduleUtil;
 
         //barcode types
         $this->barcode_types = $this->productUtil->barcode_types();
@@ -102,6 +105,15 @@ class ImportProductsController extends Controller
 
                 $is_valid = true;
                 $error_msg = '';
+
+                $total_rows = count($imported_data);
+
+                //Check if subscribed or not, then check for products quota
+                if (!$this->moduleUtil->isSubscribed($business_id)) {
+                    return $this->moduleUtil->expiredResponse();
+                } elseif (!$this->moduleUtil->isQuotaAvailable('products', $business_id, $total_rows)) {
+                    return $this->moduleUtil->quotaExpiredResponse('products', $business_id, action('ImportProductsController@index'));
+                }
 
                 DB::beginTransaction();
                 foreach ($imported_data as $key => $value) {

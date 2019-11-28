@@ -12,9 +12,9 @@ use DB;
 
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Hash;
 
 class ManageUserController extends Controller
 {
@@ -107,6 +107,7 @@ class ManageUserController extends Controller
         $username_ext = $this->getUsernameExtension();
         $contacts = Contact::contactDropdown($business_id, true, false);
         $locations = BusinessLocation::where('business_id', $business_id)
+                                    ->Active()
                                     ->get();
 
         return view('manage_user.create')

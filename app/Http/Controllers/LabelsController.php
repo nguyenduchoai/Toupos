@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Barcode;
-
 use App\Product;
 use App\Utils\ProductUtil;
-
 use App\Utils\TransactionUtil;
 use Illuminate\Http\Request;
 

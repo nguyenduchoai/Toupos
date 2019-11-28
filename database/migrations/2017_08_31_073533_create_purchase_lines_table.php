@@ -21,7 +21,7 @@ class CreatePurchaseLinesTable extends Migration
             $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
             $table->integer('variation_id')->unsigned();
             $table->foreign('variation_id')->references('id')->on('variations')->onDelete('cascade');
-            $table->integer('quantity');
+            $table->decimal('quantity', 22, 4);
             $table->decimal('purchase_price', 22, 4);
             $table->decimal('purchase_price_inc_tax', 22, 4)->default(0);
             $table->decimal('item_tax', 22, 4)->comment("Tax for one quantity");

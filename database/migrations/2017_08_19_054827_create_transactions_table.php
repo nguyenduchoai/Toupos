@@ -30,7 +30,7 @@ class CreateTransactionsTable extends Migration
             $table->foreign('tax_id')->references('id')->on('tax_rates')->onDelete('cascade');
             $table->decimal('tax_amount', 22, 4)->default(0);
             $table->enum('discount_type', ['fixed', 'percentage'])->nullable();
-            $table->string('discount_amount', 10)->nullable();
+            $table->decimal('discount_amount', 22, 4)->default(0);
             $table->string('shipping_details')->nullable();
             $table->decimal('shipping_charges', 22, 4)->default(0);
             $table->text('additional_notes')->nullable();

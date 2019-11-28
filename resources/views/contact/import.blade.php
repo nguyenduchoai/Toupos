@@ -71,7 +71,7 @@
                     <tr>
                         <td>1</td>
                         <td>@lang('contact.contact_type') <small class="text-muted">(@lang('lang_v1.required'))</small></td>
-                        <td>{!! __('lang_v1.contact_type_ins') !!}</td>
+                        <td>{!! __('lang_v1.import_contact_type_ins') !!}</td>
                     </tr>
                     <tr>
                         <td>2</td>

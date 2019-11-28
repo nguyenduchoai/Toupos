@@ -162,14 +162,14 @@ class NotificationUtil extends Util
         $user->notify(new RecurringInvoiceNotification($invoice));
     }
 
-    public function configureEmail($notificationInfo)
+    public function configureEmail($notificationInfo, $check_superadmin = true)
     {
         $email_settings = $notificationInfo['email_settings'];
 
         $is_superadmin_settings_allowed = System::getProperty('allow_email_settings_to_businesses');
 
         //Check if prefered email setting is superadmin email settings
-        if (!empty($is_superadmin_settings_allowed) && !empty($email_settings['use_superadmin_settings'])) {
+        if (!empty($is_superadmin_settings_allowed) && !empty($email_settings['use_superadmin_settings']) && $check_superadmin) {
             $email_settings['mail_driver'] = env('MAIL_DRIVER');
             $email_settings['mail_host'] = env('MAIL_HOST');
             $email_settings['mail_port'] = env('MAIL_PORT');

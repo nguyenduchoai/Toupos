@@ -61,6 +61,7 @@ return array(
     'Patchwork\\' => array($vendorDir . '/patchwork/utf8/src/Patchwork'),
     'Opis\\Closure\\' => array($vendorDir . '/opis/closure/src'),
     'Nwidart\\Modules\\' => array($vendorDir . '/nwidart/laravel-modules/src'),
+    'Nwidart\\Menus\\' => array($vendorDir . '/nwidart/laravel-menus/src'),
     'NunoMaduro\\Collision\\' => array($vendorDir . '/nunomaduro/collision/src'),
     'Nexmo\\' => array($vendorDir . '/nexmo/client/src'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),

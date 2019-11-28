@@ -80,6 +80,7 @@
                                     <tr>
                                         <th>@lang('sale.product')</th>
                                         <th>@lang('sale.customer_name')</th>
+                                        <th>@lang('lang_v1.contact_id')</th>
                                         <th>@lang('sale.invoice_no')</th>
                                         <th>@lang('messages.date')</th>
                                         <th>@lang('sale.qty')</th>
@@ -92,7 +93,7 @@
                                 </thead>
                                 <tfoot>
                                     <tr class="bg-gray font-17 footer-total text-center">
-                                        <td colspan="4"><strong>@lang('sale.total'):</strong></td>
+                                        <td colspan="5"><strong>@lang('sale.total'):</strong></td>
                                         <td id="footer_total_sold"></td>
                                         <td></td>
                                         <td></td>

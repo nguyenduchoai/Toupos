@@ -1165,7 +1165,7 @@ $(document).ready(function() {
     });
 
     //Business locations CRUD
-    var business_locations = $('#business_location_table').DataTable({
+    business_locations = $('#business_location_table').DataTable({
         processing: true,
         serverSide: true,
         bPaginate: false,
@@ -1518,43 +1518,7 @@ $(document).ready(function() {
         var end = start;
         var location_id = '';
 
-        var data = { start_date: start, end_date: end, location_id: location_id };
-
-        var loader = __fa_awesome();
-        $(
-            '.modal_opening_stock, .modal_total_transfer_shipping_charges, .modal_closing_stock, \
-            .modal_total_sell, .modal_total_purchase, .modal_total_expense, .modal_net_profit, \
-            .modal_total_adjustment, .modal_total_recovered, .modal_gross_profit'
-        ).html(loader);
-
-        $.ajax({
-            method: 'GET',
-            url: '/reports/profit-loss',
-            dataType: 'json',
-            data: data,
-            success: function(data) {
-                $('.modal_opening_stock').html(__currency_trans_from_en(data.opening_stock, true));
-                $('.modal_closing_stock').html(__currency_trans_from_en(data.closing_stock, true));
-                $('.modal_total_sell').html(__currency_trans_from_en(data.total_sell, true));
-                $('.modal_total_purchase').html(
-                    __currency_trans_from_en(data.total_purchase, true)
-                );
-                $('.modal_total_expense').html(__currency_trans_from_en(data.total_expense, true));
-                $('.modal_net_profit').html(__currency_trans_from_en(data.net_profit, true));
-                $('.modal_gross_profit').html(__currency_trans_from_en(data.gross_profit, true));
-                $('.modal_total_adjustment').html(
-                    __currency_trans_from_en(data.total_adjustment, true)
-                );
-                $('.modal_total_recovered').html(
-                    __currency_trans_from_en(data.total_recovered, true)
-                );
-                $('.modal_total_transfer_shipping_charges').html(
-                    __currency_trans_from_en(data.total_transfer_shipping_charges, true)
-                );
-                __highlight(data.net_profit, $('.modal_net_profit'));
-                __highlight(data.net_profit, $('.modal_gross_profit'));
-            },
-        });
+        updateProfitLoss(start, end, location_id);
     });
 
     //Used for Purchase & Sell invoice.
@@ -2234,5 +2198,105 @@ $(document).on('submit', 'form#edit_shipping_form', function(e){
                 toastr.error(result.msg);
             }
         },
+    });
+});
+
+
+function updateProfitLoss(start = null, end = null, location_id = null) {
+    if(start == null){
+        var start = $('#profit_loss_date_filter')
+                    .data('daterangepicker')
+                    .startDate.format('YYYY-MM-DD');
+    }
+    
+    if(end == null){
+        var end = $('#profit_loss_date_filter')
+                    .data('daterangepicker')
+                    .endDate.format('YYYY-MM-DD');
+    }
+
+    if(location_id == null){
+        var location_id = $('#profit_loss_location_filter').val();
+    }
+
+    var data = { start_date: start, end_date: end, location_id: location_id };
+
+    var loader = __fa_awesome();
+    var pl_span = $('span#pl_span');
+
+    pl_span.find(
+        '.opening_stock, .total_transfer_shipping_charges, .closing_stock, .total_sell, .total_purchase, \
+        .total_expense, .net_profit, .total_adjustment, .total_recovered, .total_sell_discount, \
+        .total_purchase_discount, .total_purchase_return, .total_sell_return, .gross_profit, \
+        .total_reward_amount, .total_payroll'
+    ).html(loader);
+
+    $.ajax({
+        method: 'GET',
+        url: '/reports/profit-loss',
+        dataType: 'json',
+        data: data,
+        success: function(data) {
+            pl_span.find('.opening_stock').html(__currency_trans_from_en(data.opening_stock, true));
+            pl_span.find('.closing_stock').html(__currency_trans_from_en(data.closing_stock, true));
+            pl_span.find('.total_sell').html(__currency_trans_from_en(data.total_sell, true));
+            pl_span.find('.total_purchase').html(__currency_trans_from_en(data.total_purchase, true));
+            pl_span.find('.total_expense').html(__currency_trans_from_en(data.total_expense, true));
+
+            if($('.total_payroll').length > 0) {
+                pl_span.find('.total_payroll').html(__currency_trans_from_en(data.total_payroll, true));
+            }
+
+            if($('.total_production_cost').length > 0) {
+                pl_span.find('.total_production_cost').html(__currency_trans_from_en(data.total_production_cost, true));
+            }
+
+            pl_span.find('.net_profit').html(__currency_trans_from_en(data.net_profit, true));
+            pl_span.find('.gross_profit').html(__currency_trans_from_en(data.gross_profit, true));
+            pl_span.find('.total_adjustment').html(__currency_trans_from_en(data.total_adjustment, true));
+            pl_span.find('.total_recovered').html(__currency_trans_from_en(data.total_recovered, true));
+            pl_span.find('.total_purchase_return').html(
+                __currency_trans_from_en(data.total_purchase_return, true)
+            );
+            pl_span.find('.total_transfer_shipping_charges').html(
+                __currency_trans_from_en(data.total_transfer_shipping_charges, true)
+            );
+            pl_span.find('.total_purchase_discount').html(
+                __currency_trans_from_en(data.total_purchase_discount, true)
+            );
+            pl_span.find('.total_sell_discount').html(
+                __currency_trans_from_en(data.total_sell_discount, true)
+            );
+            pl_span.find('.total_reward_amount').html(
+                __currency_trans_from_en(data.total_reward_amount, true)
+            );
+            pl_span.find('.total_sell_return').html(__currency_trans_from_en(data.total_sell_return, true));
+            __highlight(data.net_profit, pl_span.find('.net_profit'));
+            __highlight(data.net_profit, pl_span.find('.gross_profit'));
+        },
+    });
+}
+
+$(document).on('click', 'button.activate-deactivate-location', function(){
+    swal({
+        title: LANG.sure,
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then(willDelete => {
+        if (willDelete) {
+            $.ajax({
+                url: $(this).data('href'),
+                dataType: 'json',
+                success: function(result) {
+                    if (result.success == true) {
+                        toastr.success(result.msg);
+                        business_locations.ajax.reload();
+                    } else {
+                        toastr.error(result.msg);
+                    }
+                },
+            });
+        }
     });
 });

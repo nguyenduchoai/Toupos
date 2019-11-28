@@ -285,7 +285,8 @@ class CashRegisterUtil extends Util
                 ->where('transactions.status', 'final')
                 ->select(
                     DB::raw('SUM(tax_amount) as total_tax'),
-                    DB::raw('SUM(IF(discount_type = "percentage", total_before_tax*discount_amount/100, discount_amount)) as total_discount')
+                    DB::raw('SUM(IF(discount_type = "percentage", total_before_tax*discount_amount/100, discount_amount)) as total_discount'),
+                    DB::raw('SUM(final_total) as total_sales')
                 )
                 ->first();
 

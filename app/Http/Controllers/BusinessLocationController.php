@@ -5,27 +5,23 @@ namespace App\Http\Controllers;
 use App\BusinessLocation;
 use App\InvoiceLayout;
 use App\InvoiceScheme;
-    
-use Yajra\DataTables\Facades\DataTables;
+use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
-
-use App\Utils\Util;
-use App\Utils\ModuleUtil;
+use Yajra\DataTables\Facades\DataTables;
 
 class BusinessLocationController extends Controller
 {
-    protected $commonUtil;
+    protected $moduleUtil;
 
     /**
      * Constructor
      *
-     * @param Util $commonUtil
+     * @param ModuleUtil $moduleUtil
      * @return void
      */
-    public function __construct(Util $commonUtil, ModuleUtil $moduleUtil)
+    public function __construct(ModuleUtil $moduleUtil)
     {
-        $this->commonUtil = $commonUtil;
         $this->moduleUtil = $moduleUtil;
     }
 
@@ -57,7 +53,7 @@ class BusinessLocationController extends Controller
                     'il.id'
                 )
                 ->select(['business_locations.name', 'location_id', 'landmark', 'city', 'zip_code', 'state',
-                    'country', 'business_locations.id', 'ic.name as invoice_scheme', 'il.name as invoice_layout']);
+                    'country', 'business_locations.id', 'ic.name as invoice_scheme', 'il.name as invoice_layout', 'business_locations.is_active']);
 
             $permitted_locations = auth()->user()->permitted_locations();
             if ($permitted_locations != 'all') {
@@ -70,9 +66,12 @@ class BusinessLocationController extends Controller
                     '<button type="button" data-href="{{action(\'BusinessLocationController@edit\', [$id])}}" class="btn btn-xs btn-primary btn-modal" data-container=".location_edit_modal"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</button>
 
                     <a href="{{route(\'location.settings\', [$id])}}" class="btn btn-success btn-xs"><i class="fa fa-wrench"></i> @lang("messages.settings")</a>
+
+                    <button type="button" data-href="{{action(\'BusinessLocationController@activateDeactivateLocation\', [$id])}}" class="btn btn-xs activate-deactivate-location @if($is_active) btn-danger @else btn-success @endif"><i class="fa fa-power-off"></i> @if($is_active) @lang("lang_v1.deactivate_location") @else @lang("lang_v1.activate_location") @endif </button>
                     '
                 )
                 ->removeColumn('id')
+                ->removeColumn('is_active')
                 ->rawColumns([9])
                 ->make(false);
         }
@@ -138,10 +137,10 @@ class BusinessLocationController extends Controller
             $input['business_id'] = $business_id;
 
             //Update reference count
-            $ref_count = $this->commonUtil->setAndGetReferenceCount('business_location');
+            $ref_count = $this->moduleUtil->setAndGetReferenceCount('business_location');
 
             if (empty($input['location_id'])) {
-                $input['location_id'] = $this->commonUtil->generateReferenceNumber('business_location', $ref_count);
+                $input['location_id'] = $this->moduleUtil->generateReferenceNumber('business_location', $ref_count);
             }
 
             $location = BusinessLocation::create($input);
@@ -275,5 +274,42 @@ class BusinessLocationController extends Controller
         }
         echo $valid;
         exit;
+    }
+
+    /**
+     * Function to activate or deactivate a location.
+     * @param int $location_id
+     *
+     * @return json
+     */
+    public function activateDeactivateLocation($location_id)
+    {
+        if (!auth()->user()->can('business_settings.access')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = request()->session()->get('user.business_id');
+
+            $business_location = BusinessLocation::where('business_id', $business_id)
+                            ->findOrFail($location_id);
+
+            $business_location->is_active = !$business_location->is_active;
+            $business_location->save();
+
+            $msg = $business_location->is_active ? __('lang_v1.business_location_activated_successfully') : __('lang_v1.business_location_deactivated_successfully');
+
+            $output = ['success' => true,
+                            'msg' => $msg
+                        ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
+        }
+
+        return $output;
     }
 }

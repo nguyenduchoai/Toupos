@@ -143,9 +143,9 @@
 				<div class="col-sm-10 col-sm-offset-1">
 					<div class="form-group">
 						<div class="input-group">
-							<span class="input-group-addon">
-								<i class="fa fa-barcode"></i>
-							</span>
+							<div class="input-group-btn">
+								<button type="button" class="btn btn-default bg-white btn-flat" data-toggle="modal" data-target="#configure_search_modal" title="{{__('lang_v1.configure_product_search')}}"><i class="fa fa-barcode"></i></button>
+							</div>
 							{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'),
 							'autofocus' => true,
 							]); !!}
@@ -372,6 +372,8 @@
 </div>
 <!-- quick product modal -->
 <div class="modal fade quick_add_product_modal" tabindex="-1" role="dialog" aria-labelledby="modalTitle"></div>
+
+@include('sale_pos.partials.configure_search_modal')
 
 @stop
 

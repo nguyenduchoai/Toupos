@@ -210,10 +210,11 @@ class ModuleUtil extends Util
      *
      * @param string $type
      * @param int $business_id
+     * @param int $total_rows default 0
      *
      * @return boolean
      */
-    public static function isQuotaAvailable($type, $business_id)
+    public static function isQuotaAvailable($type, $business_id, $total_rows = 0)
     {
         $is_available = Module::has('Superadmin');
         
@@ -254,14 +255,15 @@ class ModuleUtil extends Util
                 }
             } elseif ($type == 'products') {
                 $max_allowed = isset($package->package_details['product_count']) ? $package->package_details['product_count'] : 0;
-
                 if ($max_allowed == 0) {
                     return true;
                 } else {
                     $count = Product::where('business_id', $business_id)
                             ->whereBetween('created_at', [$start_dt, $end_dt])
                             ->count();
-                    if ($count >= $max_allowed) {
+
+                    $total_products = $count + $total_rows;
+                    if ($total_products >= $max_allowed) {
                         return false;
                     }
                 }
@@ -327,6 +329,7 @@ class ModuleUtil extends Util
             $response_array = ['success' => 0,
                         'msg' => __("superadmin::lang.max_products", ['count' => $count])
                     ];
+
             return redirect($redirect_url)
                     ->with('status', $response_array);
         } elseif ($type == 'invoices') {

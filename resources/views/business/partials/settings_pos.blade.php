@@ -203,6 +203,19 @@
                 </div>
             </div>
         </div>
+        <div class="clearfix"></div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <div class="checkbox">
+                <br>
+                  <label>
+                    {!! Form::checkbox('pos_settings[enable_transaction_date]', 1,  
+                    empty($pos_settings['enable_transaction_date']) ? 0 : 1 , 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.enable_pos_transaction_date' ) }}
+                  </label>
+                </div>
+            </div>
+        </div>
 
         <div class="col-sm-6">
             <div class="form-group">
@@ -217,7 +230,7 @@
                 </div>
             </div>
         </div>
-
+        <div class="clearfix"></div>
         <div class="col-sm-4">
             <div class="form-group">
                 <div class="checkbox">

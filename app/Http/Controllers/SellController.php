@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\BusinessLocation;
-
 use App\Contact;
 use App\CustomerGroup;
 use App\InvoiceScheme;
@@ -15,7 +14,6 @@ use App\User;
 use App\Utils\BusinessUtil;
 use App\Utils\ContactUtil;
 use App\Utils\ModuleUtil;
-
 use App\Utils\ProductUtil;
 use App\Utils\TransactionUtil;
 use DB;
@@ -117,8 +115,6 @@ class SellController extends Controller
                     DB::raw('COALESCE(SR.final_total, 0) as amount_return'),
                     'SR.id as return_transaction_id'
                 );
-
-
 
             $permitted_locations = auth()->user()->permitted_locations();
             if ($permitted_locations != 'all') {

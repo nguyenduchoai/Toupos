@@ -168,7 +168,7 @@ class CurrenciesTableSeeder extends Seeder
             "thousand_separator" => ".", "decimal_separator" => ",", "created_at" => null , "updated_at" => null ],
             [ "id" => "77", "country" => "Mauritius", "currency" => "Rupees", "code" => "MUR", "symbol" => "₨",
             "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
-            [ "id" => "78", "country" => "Mexico", "currency" => "Pesos", "code" => "MX", "symbol" => '$',
+            [ "id" => "78", "country" => "Mexico", "currency" => "Pesos", "code" => "MXN", "symbol" => '$',
             "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
             [ "id" => "79", "country" => "Mongolia", "currency" => "Tugriks", "code" => "MNT", "symbol" => "₮",
             "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],

@@ -7,16 +7,7 @@
 <section class="content-header">
     <h1>@lang('business.business_settings')</h1>
     <br>
-    <div class="row">
-        <div class="col-md-8 col-xs-12 col-md-offset-2">
-            <div class="input-group">
-                <span class="input-group-addon"><i class="fa fa-search"></i></span>
-                <select id="search_settings" class="form-control" style="width: 100%;">
-                </select>
-            </div>
-            
-        </div>
-    </div>
+    @include('layouts.partials.search_settings')
 </section>
 
 <!-- Main content -->
@@ -105,55 +96,105 @@
 @stop
 @section('javascript')
 <script type="text/javascript">
-    $(document).ready( function(){
-        //Search Settings
-        //Set all labels as select2 options
-        label_objects = [];
-        select2_data = [{
-            id: '',
-            text: ''
-        }];
-        var i = 0;
-        $('.pos-tab-container label').each( function(){
-            label_objects.push($(this));
-            var label_text = $(this).text().trim().replace(":", "").replace("*", "");
-            select2_data.push(
-                {
-                    id: i,
-                    text: label_text
-                }
-            );
-            i++;
-        });
-        $('#search_settings').select2({
-            data: select2_data,
-            placeholder: '@lang("lang_v1.search_settings")',
-        });
-        $('#search_settings').change( function(){
-            //Get label position and add active class to the tab
-            var label_index = $(this).val();
-            var label = label_objects[label_index];
-            $('.pos-tab-content.active').removeClass('active');
-            var tab_content = label.closest('.pos-tab-content');
-            tab_content.addClass('active');
-            tab_index = $('.pos-tab-content').index(tab_content);
-            $('.list-group-item.active').removeClass('active');
-            $('.list-group-item').eq(tab_index).addClass('active');
-
-            //Highlight the label for three seconds
-            label.css('background-color', 'yellow');
-            setTimeout(function(){ 
-                label.css('background-color', ''); 
-            }, 3000);
-        });
-    });
-
     $(document).on('ifToggled', '#use_superadmin_settings', function() {
         if ($('#use_superadmin_settings').is(':checked')) {
             $('#toggle_visibility').addClass('hide');
+            $('.test_email_btn').addClass('hide');
         } else {
             $('#toggle_visibility').removeClass('hide');
+            $('.test_email_btn').removeClass('hide');
         }
+    });
+
+    $('#test_email_btn').click( function() {
+        var data = {
+            mail_driver: $('#mail_driver').val(),
+            mail_host: $('#mail_host').val(),
+            mail_port: $('#mail_port').val(),
+            mail_username: $('#mail_username').val(),
+            mail_password: $('#mail_password').val(),
+            mail_encryption: $('#mail_encryption').val(),
+            mail_from_address: $('#mail_from_address').val(),
+            mail_from_name: $('#mail_from_name').val(),
+        };
+        $.ajax({
+            method: 'post',
+            data: data,
+            url: "{{ action('BusinessController@testEmailConfiguration') }}",
+            dataType: 'json',
+            success: function(result) {
+                if (result.success == true) {
+                    swal({
+                        text: result.msg,
+                        icon: 'success'
+                    });
+                } else {
+                    swal({
+                        text: result.msg,
+                        icon: 'error'
+                    });
+                }
+            },
+        });
+    });
+
+    $('#test_sms_btn').click( function() {
+        var test_number = $('#test_number').val();
+        if (test_number.trim() == '') {
+            toastr.error('{{__("lang_v1.test_number_is_required")}}');
+            $('#test_number').focus();
+
+            return false;
+        }
+
+        var data = {
+            url: $('#sms_settings_url').val(),
+            send_to_param_name: $('#send_to_param_name').val(),
+            msg_param_name: $('#msg_param_name').val(),
+            request_method: $('#request_method').val(),
+            param_1: $('#sms_settings_param_key1').val(),
+            param_2: $('#sms_settings_param_key2').val(),
+            param_3: $('#sms_settings_param_key3').val(),
+            param_4: $('#sms_settings_param_key4').val(),
+            param_5: $('#sms_settings_param_key5').val(),
+            param_6: $('#sms_settings_param_key6').val(),
+            param_7: $('#sms_settings_param_key7').val(),
+            param_8: $('#sms_settings_param_key8').val(),
+            param_9: $('#sms_settings_param_key9').val(),
+            param_10: $('#sms_settings_param_key10').val(),
+
+            param_val_1: $('#sms_settings_param_val1').val(),
+            param_val_2: $('#sms_settings_param_val2').val(),
+            param_val_3: $('#sms_settings_param_val3').val(),
+            param_val_4: $('#sms_settings_param_val4').val(),
+            param_val_5: $('#sms_settings_param_val5').val(),
+            param_val_6: $('#sms_settings_param_val6').val(),
+            param_val_7: $('#sms_settings_param_val7').val(),
+            param_val_8: $('#sms_settings_param_val8').val(),
+            param_val_9: $('#sms_settings_param_val9').val(),
+            param_val_10: $('#sms_settings_param_val10').val(),
+            test_number: test_number
+        };
+
+        $.ajax({
+            method: 'post',
+            data: data,
+            url: "{{ action('BusinessController@testSmsConfiguration') }}",
+            dataType: 'json',
+            success: function(result) {
+                if (result.success == true) {
+                    swal({
+                        text: result.msg,
+                        icon: 'success'
+                    });
+                } else {
+                    swal({
+                        text: result.msg,
+                        icon: 'error'
+                    });
+                }
+            },
+        });
     });
 </script>
 @endsection

@@ -2,8 +2,8 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
 use DB;
+use Illuminate\Database\Eloquent\Model;
 
 class BusinessLocation extends Model
 {
@@ -25,7 +25,7 @@ class BusinessLocation extends Model
      */
     public static function forDropdown($business_id, $show_all = false, $receipt_printer_type_attribute = false, $append_id = true)
     {
-        $query = BusinessLocation::where('business_id', $business_id);
+        $query = BusinessLocation::where('business_id', $business_id)->Active();
 
         $permitted_locations = auth()->user()->permitted_locations();
         if ($permitted_locations != 'all') {
@@ -35,7 +35,8 @@ class BusinessLocation extends Model
         if ($append_id) {
             $query->select(
                 DB::raw("IF(location_id IS NULL OR location_id='', name, CONCAT(name, ' (', location_id, ')')) AS name"),
-                'id', 'receipt_printer_type'
+                'id',
+                'receipt_printer_type'
             );
         }
 
@@ -56,5 +57,16 @@ class BusinessLocation extends Model
         } else {
             return $locations;
         }
+    }
+
+    /**
+     * Scope a query to only include active location.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', 1);
     }
 }

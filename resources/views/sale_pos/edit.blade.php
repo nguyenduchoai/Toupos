@@ -51,6 +51,19 @@
 				<!-- /.box-header -->
 				<div class="box-body">
 					<div class="row">
+						@if(!empty($pos_settings['enable_transaction_date']))
+						<div class="col-md-4 col-sm-6">
+							<div class="form-group">
+								{!! Form::label('transaction_date', __('sale.sale_date') . ':*') !!}
+								<div class="input-group">
+									<span class="input-group-addon">
+										<i class="fa fa-calendar"></i>
+									</span>
+									{!! Form::text('transaction_date', @format_datetime($transaction->transaction_date), ['class' => 'form-control', 'readonly', 'required']); !!}
+								</div>
+							</div>
+						</div>
+						@endif
 						@if(config('constants.enable_sell_in_diff_currency') == true)
 							<div class="col-md-4 col-sm-6">
 								<div class="form-group">
@@ -128,9 +141,9 @@
 						<div class="@if(!empty($commission_agent)) col-sm-4 @else col-sm-6 @endif">
 							<div class="form-group">
 								<div class="input-group">
-									<span class="input-group-addon">
-										<i class="fa fa-barcode"></i>
-									</span>
+									<div class="input-group-btn">
+										<button type="button" class="btn btn-default bg-white btn-flat" data-toggle="modal" data-target="#configure_search_modal" title="{{__('lang_v1.configure_product_search')}}"><i class="fa fa-barcode"></i></button>
+									</div>
 									{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'), 'autofocus']); !!}
 									<span class="input-group-btn">
 										<button type="button" class="btn btn-default bg-white btn-flat pos_add_quick_product" data-href="{{action('ProductController@quickAdd')}}" data-container=".quick_add_product_modal"><i class="fa fa-plus-circle text-primary fa-lg"></i></button>
@@ -237,6 +250,7 @@
 </div>
 <!-- quick product modal -->
 <div class="modal fade quick_add_product_modal" tabindex="-1" role="dialog" aria-labelledby="modalTitle"></div>
+@include('sale_pos.partials.configure_search_modal')
 
 @stop
 @section('javascript')
