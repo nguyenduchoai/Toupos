@@ -63,6 +63,17 @@
         </div>
     </div>
 </div>
+
+<div class="col-md-8 col-xs-12">
+    <div class="form-group">
+        <div class="input-group">
+            {!! Form::text('test_number', null, ['class' => 'form-control','placeholder' => __('lang_v1.test_number'), 'id' => 'test_number']); !!}
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-success pull-right" id="test_sms_btn">@lang('lang_v1.test_sms_configuration')</button>
+            </span>
+        </div>
+    </div>
+</div>
 <!-- 02/10/19 DanhVT end -->
 <!-- 02/10/19 DanhVT remove -->
 <!-- 02/10/19 DanhVT end -->
