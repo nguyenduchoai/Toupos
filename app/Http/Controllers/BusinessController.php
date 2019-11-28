@@ -581,9 +581,13 @@ class BusinessController extends Controller
             $sms_settings = $request->input();
             
             $data = [
-                'sms_settings' => $sms_settings,
+                //28/11/19 DanhVT edit
+                // 'sms_settings' => $sms_settings,
+                'sms_settings' => request()->session()->get('business.sms_settings'),
                 'mobile_number' => $sms_settings['test_number'],
-                'sms_body' => 'This is a test SMS',
+                'sms_body' => 'Day la tin nhan mau tu TouPOS',
+                // 'sms_body' => 'This is a test SMS',
+                //28/11/19 DanhVT end
             ];
             if (!empty($sms_settings['test_number'])) {
                 $response = $this->businessUtil->sendSms($data);
