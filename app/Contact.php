@@ -2,12 +2,11 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Notifications\Notifiable;
-
 use DB;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+use Illuminate\Notifications\Notifiable;
 
 class Contact extends Authenticatable
 {
@@ -27,7 +26,20 @@ class Contact extends Authenticatable
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    
+
+    /**
+    * Get the business that owns the user.
+    */
+    public function business()
+    {
+        return $this->belongsTo(\App\Business::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('contacts.contact_status', 'active');
+    }
 
     public function scopeOnlySuppliers($query)
     {
@@ -37,6 +49,14 @@ class Contact extends Authenticatable
     public function scopeOnlyCustomers($query)
     {
         return $query->whereIn('contacts.type', ['customer', 'both']);
+    }
+
+    /**
+     * Get all of the contacts's notes & documents.
+     */
+    public function documentsAndnote()
+    {
+        return $this->morphMany('App\DocumentAndNote', 'notable');
     }
 
     /**
@@ -50,7 +70,10 @@ class Contact extends Authenticatable
      */
     public static function contactDropdown($business_id, $exclude_default = false, $prepend_none = true, $append_id = true)
     {
-        $query = Contact::where('business_id', $business_id);
+        $query = Contact::where('business_id', $business_id)
+                    ->where('type', '!=', 'lead')
+                    ->active();
+                    
         if ($exclude_default) {
             $query->where('is_default', 0);
         }
@@ -88,7 +111,8 @@ class Contact extends Authenticatable
     public static function suppliersDropdown($business_id, $prepend_none = true, $append_id = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->whereIn('type', ['supplier', 'both']);
+                        ->whereIn('type', ['supplier', 'both'])
+                        ->active();
 
         if ($append_id) {
             $all_contacts->select(
@@ -123,7 +147,8 @@ class Contact extends Authenticatable
     public static function customersDropdown($business_id, $prepend_none = true, $append_id = true)
     {
         $all_contacts = Contact::where('business_id', $business_id)
-                        ->whereIn('type', ['customer', 'both']);
+                        ->whereIn('type', ['customer', 'both'])
+                        ->active();
 
         if ($append_id) {
             $all_contacts->select(
@@ -150,10 +175,11 @@ class Contact extends Authenticatable
      * @param $prepend_all = false (boolean)
      * @return array
      */
-    public static function typeDropdown($prepend_all = false){
+    public static function typeDropdown($prepend_all = false)
+    {
         $types = [];
 
-        if($prepend_all){
+        if ($prepend_all) {
             $types[''] = __('lang_v1.all');
         }
 
@@ -162,5 +188,34 @@ class Contact extends Authenticatable
         $types['both'] = __('lang_v1.both_supplier_customer');
 
         return $types;
+    }
+
+    /**
+     * Return list of contact type by permissions.
+     *
+     * @return array
+     */
+    public static function getContactTypes()
+    {
+        $types = [];
+        if (auth()->user()->can('supplier.create')) {
+            $types['supplier'] = __('report.supplier');
+        }
+        if (auth()->user()->can('customer.create')) {
+            $types['customer'] = __('report.customer');
+        }
+        if (auth()->user()->can('supplier.create') && auth()->user()->can('customer.create')) {
+            $types['both'] = __('lang_v1.both_supplier_customer');
+        }
+
+        return $types;
+    }
+
+    public function getContactAddressAttribute()
+    {
+        $address = $this->city .
+        ', ' . $this->landmark . ', ' . $this->state . '<br>' . $this->country;
+
+        return $address;
     }
 }

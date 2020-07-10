@@ -53,7 +53,7 @@
                               <h5 class="widget-user-desc"><i class="fa fa-user-secret" title="Owner"></i> {{ $business->owner->first_name . ' ' . $business->owner->last_name}}</h5>
                               <h5 class="widget-user-desc"><i class="fa fa-envelope" title="Owner Email"></i> {{ $business->owner->email}}</h5>
                                 <h5 class="widget-user-desc"><i class="fa fa-mobile" title="Owner Contact"></i> {{ $business->owner->contact_no }}</h5>
-                                <h5 class="widget-user-desc"><i class="fa fa-phone" title="Business Contact"></i> {{ implode([$address->mobile, $address->alternate_number], ", ") }}</h5>
+                                <h5 class="widget-user-desc"><i class="fa fa-phone" title="Business Contact"></i> {{ implode([", ", $address->mobile, $address->alternate_number]) }}</h5>
                                 <address class="widget-user-desc">
                                   @php
                                     $address_array = [];
@@ -96,14 +96,14 @@
                             </h5>
                                 @if(!empty($business->subscriptions[0]))
                                     <h5 class="widget-user-desc">
-                                        <i class="fa fa-clock-o"></i> 
+                                        <i class="fas fa-clock"></i> 
                                             @lang('superadmin::lang.remaining', ['days' => \Carbon::today()->diffInDays($business->subscriptions[0]->end_date)])
                                     </h5>
                                 @endif
                             </div>
                             <div class="box-footer">
                                 <a href="{{action('\Modules\Superadmin\Http\Controllers\BusinessController@show', [$business->id])}}"
-                                class="btn btn-info btn-xs">@lang('messages.view' )</a>
+                                class="btn btn-info btn-xs">@lang('superadmin::lang.manage' )</a>
 
                                 <button type="button" class="btn btn-primary btn-xs btn-modal" data-href="{{action('\Modules\Superadmin\Http\Controllers\SuperadminSubscriptionsController@create', ['business_id' => $business->id])}}" data-container=".view_modal">
                                     @lang('superadmin::lang.add_subscription' )

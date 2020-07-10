@@ -91,10 +91,11 @@ class PayrollController extends Controller
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-right" role="menu">';
 
-                        $html .= '<li><a href="#" data-href="' . action('\Modules\Essentials\Http\Controllers\PayrollController@show', [$row->id]) . '" data-container=".view_modal"><i class="fa fa-eye" aria-hidden="true"></i> ' . __("messages.view") . '</a></li>';
+                        $html .= '<li><a href="#" data-href="' . action('\Modules\Essentials\Http\Controllers\PayrollController@show', [$row->id]) . '" data-container=".view_modal" class="btn-modal"><i class="fa fa-eye" aria-hidden="true"></i> ' . __("messages.view") . '</a></li>';
 
                         if ($is_admin) {
                             $html .= '<li><a href="' . action('\Modules\Essentials\Http\Controllers\PayrollController@edit', [$row->id]) . '"><i class="fa fa-edit" aria-hidden="true"></i> ' . __("messages.edit") . '</a></li>';
+                            $html .= '<li><a href="' . action('\Modules\Essentials\Http\Controllers\PayrollController@destroy', [$row->id]) . '" class="delete-payroll"><i class="fa fa-trash" aria-hidden="true"></i> ' . __("messages.delete") . '</a></li>';
                         }
 
                         $html .= '<li><a href="' . action('TransactionPaymentController@show', [$row->id]) . '" class="view_payment_modal"><i class="fa fa-money"></i> ' . __("purchase.view_payments") . '</a></li>';
@@ -172,8 +173,25 @@ class PayrollController extends Controller
             $month_name = $end_date->format('F');
             $total_work_duration = $this->essentialsUtil->getTotalWorkDuration('hour', $employee_id, $business_id, $start_date, $end_date->format('Y-m-d'));
 
+            $allowances_and_deductions = $this->essentialsUtil->getEmployeeAllowancesAndDeductions($business_id, $employee_id, $start_date, $end_date);
+            $allowances = [];
+            $deductions = [];
+            foreach ($allowances_and_deductions as $ad) {
+                if ($ad->type == 'allowance') {
+                    $allowances['allowance_names'][] = $ad->description;
+                    $allowances['allowance_amounts'][] = $ad->amount_type == 'fixed' ?$ad->amount : 0;
+                    $allowances['allowance_types'][] = $ad->amount_type;
+                    $allowances['allowance_percents'][] = $ad->amount_type == 'percent' ? $ad->amount : 0;
+                } else {
+                    $deductions['deduction_names'][] = $ad->description;
+                    $deductions['deduction_amounts'][] = $ad->amount_type == 'fixed' ? $ad->amount : 0;
+                    $deductions['deduction_types'][] = $ad->amount_type;
+                    $deductions['deduction_percents'][] = $ad->amount_type == 'percent' ? $ad->amount : 0;
+                }
+            }
+
             return view('essentials::payroll.create')
-                    ->with(compact('employee', 'total_work_duration', 'month_name', 'transaction_date', 'year'));
+                    ->with(compact('employee', 'total_work_duration', 'month_name', 'transaction_date', 'year', 'allowances', 'deductions'));
         } else {
             return redirect()->action('\Modules\Essentials\Http\Controllers\PayrollController@edit', $payroll->id);
         }
@@ -205,34 +223,9 @@ class PayrollController extends Controller
             $input['status'] = 'final';
             $input['total_before_tax'] = $input['final_total'];
 
-            $allowance_names = $request->input('allowance_names');
-            $allowance_names_array = [];
-            $allowance_amounts = [];
-            foreach ($request->input('allowance_amounts') as $key => $value) {
-                if (!empty($allowance_names[$key])) {
-                    $allowance_amounts[] = $this->moduleUtil->num_uf($value);
-                    $allowance_names_array[] = $allowance_names[$key];
-                }
-            }
-
-            $deduction_names = $request->input('deduction_names');
-            $deduction_names_array = [];
-            $deduction_amounts = [];
-            foreach ($request->input('deduction_amounts') as $key => $value) {
-                if (!empty($deduction_names[$key])) {
-                    $deduction_names_array[] = $deduction_names[$key];
-                    $deduction_amounts[] = $this->moduleUtil->num_uf($value);
-                }
-            }
-
-            $input['essentials_allowances'] = json_encode([
-                    'allowance_names' => $allowance_names_array,
-                    'allowance_amounts' => $allowance_amounts,
-                ]);
-            $input['essentials_deductions'] = json_encode([
-                    'deduction_names' => $deduction_names_array,
-                    'deduction_amounts' => $deduction_amounts,
-                ]);
+            $allowances_and_deductions = $this->getAllowanceAndDeductionJson($request);
+            $input['essentials_allowances'] = $allowances_and_deductions['essentials_allowances'];
+            $input['essentials_deductions'] = $allowances_and_deductions['essentials_deductions'];
 
             DB::beginTransaction();
             //Update reference count
@@ -267,6 +260,52 @@ class PayrollController extends Controller
         return redirect()->action('\Modules\Essentials\Http\Controllers\PayrollController@index')->with('status', $output);
     }
 
+    private function getAllowanceAndDeductionJson($request)
+    {
+        $allowance_names = $request->input('allowance_names');
+        $allowance_types = $request->input('allowance_types');
+        $allowance_percents = $request->input('allowance_percent');
+        $allowance_names_array = [];
+        $allowance_percent_array = [];
+        $allowance_amounts = [];
+        foreach ($request->input('allowance_amounts') as $key => $value) {
+            if (!empty($allowance_names[$key])) {
+                $allowance_amounts[] = $this->moduleUtil->num_uf($value);
+                $allowance_names_array[] = $allowance_names[$key];
+                $allowance_percent_array[] = !empty($allowance_percents[$key]) ? $this->moduleUtil->num_uf($allowance_percents[$key]) : 0;
+            }
+        }
+
+        $deduction_names = $request->input('deduction_names');
+        $deduction_types = $request->input('deduction_types');
+        $deduction_percents = $request->input('deduction_percent');
+        $deduction_names_array = [];
+        $deduction_percents_array = [];
+        $deduction_amounts = [];
+        foreach ($request->input('deduction_amounts') as $key => $value) {
+            if (!empty($deduction_names[$key])) {
+                $deduction_names_array[] = $deduction_names[$key];
+                $deduction_amounts[] = $this->moduleUtil->num_uf($value);
+                $deduction_percents_array[] = !empty($deduction_percents[$key]) ? $this->moduleUtil->num_uf($deduction_percents[$key]) : 0;
+            }
+        }
+
+        $output['essentials_allowances'] = json_encode([
+                'allowance_names' => $allowance_names_array,
+                'allowance_amounts' => $allowance_amounts,
+                'allowance_types' => $allowance_types,
+                'allowance_percents' => $allowance_percent_array
+            ]);
+        $output['essentials_deductions'] = json_encode([
+                'deduction_names' => $deduction_names_array,
+                'deduction_amounts' => $deduction_amounts,
+                'deduction_types' => $deduction_types,
+                'deduction_percents' => $deduction_percents_array
+            ]);
+
+        return $output;
+    }
+
     /**
      * Show the specified resource.
      * @return Response
@@ -288,7 +327,9 @@ class PayrollController extends Controller
         $allowances = !empty($payroll->essentials_allowances) ? json_decode($payroll->essentials_allowances, true) : [];
         $deductions = !empty($payroll->essentials_deductions) ? json_decode($payroll->essentials_deductions, true) : [];
 
-        return view('essentials::payroll.show')->with(compact('payroll', 'month_name', 'allowances', 'deductions', 'year'));
+        $payment_types = $this->moduleUtil->payment_types();
+
+        return view('essentials::payroll.show')->with(compact('payroll', 'month_name', 'allowances', 'deductions', 'year', 'payment_types'));
     }
 
     /**
@@ -338,34 +379,9 @@ class PayrollController extends Controller
             $input['essentials_amount_per_unit_duration'] = $this->moduleUtil->num_uf($input['essentials_amount_per_unit_duration']);
             $input['total_before_tax'] = $input['final_total'];
 
-            $allowance_names = $request->input('allowance_names');
-            $allowance_names_array = [];
-            $allowance_amounts = [];
-            foreach ($request->input('allowance_amounts') as $key => $value) {
-                if (!empty($allowance_names[$key])) {
-                    $allowance_amounts[] = $this->moduleUtil->num_uf($value);
-                    $allowance_names_array[] = $allowance_names[$key];
-                }
-            }
-
-            $deduction_names = $request->input('deduction_names');
-            $deduction_names_array = [];
-            $deduction_amounts = [];
-            foreach ($request->input('deduction_amounts') as $key => $value) {
-                if (!empty($deduction_names[$key])) {
-                    $deduction_names_array[] = $deduction_names[$key];
-                    $deduction_amounts[] = $this->moduleUtil->num_uf($value);
-                }
-            }
-
-            $input['essentials_allowances'] = json_encode([
-                    'allowance_names' => $allowance_names_array,
-                    'allowance_amounts' => $allowance_amounts,
-                ]);
-            $input['essentials_deductions'] = json_encode([
-                    'deduction_names' => $deduction_names_array,
-                    'deduction_amounts' => $deduction_amounts,
-                ]);
+            $allowances_and_deductions = $this->getAllowanceAndDeductionJson($request);
+            $input['essentials_allowances'] = $allowances_and_deductions['essentials_allowances'];
+            $input['essentials_deductions'] = $allowances_and_deductions['essentials_deductions'];
 
             DB::beginTransaction();
             $payroll = Transaction::where('business_id', $business_id)
@@ -397,7 +413,41 @@ class PayrollController extends Controller
      * Remove the specified resource from storage.
      * @return Response
      */
-    public function destroy()
+    public function destroy($id)
     {
+        $business_id = request()->session()->get('user.business_id');
+
+        if (!(auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'essentials_module'))) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (request()->ajax()) {
+            try {
+                $is_admin = $this->moduleUtil->is_admin(auth()->user(), $business_id);
+
+                if ($is_admin) {
+                    $payroll = Transaction::where('business_id', $business_id)
+                                ->where('type', 'payroll')
+                                ->where('id', $id)
+                                ->delete();
+
+                    $output = ['success' => true,
+                                'msg' => __("lang_v1.deleted_success")
+                            ];
+                } else {
+                    $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
+                }
+            } catch (\Exception $e) {
+                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+                $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
+            }
+
+            return $output;
+        }
     }
 }

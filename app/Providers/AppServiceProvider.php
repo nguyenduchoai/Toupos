@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\System;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,17 +28,34 @@ class AppServiceProvider extends ServiceProvider
 
         //Laravel 5.6 uses Bootstrap 4 by default. Shift did not update your front-end resources or dependencies as this could impact your UI. If you are using Bootstrap and wish to continue using Bootstrap 3, you should add Paginator::useBootstrapThree() to your AppServiceProvider boot method.
         Paginator::useBootstrapThree();
-        
+
         $asset_v = config('constants.asset_version', 1);
         View::share('asset_v', $asset_v);
-
+        
         // Share the list of modules enabled in sidebar
         View::composer(
             ['*'],
             function ($view) {
                 $enabled_modules = !empty(session('business.enabled_modules')) ? session('business.enabled_modules') : [];
 
+                $__is_pusher_enabled = isPusherEnabled();
+
+                if (!Auth::check()) {
+                    $__is_pusher_enabled = false;
+                }
+
                 $view->with('enabled_modules', $enabled_modules);
+                $view->with('__is_pusher_enabled', $__is_pusher_enabled);
+            }
+        );
+        View::composer(
+            ['layouts.partials.javascripts', 'layouts.partials.css'],
+            function ($view) {
+                if(isAppInstalled()){
+                    $keys = ['additional_js', 'additional_css'];
+                    $__system_settings = System::getProperties($keys, true);
+                    $view->with('__system_settings', $__system_settings);
+                }
             }
         );
 
@@ -69,9 +88,13 @@ class AppServiceProvider extends ServiceProvider
             return "<?php if($status == 'partial'){
                 echo 'bg-aqua';
             }elseif($status == 'due'){
-                echo 'bg-red';
+                echo 'bg-yellow';
             }elseif ($status == 'paid') {
                 echo 'bg-light-green';
+            }elseif ($status == 'overdue') {
+                echo 'bg-red';
+            }elseif ($status == 'partial-overdue') {
+                echo 'bg-red';
             }?>";
         });
 
@@ -119,6 +142,21 @@ class AppServiceProvider extends ServiceProvider
             } else {
                 return null;
             }
+        });
+
+        //Blade directive to format currency.
+        Blade::directive('format_currency', function ($number) {
+            return '<?php 
+            $formated_number = "";
+            if (session("business.currency_symbol_placement") == "before") {
+                $formated_number .= session("currency")["symbol"] . " ";
+            } 
+            $formated_number .= number_format((float) ' . $number . ', config("constants.currency_precision", 2) , session("currency")["decimal_separator"], session("currency")["thousand_separator"]);
+
+            if (session("business.currency_symbol_placement") == "after") {
+                $formated_number .= " " . session("currency")["symbol"];
+            }
+            echo $formated_number; ?>';
         });
 
         $this->registerCommands();

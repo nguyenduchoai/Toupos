@@ -2,14 +2,12 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
-use Composer\Semver\Comparator;
-
 use App\System;
+use Composer\Semver\Comparator;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Artisan;
+
+use Illuminate\Support\Facades\DB;
 
 class InstallController extends BaseController
 {
@@ -38,13 +36,16 @@ class InstallController extends BaseController
         $is_installed = System::getProperty($this->module_name . '_version');
         if (empty($is_installed)) {
             DB::statement('SET default_storage_engine=INNODB;');
-            Artisan::call('migrate', ["--force"=> true]);
+            Artisan::call('module:migrate', ['module' => "Superadmin"]);
+            System::addProperty($this->module_name . '_version', $this->appVersion);
         }
 
         $output = ['success' => 1,
                     'msg' => 'Superadmin module installed succesfully'
                 ];
-        return redirect()->action('\Modules\Superadmin\Http\Controllers\SuperadminController@index')
+
+        return redirect()
+            ->action('\App\Http\Controllers\Install\ModulesController@index')
             ->with('status', $output);
     }
 
@@ -84,7 +85,7 @@ class InstallController extends BaseController
                 $this->installSettings();
                 
                 DB::statement('SET default_storage_engine=INNODB;');
-                Artisan::call('migrate', ["--force"=> true]);
+                Artisan::call('module:migrate', ['module' => "Superadmin"]);
 
                 System::setProperty($this->module_name . '_version', $this->appVersion);
             } else {
@@ -96,12 +97,38 @@ class InstallController extends BaseController
             $output = ['success' => 1,
                         'msg' => 'Superadmin module updated Succesfully to version ' . $this->appVersion . ' !!'
                     ];
+
             return redirect()
-                ->action('\Modules\Superadmin\Http\Controllers\SuperadminController@index')
-                ->with('status', $output);
+            ->action('\App\Http\Controllers\Install\ModulesController@index')
+            ->with('status', $output);
         } catch (Exception $e) {
             DB::rollBack();
             die($e->getMessage());
         }
+    }
+
+    /**
+     * Uninstall
+     * @return Response
+     */
+    public function uninstall()
+    {
+        if (!auth()->user()->can('superadmin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            System::removeProperty($this->module_name . '_version');
+
+            $output = ['success' => true,
+                            'msg' => __("lang_v1.success")
+                        ];
+        } catch (\Exception $e) {
+            $output = ['success' => false,
+                        'msg' => $e->getMessage()
+                    ];
+        }
+
+        return redirect()->back()->with(['status' => $output]);
     }
 }

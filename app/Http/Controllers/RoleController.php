@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\SellingPriceGroup;
-
 use App\Utils\ModuleUtil;
-
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
-
 use Yajra\DataTables\Facades\DataTables;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
@@ -94,6 +92,7 @@ class RoleController extends Controller
         $business_id = request()->session()->get('user.business_id');
 
         $selling_price_groups = SellingPriceGroup::where('business_id', $business_id)
+                                    ->active()
                                     ->get();
 
         $module_permissions = $this->moduleUtil->getModuleData('user_permissions');
@@ -141,6 +140,8 @@ class RoleController extends Controller
                         $permissions[] = $spg_permission;
                     }
                 }
+
+                $this->__createPermissionIfNotExists($permissions);
 
                 if (!empty($permissions)) {
                     $role->syncPermissions($permissions);
@@ -196,6 +197,7 @@ class RoleController extends Controller
         }
 
         $selling_price_groups = SellingPriceGroup::where('business_id', $business_id)
+                                    ->active()
                                     ->get();
 
         $module_permissions = $this->moduleUtil->getModuleData('user_permissions');
@@ -249,6 +251,8 @@ class RoleController extends Controller
                             $permissions[] = $spg_permission;
                         }
                     }
+
+                    $this->__createPermissionIfNotExists($permissions);
 
                     if (!empty($permissions)) {
                         $role->syncPermissions($permissions);
@@ -315,6 +319,31 @@ class RoleController extends Controller
             }
 
             return $output;
+        }
+    }
+
+    /**
+     * Creates new permission if doesn't exist
+     *
+     * @param  array  $permissions
+     * @return void
+     */
+    private function __createPermissionIfNotExists($permissions)
+    {
+        $exising_permissions = Permission::whereIn('name', $permissions)
+                                    ->pluck('name')
+                                    ->toArray();
+
+        $non_existing_permissions = array_diff($permissions, $exising_permissions);
+
+        if (!empty($non_existing_permissions)) {
+            foreach ($non_existing_permissions as $new_permission) {
+                $time_stamp = \Carbon::now()->toDateTimeString();
+                Permission::create([
+                    'name' => $new_permission,
+                    'guard_name' => 'web'
+                ]);
+            }
         }
     }
 }

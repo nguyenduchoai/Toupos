@@ -7,6 +7,11 @@
                 <br/>
                 (<b>{{ $variation->product_variation->name }}</b> : {{ $variation->name }})
             @endif
+            @if($product->enable_stock == 1)
+                <br>
+                <small class="text-muted" style="white-space: nowrap;">@lang('report.current_stock'): @if(!empty($variation->variation_location_details->first())) {{@num_format($variation->variation_location_details->first()->qty_available)}} @else 0 @endif {{ $product->unit->short_name }}</small>
+            @endif
+            
         </td>
         <td>
             {!! Form::hidden('purchases[' . $row_count . '][product_id]', $product->id ); !!}

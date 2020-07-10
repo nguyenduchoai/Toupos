@@ -43,8 +43,9 @@
 			@endphp
 			<div class="col-sm-3">
 				<div class="form-group">
-					{!! Form::label('variation_id', __('sale.product').':*') !!}
-					{!! Form::select('variation_id', $recipe_dropdown, $purchase_line->variation_id, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
+					{!! Form::label('variation_id_shown', __('sale.product').':*') !!}
+					{!! Form::select('variation_id_shown', $recipe_dropdown, $purchase_line->variation_id, ['class' => 'form-control', 'placeholder' => __('messages.please_select'), 'required', 'disabled']); !!}
+					{!! Form::hidden('variation_id', $purchase_line->variation_id, ['id' => 'variation_id']); !!}
 				</div>
 			</div>
 			<div class="col-sm-3">

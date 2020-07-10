@@ -93,4 +93,31 @@ class System extends Model
         System::where('key', $key)
             ->update(['value' => $value]);
     }
+
+    /**
+     * Remove the specified property
+     *
+     * @param $key
+     * @return void
+     */
+    public static function removeProperty($key)
+    {
+        System::where('key', $key)
+            ->delete();
+    }
+
+    /**
+     * Add a new property, if exist update the value
+     *
+     * @param $key
+     * @param $value
+     * @return void
+     */
+    public static function addProperty($key, $value)
+    {
+        System::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value]
+        );
+    }
 }

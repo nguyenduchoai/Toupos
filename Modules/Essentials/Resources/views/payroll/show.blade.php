@@ -43,7 +43,12 @@
 	                    @forelse($allowances['allowance_names'] as $key => $value)
 	                    	<tr>
 		                    	<th width="50%">{{$value}}:</th>
-		                    	<td width="50%"><span class="display_currency" data-currency_symbol="true">{{$allowances['allowance_amounts'][$key]}}</span></td>
+		                    	<td width="50%"><span class="display_currency" data-currency_symbol="true">{{$allowances['allowance_amounts'][$key]}}</span>
+		                    		@if(!empty($allowances['allowance_types'][$key]) 
+		                    		&& $allowances['allowance_types'][$key] == 'percent')
+		                    			({{@num_format($allowances['allowance_percents'][$key])}}%)
+		                    		@endif
+		                    	</td>
 
 		                        @php
 		                            $total_allowances += !empty($allowances['allowance_amounts'][$key]) ? $allowances['allowance_amounts'][$key] : 0;
@@ -65,7 +70,12 @@
 	                    @forelse($deductions['deduction_names'] as $key => $value)
 	                    	<tr>
 		                    	<th width="50%">{{$value}}:</th>
-		                    	<td width="50%"><span class="display_currency" data-currency_symbol="true">{{$deductions['deduction_amounts'][$key]}}</span></td>
+		                    	<td width="50%"><span class="display_currency" data-currency_symbol="true">{{$deductions['deduction_amounts'][$key]}}</span>
+		                    	@if(!empty($deductions['deduction_types'][$key]) 
+		                    		&& $deductions['deduction_types'][$key] == 'percent')
+	                    			({{@num_format($deductions['deduction_percents'][$key])}}%)
+	                    		@endif
+		                    	</td>
 
 		                        @php
 		                            $total_deduction += !empty($deductions['deduction_amounts'][$key]) ? $deductions['deduction_amounts'][$key] : 0;
@@ -118,11 +128,7 @@
 								<td>{{ $payment_line->payment_ref_no }}</td>
 								<td><span class="display_currency" data-currency_symbol="true">{{ $payment_line->amount }}</span></td>
 								<td>
-								  	{{ $payment_types[$payment_line->method] or $payment_line->method }}
-								  	@if($payment_line->is_return == 1)
-								    	<br/>
-								    	( {{ __('lang_v1.change_return') }} )
-								  	@endif
+								  	{{ $payment_types[$payment_line->method]}}
 								</td>
 								<td>@if($payment_line->note) 
 								  {{ ucfirst($payment_line->note) }}

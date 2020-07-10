@@ -55,7 +55,7 @@
                         <div class="form-group">
                             {!! Form::label('transaction_type', __('account.transaction_type') . ':') !!}
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-exchange"></i></span>
+                                <span class="input-group-addon"><i class="fas fa-exchange-alt"></i></span>
                                 {!! Form::select('transaction_type', ['' => __('messages.all'),'debit' => __('account.debit'), 'credit' => __('account.credit')], '', ['class' => 'form-control']) !!}
                             </div>
                         </div>
@@ -75,8 +75,9 @@
                     			<tr>
                                     <th>@lang( 'messages.date' )</th>
                                     <th>@lang( 'lang_v1.description' )</th>
-                    				<th>@lang('account.credit')</th>
+                                    <th>@lang( 'lang_v1.added_by' )</th>
                                     <th>@lang('account.debit')</th>
+                    				<th>@lang('account.credit')</th>
                     				<th>@lang( 'lang_v1.balance' )</th>
                                     <th>@lang( 'messages.action' )</th>
                     			</tr>
@@ -103,54 +104,59 @@
 <script>
     $(document).ready(function(){
         update_account_balance();
-        
-        // Account Book
-        account_book = $('#account_book').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: '{{action("AccountController@show",[$account->id])}}',
-                        "ordering": false,
-                        "searching": false,
-                        columns: [
-                            {data: 'operation_date', name: 'operation_date'},
-                            {data: 'sub_type', name: 'sub_type'},
-                            {data: 'credit', name: 'amount'},
-                            {data: 'debit', name: 'amount'},
-                            {data: 'balance', name: 'balance'},
-                            {data: 'action', name: 'action'}
-                        ],
-                        "fnDrawCallback": function (oSettings) {
-                            __currency_convert_recursively($('#account_book'));
-                        }
-                    });
-        dateRangeSettings.autoUpdateInput = false
+
+        dateRangeSettings.startDate = moment().subtract(6, 'days');
+        dateRangeSettings.endDate = moment();
         $('#transaction_date_range').daterangepicker(
             dateRangeSettings,
             function (start, end) {
                 $('#transaction_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
-                var start = '';
-                var end = '';
-                if($('#transaction_date_range').val()){
-                    start = $('input#transaction_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
-                    end = $('input#transaction_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
-                }
-                var transaction_type = $('select#transaction_type').val();
-                account_book.ajax.url( '{{action("AccountController@show",[$account->id])}}?start_date=' + start + '&end_date=' + end + '&type=' + transaction_type ).load();
+                
+                account_book.ajax.reload();
             }
         );
+        
+        // Account Book
+        account_book = $('#account_book').DataTable({
+                            processing: true,
+                            serverSide: true,
+                            ajax: {
+                                url: '{{action("AccountController@show",[$account->id])}}',
+                                data: function(d) {
+                                    var start = '';
+                                    var end = '';
+                                    if($('#transaction_date_range').val()){
+                                        start = $('input#transaction_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                                        end = $('input#transaction_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                                    }
+                                    var transaction_type = $('select#transaction_type').val();
+                                    d.start_date = start;
+                                    d.end_date = end;
+                                    d.type = transaction_type;
+                                }
+                            },
+                            "ordering": false,
+                            "searching": false,
+                            columns: [
+                                {data: 'operation_date', name: 'operation_date'},
+                                {data: 'sub_type', name: 'sub_type'},
+                                {data: 'added_by', name: 'added_by'},
+                                {data: 'debit', name: 'amount'},
+                                {data: 'credit', name: 'amount'},
+                                {data: 'balance', name: 'balance'},
+                                {data: 'action', name: 'action'}
+                            ],
+                            "fnDrawCallback": function (oSettings) {
+                                __currency_convert_recursively($('#account_book'));
+                            }
+                        });
+
         $('#transaction_type').change( function(){
-            var start = '';
-            var end = '';
-            if($('#transaction_date_range').val()){
-                start = $('input#transaction_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
-                end = $('input#transaction_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
-            }
-            var transaction_type = $('select#transaction_type').val();
-            account_book.ajax.url( '{{action("AccountController@show",[$account->id])}}?start_date=' + start + '&end_date=' + end + '&type=' + transaction_type ).load();
+            account_book.ajax.reload();
         });
         $('#transaction_date_range').on('cancel.daterangepicker', function(ev, picker) {
             $('#transaction_date_range').val('');
-            account_book.ajax.url( '{{action("AccountController@show",[$account->id])}}?start_date=' + start + '&end_date=' + end + '&type=' + transaction_type ).load();
+            account_book.ajax.reload();
         });
 
     });
@@ -183,7 +189,7 @@
     });
 
     function update_account_balance(argument) {
-        $('span#account_balance').html('<i class="fa fa-refresh fa-spin"></i>');
+        $('span#account_balance').html('<i class="fas fa-sync fa-spin"></i>');
         $.ajax({
             url: '{{action("AccountController@getAccountBalance", [$account->id])}}',
             dataType: "json",

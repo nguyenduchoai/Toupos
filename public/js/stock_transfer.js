@@ -70,6 +70,7 @@ $(document).ready(function() {
         }
         $('table#stock_adjustment_product_table tbody').html('');
         $('#product_row_index').val(0);
+        update_table_total();
     });
 
     $(document).on('change', 'input.product_quantity', function() {

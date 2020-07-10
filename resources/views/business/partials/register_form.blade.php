@@ -7,7 +7,7 @@
 <legend>@lang('business.business_details'):</legend>
 <div class="col-md-12">
     <div class="form-group">
-        {!! Form::label('name', __('business.business_name') . ':' ) !!}
+        {!! Form::label('name', __('business.business_name') . ':*' ) !!}
         <div class="input-group">
             <span class="input-group-addon">
                 <i class="fa fa-suitcase"></i>
@@ -30,10 +30,10 @@
 </div>
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('currency_id', __('business.currency') . ':') !!}
+    {!! Form::label('currency_id', __('business.currency') . ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
-            <i class="fa fa-money"></i>
+            <i class="fas fa-money-bill-alt"></i>
         </span>
         {!! Form::select('currency_id', $currencies, '', ['class' => 'form-control select2_register','placeholder' => __('business.currency_placeholder'), 'required']); !!}
     </div>
@@ -86,7 +86,7 @@
 
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('country', __('business.country') . ':') !!}
+    {!! Form::label('country', __('business.country') . ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
             <i class="fa fa-globe"></i>
@@ -98,7 +98,7 @@
 
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('state',__('business.state') . ':') !!}
+    {!! Form::label('state',__('business.state') . ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
             <i class="fa fa-map-marker"></i>
@@ -110,7 +110,7 @@
 <div class="clearfix"></div>
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('city',__('business.city'). ':') !!}
+    {!! Form::label('city',__('business.city'). ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
             <i class="fa fa-map-marker"></i>
@@ -121,7 +121,7 @@
 </div>
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('zip_code', __('business.zip_code') . ':') !!}
+    {!! Form::label('zip_code', __('business.zip_code') . ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
             <i class="fa fa-map-marker"></i>
@@ -133,7 +133,7 @@
 <div class="clearfix"></div>
 <div class="col-md-6">
     <div class="form-group">
-    {!! Form::label('landmark', __('business.landmark') . ':') !!}
+    {!! Form::label('landmark', __('business.landmark') . ':*') !!}
     <div class="input-group">
         <span class="input-group-addon">
             <i class="fa fa-map-marker"></i>
@@ -144,10 +144,10 @@
 </div>
 <div class="col-md-6">
     <div class="form-group">
-        {!! Form::label('time_zone', __('business.time_zone') . ':') !!}
+        {!! Form::label('time_zone', __('business.time_zone') . ':*') !!}
         <div class="input-group">
             <span class="input-group-addon">
-                <i class="fa fa-clock-o"></i>
+                <i class="fas fa-clock"></i>
             </span>
             {!! Form::select('time_zone', $timezone_list, config('app.timezone'), ['class' => 'form-control select2_register','placeholder' => __('business.time_zone'), 'required']); !!}
         </div>
@@ -211,7 +211,7 @@
     <div class="clearfix"></div>
     <div class="col-md-6">
         <div class="form-group">
-            {!! Form::label('fy_start_month', __('business.fy_start_month') . ':') !!} @show_tooltip(__('tooltip.fy_start_month'))
+            {!! Form::label('fy_start_month', __('business.fy_start_month') . ':*') !!} @show_tooltip(__('tooltip.fy_start_month'))
             <div class="input-group">
                 <span class="input-group-addon">
                     <i class="fa fa-calendar"></i>
@@ -222,7 +222,7 @@
     </div>
     <div class="col-sm-6">
         <div class="form-group">
-            {!! Form::label('accounting_method', __('business.accounting_method') . ':') !!}
+            {!! Form::label('accounting_method', __('business.accounting_method') . ':*') !!}
             <div class="input-group">
                 <span class="input-group-addon">
                     <i class="fa fa-calculator"></i>
@@ -255,7 +255,7 @@
 
 <div class="col-md-4">
     <div class="form-group">
-        {!! Form::label('first_name', __('business.first_name') . ':') !!}
+        {!! Form::label('first_name', __('business.first_name') . ':*') !!}
         <div class="input-group">
             <span class="input-group-addon">
                 <i class="fa fa-info"></i>
@@ -279,7 +279,7 @@
 <div class="clearfix"></div>
 <div class="col-md-6">
     <div class="form-group">
-        {!! Form::label('username', __('business.username') . ':') !!}
+        {!! Form::label('username', __('business.username') . ':*') !!}
         <div class="input-group">
             <span class="input-group-addon">
                 <i class="fa fa-user"></i>
@@ -303,7 +303,7 @@
 <div class="clearfix"></div>
 <div class="col-md-6">
     <div class="form-group">
-        {!! Form::label('password', __('business.password') . ':') !!}
+        {!! Form::label('password', __('business.password') . ':*') !!}
         <div class="input-group">
             <span class="input-group-addon">
                 <i class="fa fa-lock"></i>
@@ -315,7 +315,7 @@
 
 <div class="col-md-6">
     <div class="form-group">
-        {!! Form::label('confirm_password', __('business.confirm_password') . ':') !!}
+        {!! Form::label('confirm_password', __('business.confirm_password') . ':*') !!}
         <div class="input-group">
             <span class="input-group-addon">
                 <i class="fa fa-lock"></i>
@@ -327,12 +327,12 @@
 <div class="clearfix"></div>
 <div class="col-md-6">
     @if(!empty($system_settings['superadmin_enable_register_tc']))
-        <div class="checkbox">
-            {!! Form::checkbox('accept_tc', 0, false, ['required']); !!}
+        <div class="form-group">
             <label>
-                <a class="terms_condition" data-toggle="modal" data-target="#tc_modal">
-                    @lang('lang_v1.accept_terms_and_conditions')
-                </a>
+                {!! Form::checkbox('accept_tc', 0, false, ['required', 'class' => 'input-icheck']); !!}
+                <u><a class="terms_condition cursor-pointer" data-toggle="modal" data-target="#tc_modal">
+                    @lang('lang_v1.accept_terms_and_conditions') <i></i>
+                </a></u>
             </label>
         </div>
         @include('business.partials.terms_conditions')

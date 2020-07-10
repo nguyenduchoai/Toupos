@@ -11,7 +11,7 @@
             <h3>@lang( 'restaurant.all_orders' ) @show_tooltip(__('lang_v1.tooltip_serviceorder'))</h3>
         </div>
         <div class="col-sm-12">
-            <button type="button" class="btn btn-sm btn-primary pull-right" id="refresh_orders"><i class="fa fa-refresh"></i> @lang( 'restaurant.refresh' )</button>
+            <button type="button" class="btn btn-sm btn-primary pull-right" id="refresh_orders"><i class="fas fa-sync"></i> @lang( 'restaurant.refresh' )</button>
         </div>
     </div>
     <br>
@@ -38,7 +38,7 @@
          @include('restaurant.partials.line_orders', array('orders_for' => 'waiter'))   
         </div>
         <div class="overlay hide">
-          <i class="fa fa-refresh fa-spin"></i>
+          <i class="fas fa-sync fa-spin"></i>
         </div>
     @endcomponent
 
@@ -48,7 +48,7 @@
          @include('restaurant.partials.show_orders', array('orders_for' => 'waiter'))   
         </div>
         <div class="overlay hide">
-          <i class="fa fa-refresh fa-spin"></i>
+          <i class="fas fa-sync fa-spin"></i>
         </div>
     @endcomponent
     </div>

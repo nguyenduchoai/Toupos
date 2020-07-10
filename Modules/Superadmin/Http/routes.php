@@ -2,14 +2,20 @@
 
 Route::get('/pricing', 'Modules\Superadmin\Http\Controllers\PricingController@index')->name('pricing');
 
-Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadmin', 'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
+Route::group(['middleware' => ['web', 'auth', 'language', 'AdminSidebarMenu', 'superadmin'], 'prefix' => 'superadmin', 'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
     Route::get('/install', 'InstallController@index');
     Route::get('/install/update', 'InstallController@update');
+    Route::get('/install/uninstall', 'InstallController@uninstall');
 
     Route::get('/', 'SuperadminController@index');
     Route::get('/stats', 'SuperadminController@stats');
     
     Route::get('/{business_id}/toggle-active/{is_active}', 'BusinessController@toggleActive');
+
+    Route::get('/users/{business_id}', 'BusinessController@usersList');
+    Route::post('/update-password', 'BusinessController@updatePassword');
+
+
     Route::resource('/business', 'BusinessController');
     Route::get('/business/{id}/destroy', 'BusinessController@destroy');
 
@@ -29,7 +35,7 @@ Route::group(['middleware' => ['web', 'auth', 'language'], 'prefix' => 'superadm
     Route::resource('/frontend-pages', 'PageController');
 });
 
-Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone'],
+Route::group(['middleware' => ['web', 'SetSessionData', 'auth', 'language', 'timezone', 'AdminSidebarMenu'],
     'namespace' => 'Modules\Superadmin\Http\Controllers'], function () {
         //Routes related to paypal checkout
         Route::get(

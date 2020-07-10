@@ -9,6 +9,7 @@
 </section>
 <!-- Main content -->
 <section class="content no-print">
+<input type="hidden" id="amount_rounding_method" value="{{$pos_settings['amount_rounding_method'] ?? ''}}">
 @if(!empty($pos_settings['allow_overselling']))
 	<input type="hidden" id="is_overselling_allowed">
 @endif
@@ -40,7 +41,7 @@
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			@component('components.widget', ['class' => 'box-primary'])
-				{!! Form::hidden('location_id', $default_location, ['id' => 'location_id', 'data-receipt_printer_type' => isset($bl_attributes[$default_location]['data-receipt_printer_type']) ? $bl_attributes[$default_location]['data-receipt_printer_type'] : 'browser']); !!}
+				{!! Form::hidden('location_id', !empty($default_location) ? $default_location->id : null , ['id' => 'location_id', 'data-receipt_printer_type' => !empty($default_location->receipt_printer_type) ? $default_location->receipt_printer_type : 'browser', 'data-default_accounts' => !empty($default_location) ? $default_location->default_payment_accounts : '']); !!}
 
 				@if(!empty($price_groups))
 					@if(count($price_groups) > 1)
@@ -48,7 +49,7 @@
 							<div class="form-group">
 								<div class="input-group">
 									<span class="input-group-addon">
-										<i class="fa fa-money"></i>
+										<i class="fas fa-money-bill-alt"></i>
 									</span>
 									@php
 										reset($price_groups);
@@ -68,6 +69,29 @@
 						@endphp
 						{!! Form::hidden('price_group', key($price_groups), ['id' => 'price_group']) !!}
 					@endif
+				@endif
+
+				{!! Form::hidden('default_price_group', null, ['id' => 'default_price_group']) !!}
+
+				@if(in_array('types_of_service', $enabled_modules) && !empty($types_of_service))
+					<div class="col-md-4 col-sm-6">
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">
+									<i class="fa fa-external-link-square-alt text-primary service_modal_btn"></i>
+								</span>
+								{!! Form::select('types_of_service_id', $types_of_service, null, ['class' => 'form-control', 'id' => 'types_of_service_id', 'style' => 'width: 100%;', 'placeholder' => __('lang_v1.select_types_of_service')]); !!}
+
+								{!! Form::hidden('types_of_service_price_group', null, ['id' => 'types_of_service_price_group']) !!}
+
+								<span class="input-group-addon">
+									@show_tooltip(__('lang_v1.types_of_service_help'))
+								</span> 
+							</div>
+							<small><p class="help-block hide" id="price_group_text">@lang('lang_v1.price_group'): <span></span></p></small>
+						</div>
+					</div>
+					<div class="modal fade types_of_service_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel"></div>
 				@endif
 				
 				@if(in_array('subscription', $enabled_modules))
@@ -245,6 +269,13 @@
 			            </div>
 			        </div>
 			    </div>
+			    @php
+			    	$max_discount = !is_null(auth()->user()->max_sales_discount_percent) ? auth()->user()->max_sales_discount_percent : '';
+
+			    	//if sale discount is more than user max discount change it to max discount
+			    	$sales_discount = $business_details->default_sales_discount;
+			    	if($max_discount != '' && $sales_discount > $max_discount) $sales_discount = $max_discount;
+			    @endphp
 			    <div class="col-md-4">
 			        <div class="form-group">
 			            {!! Form::label('discount_amount', __('sale.discount_amount') . ':*' ) !!}
@@ -252,7 +283,7 @@
 			                <span class="input-group-addon">
 			                    <i class="fa fa-info"></i>
 			                </span>
-			                {!! Form::text('discount_amount', @num_format($business_details->default_sales_discount), ['class' => 'form-control input_number', 'data-default' => $business_details->default_sales_discount]); !!}
+			                {!! Form::text('discount_amount', @num_format($sales_discount), ['class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
 			            </div>
 			        </div>
 			    </div>
@@ -351,6 +382,12 @@
 			    </div>
 				<div class="clearfix"></div>
 			    <div class="col-md-4 col-md-offset-8">
+			    	@if(!empty($pos_settings['amount_rounding_method']) && $pos_settings['amount_rounding_method'] > 0)
+			    	<small id="round_off"><br>(@lang('lang_v1.round_off'): <span id="round_off_text">0</span>)</small>
+					<br/>
+					<input type="hidden" name="round_off_amount" 
+						id="round_off_amount" value=0>
+					@endif
 			    	<div><b>@lang('sale.total_payable'): </b>
 						<input type="hidden" name="final_total" id="final_total_input">
 						<span id="total_payable">0</span>
@@ -367,23 +404,27 @@
 
 		</div>
 	</div>
-	@component('components.widget', ['class' => 'box-primary', 'id' => "payment_rows_div", 'title' => __('purchase.add_payment')])
-	<div class="payment_row">
-		@include('sale_pos.partials.payment_row_form', ['row_index' => 0])
-		<hr>
-		<div class="row">
-			<div class="col-sm-12">
-				<div class="pull-right"><strong>@lang('lang_v1.balance'):</strong> <span class="balance_due">0.00</span></div>
+	@can('sell.payments')
+		@component('components.widget', ['class' => 'box-primary', 'id' => "payment_rows_div", 'title' => __('purchase.add_payment')])
+		<div class="payment_row">
+			@include('sale_pos.partials.payment_row_form', ['row_index' => 0])
+			<hr>
+			<div class="row">
+				<div class="col-sm-12">
+					<div class="pull-right"><strong>@lang('lang_v1.balance'):</strong> <span class="balance_due">0.00</span></div>
+				</div>
 			</div>
 		</div>
-		<br>
-		<div class="row">
-			<div class="col-sm-12">
-				<button type="button" id="submit-sell" class="btn btn-primary pull-right btn-flat">@lang('messages.submit')</button>
-			</div>
+		@endcomponent
+	@endcan
+	
+	<div class="row">
+		{!! Form::hidden('is_save_and_print', 0, ['id' => 'is_save_and_print']); !!}
+		<div class="col-sm-12 text-right">
+			<button type="button" id="submit-sell" class="btn btn-primary btn-flat">@lang('messages.save')</button>
+			<button type="button" id="save-and-print" class="btn btn-primary btn-flat">@lang('lang_v1.save_and_print')</button>
 		</div>
 	</div>
-	@endcomponent
 	
 	@if(empty($pos_settings['disable_recurring_invoice']))
 		@include('sale_pos.partials.recurring_invoice_modal')

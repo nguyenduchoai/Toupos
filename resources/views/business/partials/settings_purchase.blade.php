@@ -18,7 +18,7 @@
             {!! Form::label('purchase_currency_id', __('purchase.purchase_currency') . ':') !!}
             <div class="input-group">
                 <span class="input-group-addon">
-                    <i class="fa fa-money"></i>
+                    <i class="fas fa-money-bill-alt"></i>
                 </span>
                 {!! Form::select('purchase_currency_id', $currencies, $business->purchase_currency_id, ['class' => 'form-control select2', 'placeholder' => __('business.currency'), 'required', 'style' => 'width:100% !important']); !!}
             </div>

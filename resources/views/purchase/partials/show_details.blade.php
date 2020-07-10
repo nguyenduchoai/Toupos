@@ -28,7 +28,7 @@
           <br>@lang('contact.mobile'): {{$purchase->contact->mobile}}
         @endif
         @if(!empty($purchase->contact->email))
-          <br>Email: {{$purchase->contact->email}}
+          <br>@lang('business.email'): {{$purchase->contact->email}}
         @endif
       </address>
       @if($purchase->document_path)
@@ -73,8 +73,8 @@
     <div class="col-sm-4 invoice-col">
       <b>@lang('purchase.ref_no'):</b> #{{ $purchase->ref_no }}<br/>
       <b>@lang('messages.date'):</b> {{ @format_date($purchase->transaction_date) }}<br/>
-      <b>@lang('purchase.purchase_status'):</b> {{ ucfirst( $purchase->status ) }}<br>
-      <b>@lang('purchase.payment_status'):</b> {{ ucfirst( $purchase->payment_status ) }}<br>
+      <b>@lang('purchase.purchase_status'):</b> {{ __('lang_v1.' . $purchase->status) }}<br>
+      <b>@lang('purchase.payment_status'):</b> {{ __('lang_v1.' . $purchase->payment_status) }}<br>
     </div>
   </div>
 
@@ -87,14 +87,14 @@
             <tr class="bg-green">
               <th>#</th>
               <th>@lang('product.product_name')</th>
-              <th>@lang('purchase.purchase_quantity')</th>
-              <th>@lang( 'lang_v1.unit_cost_before_discount' )</th>
-              <th>@lang( 'lang_v1.discount_percent' )</th>
-              <th class="no-print">@lang('purchase.unit_cost_before_tax')</th>
-              <th class="no-print">@lang('purchase.subtotal_before_tax')</th>
-              <th>@lang('sale.tax')</th>
-              <th>@lang('purchase.unit_cost_after_tax')</th>
-              <th>@lang('purchase.unit_selling_price')</th>
+              <th class="text-right">@lang('purchase.purchase_quantity')</th>
+              <th class="text-right">@lang( 'lang_v1.unit_cost_before_discount' )</th>
+              <th class="text-right">@lang( 'lang_v1.discount_percent' )</th>
+              <th class="no-print text-right">@lang('purchase.unit_cost_before_tax')</th>
+              <th class="no-print text-right">@lang('purchase.subtotal_before_tax')</th>
+              <th class="text-right">@lang('sale.tax')</th>
+              <th class="text-right">@lang('purchase.unit_cost_after_tax')</th>
+              <th class="text-right">@lang('purchase.unit_selling_price')</th>
               @if(session('business.enable_lot_number'))
                 <th>@lang('lang_v1.lot_number')</th>
               @endif
@@ -102,7 +102,7 @@
                 <th>@lang('product.mfg_date')</th>
                 <th>@lang('product.exp_date')</th>
               @endif
-              <th>@lang('sale.subtotal')</th>
+              <th class="text-right">@lang('sale.subtotal')</th>
             </tr>
           </thead>
           @php 
@@ -119,19 +119,19 @@
                  @endif
               </td>
               <td><span class="display_currency" data-is_quantity="true" data-currency_symbol="false">{{ $purchase_line->quantity }}</span> @if(!empty($purchase_line->sub_unit)) {{$purchase_line->sub_unit->short_name}} @else {{$purchase_line->product->unit->short_name}} @endif</td>
-              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->pp_without_discount}}</span></td>
-              <td><span class="display_currency">{{ $purchase_line->discount_percent}}</span> %</td>
-              <td class="no-print"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price }}</span></td>
-              <td class="no-print"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->quantity * $purchase_line->purchase_price }}</span></td>
-              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->item_tax }} </span> <br/><small>@if(!empty($taxes[$purchase_line->tax_id])) ( {{ $taxes[$purchase_line->tax_id]}} ) </small>@endif</td>
-              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price_inc_tax }}</span></td>
+              <td class="text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->pp_without_discount}}</span></td>
+              <td class="text-right"><span class="display_currency">{{ $purchase_line->discount_percent}}</span> %</td>
+              <td class="no-print text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price }}</span></td>
+              <td class="no-print text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->quantity * $purchase_line->purchase_price }}</span></td>
+              <td class="text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->item_tax }} </span> <br/><small>@if(!empty($taxes[$purchase_line->tax_id])) ( {{ $taxes[$purchase_line->tax_id]}} ) </small>@endif</td>
+              <td class="text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price_inc_tax }}</span></td>
               @php
                 $sp = $purchase_line->variations->default_sell_price;
                 if(!empty($purchase_line->sub_unit->base_unit_multiplier)) {
                   $sp = $sp * $purchase_line->sub_unit->base_unit_multiplier;
                 }
               @endphp
-              <td><span class="display_currency" data-currency_symbol="true">{{$sp}}</span></td>
+              <td class="text-right"><span class="display_currency" data-currency_symbol="true">{{$sp}}</span></td>
 
               @if(session('business.enable_lot_number'))
                 <td>{{$purchase_line->lot_number}}</td>
@@ -157,7 +157,7 @@
                 @endif
               </td>
               @endif
-              <td><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price_inc_tax * $purchase_line->quantity }}</span></td>
+              <td class="text-right"><span class="display_currency" data-currency_symbol="true">{{ $purchase_line->purchase_price_inc_tax * $purchase_line->quantity }}</span></td>
             </tr>
             @php 
               $total_before_tax += ($purchase_line->quantity * $purchase_line->purchase_price);

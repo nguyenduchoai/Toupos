@@ -89,20 +89,16 @@ class Controller extends BaseController
     }
 
     /**
-     * Returns a disabled response for demo
+     * Returns new mpdf instance
      *
-     * @return \Illuminate\Http\Response
      */
-    public function respondDemo()
-    {
-        $data = ['success' => false, 'msg' => __('lang_v1.disabled_in_demo')];
-        return $this->respond($data);
-    }
-
-    public function isDemo()
-    {
-        if (config('app.env') == 'demo') {
-            return true;
-        }
+    public function getMpdf() {
+        return new \Mpdf\Mpdf(['tempDir' => public_path('uploads/temp'), 
+            'mode' => 'utf-8', 
+            'autoScriptToLang' => true,
+            'autoLangToFont' => true,
+            'autoVietnamese' => true,
+            'autoArabic' => true
+        ]);
     }
 }

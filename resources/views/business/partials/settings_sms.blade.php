@@ -1,6 +1,5 @@
 <div class="pos-tab-content">
-<!-- 02/10/19 DanhVT add -->
-<div class="row well">
+    <div class="row well">
     <div class="col-xs-12">
         <h4>
         <label class="radio-inline">
@@ -43,38 +42,19 @@
     </div>
 </div>
 <div class="row well">
-    <div class="col-xs-12">
-        <h4>
-        <label class="radio-inline">
-        {!! Form::radio('sms_settings[checked]', 'vht', $sms_settings['checked'] === 'vht'); !!} VHT
-        </label>
-        </h4>
-    </div>
-    <div class="col-xs-12">
-        <div class="form-group">
-            {!! Form::label('sms_settings[vht][account]', 'Account Name:') !!}
-            {!! Form::text('sms_settings[vht][account]', $sms_settings['vht']['account'], ['class' => 'form-control','placeholder' => 'Account Name']); !!}
+ 
+    <div class="clearfix"></div>
+        <hr>
+        <div class="col-md-8 col-xs-12">
+            <div class="form-group">
+                <div class="input-group">
+                    {!! Form::text('test_number', null, ['class' => 'form-control','placeholder' => __('lang_v1.test_number'), 'id' => 'test_number']); !!}
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-success pull-right" id="test_sms_btn">@lang('lang_v1.test_sms_configuration')</button>
+                    </span>
+                </div>
+            </div>
         </div>
-    </div>
-    <div class="col-xs-12">
-        <div class="form-group">
-            {!! Form::label('sms_settings[vht][password]', 'Account Password:') !!}
-            {!! Form::text('sms_settings[vht][password]', $sms_settings['vht']['password'], ['class' => 'form-control','placeholder' => 'Account Password']); !!}
-        </div>
-    </div>
-</div>
 
-<div class="col-md-8 col-xs-12">
-    <div class="form-group">
-        <div class="input-group">
-            {!! Form::text('test_number', null, ['class' => 'form-control','placeholder' => __('lang_v1.test_number'), 'id' => 'test_number']); !!}
-            <span class="input-group-btn">
-                <button type="button" class="btn btn-success pull-right" id="test_sms_btn">@lang('lang_v1.test_sms_configuration')</button>
-            </span>
-        </div>
     </div>
-</div>
-<!-- 02/10/19 DanhVT end -->
-<!-- 02/10/19 DanhVT remove -->
-<!-- 02/10/19 DanhVT end -->
 </div>

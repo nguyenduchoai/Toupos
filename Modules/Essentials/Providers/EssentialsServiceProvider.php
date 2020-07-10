@@ -31,32 +31,40 @@ class EssentialsServiceProvider extends ServiceProvider
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
-        view::composer(['essentials::layouts.partials.sidebar', 'essentials::layouts.partials.sidebar_hrm',
-            'essentials::layouts.partials.header_part', 'report.profit_loss'], function ($view) {
-                if (auth()->user()->can('superadmin')) {
-                    $__is_essentials_enabled = true;
-                } else {
-                    $business_id = session()->get('user.business_id');
-                    $module_util = new ModuleUtil();
-                    $__is_essentials_enabled = (boolean)$module_util->hasThePermissionInSubscription($business_id, 'essentials_module');
-                }
+        view::composer(['essentials::layouts.partials.header_part',
+            'report.profit_loss'], function ($view) {
+            $module_util = new ModuleUtil();
 
-                $view->with(compact('__is_essentials_enabled'));
-            });
+            if (auth()->user()->can('superadmin')) {
+                $__is_essentials_enabled = $module_util->isModuleInstalled('Essentials');
+            } else {
+                $business_id = session()->get('user.business_id');
+                $__is_essentials_enabled = (boolean)$module_util->hasThePermissionInSubscription($business_id, 'essentials_module');
+            }
+
+            $view->with(compact('__is_essentials_enabled'));
+        });
 
         view::composer(['essentials::layouts.partials.header_part'], function ($view) {
-            $business_id = session()->get('user.business_id');
-            $settings = session()->get('business.essentials_settings');
-            $settings = !empty($settings) ? json_decode($settings, true) : [];
 
-            $is_employee_allowed = !empty($settings['allow_users_for_attendance']) ? true : false;
+            $is_employee_allowed = false;
             $clock_in = null;
 
-            $util = new \App\Utils\Util();
-            $clock_in = EssentialsAttendance::where('business_id', $business_id)
-                                    ->where('user_id', auth()->user()->id)
-                                    ->whereNull('clock_out_time')
-                                    ->first();
+            $module_util = new ModuleUtil();
+            if($module_util->isModuleInstalled('Essentials')){
+                $business_id = session()->get('user.business_id');
+                $settings = session()->get('business.essentials_settings');
+                $settings = !empty($settings) ? json_decode($settings, true) : [];
+
+                //Check settings if employee are allowed or not.
+                $is_employee_allowed = !empty($settings['allow_users_for_attendance']) ? true : false;
+
+                //Check if clocked in or not.
+                $clock_in = EssentialsAttendance::where('business_id', $business_id)
+                                ->where('user_id', auth()->user()->id)
+                                ->whereNull('clock_out_time')
+                                ->first();
+            }
 
             $view->with(compact('is_employee_allowed', 'clock_in'));
         });

@@ -64,7 +64,7 @@ class EssentialsSettingsController extends Controller
         }
 
         try {
-            $input = $request->only(['leave_ref_no_prefix', 'leave_instructions', 'payroll_ref_no_prefix']);
+            $input = $request->only(['leave_ref_no_prefix', 'leave_instructions', 'payroll_ref_no_prefix', 'essentials_todos_prefix', 'grace_before_checkin', 'grace_after_checkin', 'grace_before_checkout', 'grace_after_checkout']);
             $input['allow_users_for_attendance'] = !empty($request->input('allow_users_for_attendance')) ? 1 : 0;
 
             $business = Business::find($business_id);

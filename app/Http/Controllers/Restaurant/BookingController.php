@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers\Restaurant;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
-
 use App\BusinessLocation;
 use App\Contact;
-use App\User;
-
+use App\CustomerGroup;
 use App\Restaurant\Booking;
-use App\Restaurant\ResTable;
-
-use DB;
-use Yajra\DataTables\Facades\DataTables;
-
+use App\User;
 use App\Utils\Util;
+use DB;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+
+use Yajra\DataTables\Facades\DataTables;
 
 class BookingController extends Controller
 {
@@ -109,7 +105,10 @@ class BookingController extends Controller
 
         $correspondents = User::forDropdown($business_id, false);
 
-        return view('restaurant.booking.index', compact('business_locations', 'customers', 'correspondents'));
+        $types = Contact::getContactTypes();
+        $customer_groups = CustomerGroup::forDropdown($business_id);
+
+        return view('restaurant.booking.index', compact('business_locations', 'customers', 'correspondents', 'types', 'customer_groups'));
     }
 
     /**
@@ -151,7 +150,7 @@ class BookingController extends Controller
                                         ->orWhereBetween('booking_end', $date_range);
                                     });
 
-                if (isset($input['res_waiter_id'])) {
+                if (isset($input['res_table_id'])) {
                     $query->where('table_id', $input['res_table_id']);
                 }
                 
@@ -192,11 +191,13 @@ class BookingController extends Controller
                             )
                         ];
                 }
+            } else {
+                die(__("messages.something_went_wrong"));
             }
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             $output = ['success' => 0,
-                            'msg' => "File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage()
+                            'msg' => __("messages.something_went_wrong")
                         ];
         }
         return $output;

@@ -1,7 +1,23 @@
 <div class="modal-dialog modal-lg" role="document">
   <div class="modal-content">
 
-    {!! Form::open(['url' => action('ContactController@update', [$contact->id]), 'method' => 'PUT', 'id' => 'contact_edit_form']) !!}
+  @php
+
+    if(isset($update_action)) {
+        $url = $update_action;
+        $customer_groups = [];
+        $opening_balance = 0;
+        $lead_users = $contact->leadUsers->pluck('id');
+    } else {
+      $url = action('ContactController@update', [$contact->id]);
+      $sources = [];
+      $life_stages = [];
+      $users = [];
+      $lead_users = [];
+    }
+  @endphp
+
+    {!! Form::open(['url' => $url, 'method' => 'PUT', 'id' => 'contact_edit_form']) !!}
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -70,19 +86,54 @@
               </div>
           </div>
         </div>
-        <div class="col-md-4">
+
+        <!-- lead additional field -->
+        <div class="col-md-4 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('crm_source', __('lang_v1.source') . ':' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fas fa fa-search"></i>
+                  </span>
+                  {!! Form::select('crm_source', $sources, $contact->crm_source , ['class' => 'form-control', 'id' => 'crm_source','placeholder' => __('messages.please_select')]); !!}
+              </div>
+          </div>
+        </div>
+        <div class="col-md-4 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('crm_life_stage', __('lang_v1.life_stage') . ':' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fas fa fa-life-ring"></i>
+                  </span>
+                  {!! Form::select('crm_life_stage', $life_stages, $contact->crm_life_stage , ['class' => 'form-control', 'id' => 'crm_life_stage','placeholder' => __('messages.please_select')]); !!}
+              </div>
+          </div>
+        </div>
+        <div class="col-md-6 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('user_id', __('lang_v1.assigned_to') . ':*' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fa fa-user"></i>
+                  </span>
+                  {!! Form::select('user_id[]', $users, $lead_users , ['class' => 'form-control select2', 'id' => 'user_id', 'multiple', 'required', 'style' => 'width: 100%;']); !!}
+              </div>
+          </div>
+        </div>
+        <div class="col-md-4 opening_balance">
           <div class="form-group">
               {!! Form::label('opening_balance', __('lang_v1.opening_balance') . ':') !!}
               <div class="input-group">
                   <span class="input-group-addon">
-                      <i class="fa fa-money"></i>
+                      <i class="fas fa-money-bill-alt"></i>
                   </span>
                   {!! Form::text('opening_balance', $opening_balance, ['class' => 'form-control input_number']); !!}
               </div>
           </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 pay_term">
           <div class="form-group">
             <div class="multi-input">
               {!! Form::label('pay_term_number', __('contact.pay_term') . ':') !!} @show_tooltip(__('tooltip.pay_term'))
@@ -110,9 +161,9 @@
               {!! Form::label('credit_limit', __('lang_v1.credit_limit') . ':') !!}
               <div class="input-group">
                   <span class="input-group-addon">
-                      <i class="fa fa-money"></i>
+                      <i class="fas fa-money-bill-alt"></i>
                   </span>
-                  {!! Form::text('credit_limit', $contact->credit_limit, ['class' => 'form-control input_number']); !!}
+                  {!! Form::text('credit_limit', @num_format($contact->credit_limit), ['class' => 'form-control input_number']); !!}
               </div>
               <p class="help-block">@lang('lang_v1.credit_limit_help')</p>
           </div>
@@ -214,35 +265,50 @@
       <div class="col-md-12">
         <hr/>
       </div>
+      @php
+        $custom_labels = json_decode(session('business.custom_labels'), true);
+        $contact_custom_field1 = !empty($custom_labels['contact']['custom_field_1']) ? $custom_labels['contact']['custom_field_1'] : __('lang_v1.contact_custom_field1');
+        $contact_custom_field2 = !empty($custom_labels['contact']['custom_field_2']) ? $custom_labels['contact']['custom_field_2'] : __('lang_v1.contact_custom_field2');
+        $contact_custom_field3 = !empty($custom_labels['contact']['custom_field_3']) ? $custom_labels['contact']['custom_field_3'] : __('lang_v1.contact_custom_field3');
+        $contact_custom_field4 = !empty($custom_labels['contact']['custom_field_4']) ? $custom_labels['contact']['custom_field_4'] : __('lang_v1.contact_custom_field4');
+      @endphp
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field1', __('lang_v1.custom_field', ['number' => 1]) . ':') !!}
+            {!! Form::label('custom_field1', $contact_custom_field1 . ':') !!}
             {!! Form::text('custom_field1', $contact->custom_field1, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 1])]); !!}
+                'placeholder' => $contact_custom_field1]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field2', __('lang_v1.custom_field', ['number' => 2]) . ':') !!}
+            {!! Form::label('custom_field2', $contact_custom_field2 . ':') !!}
             {!! Form::text('custom_field2', $contact->custom_field2, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 2])]); !!}
+                'placeholder' => $contact_custom_field2]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field3', __('lang_v1.custom_field', ['number' => 3]) . ':') !!}
+            {!! Form::label('custom_field3', $contact_custom_field3 . ':') !!}
             {!! Form::text('custom_field3', $contact->custom_field3, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 3])]); !!}
+                'placeholder' => $contact_custom_field3]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field4', __('lang_v1.custom_field', ['number' => 4]) . ':') !!}
+            {!! Form::label('custom_field4', $contact_custom_field4 . ':') !!}
             {!! Form::text('custom_field4', $contact->custom_field4, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 4])]); !!}
+                'placeholder' => $contact_custom_field4]); !!}
         </div>
       </div>
       <div class="clearfix"></div>
+      <div class="col-md-12"><hr></div>
+      <div class="col-md-8 col-md-offset-2" >
+          <strong>{{__('lang_v1.shipping_address')}}</strong><br>
+          {!! Form::text('shipping_address', $contact->shipping_address, ['class' => 'form-control', 
+                'placeholder' => __('lang_v1.search_address'), 'id' => 'shipping_address']); !!}
+        <div id="map"></div>
+      </div>
+      {!! Form::hidden('position', $contact->position, ['id' => 'position']); !!}
 
     </div>
 

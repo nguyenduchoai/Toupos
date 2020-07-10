@@ -80,6 +80,8 @@ $(document).ready(function() {
             { data: 'unit_price', name: 'variations.sell_price_inc_tax' },
             { data: 'stock', name: 'stock', searchable: false },
             { data: 'stock_price', name: 'stock_price', searchable: false },
+            { data: 'stock_value_by_sale_price', name: 'stock_value_by_sale_price', searchable: false, orderable: false },
+            { data: 'potential_profit', name: 'potential_profit', searchable: false, orderable: false },
             { data: 'total_sold', name: 'total_sold', searchable: false },
             { data: 'total_transfered', name: 'total_transfered', searchable: false },
             { data: 'total_adjusted', name: 'total_adjusted', searchable: false }
@@ -115,6 +117,12 @@ $(document).ready(function() {
             );
             var total_stock_price = sum_table_col($('#stock_report_table'), 'total_stock_price');
             $('#footer_total_stock_price').text(total_stock_price);
+
+            var total_stock_value_by_sale_price = sum_table_col($('#stock_report_table'), 'stock_value_by_sale_price');
+            $('#footer_stock_value_by_sale_price').text(total_stock_value_by_sale_price);
+
+            var total_potential_profit = sum_table_col($('#stock_report_table'), 'potential_profit');
+            $('#footer_potential_profit').text(total_potential_profit);
             
             __currency_convert_recursively($('#stock_report_table'));
             if ($('th.current_stock_mfg').length) {
@@ -169,6 +177,7 @@ $(document).ready(function() {
     ).change(function() {
         stock_report_table.ajax.reload();
         stock_expiry_report_table.ajax.reload();
+        get_stock_value();
     });
 
     $('#only_mfg_products').on('ifChanged', function(event){
@@ -205,15 +214,42 @@ $(document).ready(function() {
         updateStockAdjustmentReport();
     });
 
+    if ($('#register_report_date_range').length == 1) {
+        $('#register_report_date_range').daterangepicker({
+            ranges: ranges,
+            autoUpdateInput: false,
+            locale: {
+                format: moment_date_format,
+                cancelLabel: LANG.clear,
+                applyLabel: LANG.apply,
+                customRangeLabel: LANG.custom_range,
+            },
+        });
+        $('#register_report_date_range').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(
+                picker.startDate.format(moment_date_format) +
+                    ' ~ ' +
+                    picker.endDate.format(moment_date_format)
+            );
+            updateRegisterReport();
+        });
+
+        $('#register_report_date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+            updateRegisterReport();
+        });
+    }
+
     //Register report
     register_report_table = $('#register_report_table').DataTable({
         processing: true,
         serverSide: true,
         ajax: '/reports/register-report',
-        columnDefs: [{ targets: [6], orderable: false, searchable: false }],
+        columnDefs: [{ targets: [7], orderable: false, searchable: false }],
         columns: [
             { data: 'created_at', name: 'created_at' },
             { data: 'closed_at', name: 'closed_at' },
+            { data: 'location_name', name: 'bl.name' },
             { data: 'user_name', name: 'user_name' },
             { data: 'total_card_slips', name: 'total_card_slips' },
             { data: 'total_cheques', name: 'total_cheques' },
@@ -545,12 +581,6 @@ $(document).ready(function() {
             $('#product_pr_date_filter').val('');
             product_purchase_report.ajax.reload();
         });
-        $('#product_pr_date_filter')
-            .data('daterangepicker')
-            .setStartDate(moment());
-        $('#product_pr_date_filter')
-            .data('daterangepicker')
-            .setEndDate(moment());
     }
     $(
         '#product_purchase_report_form #variation_id, #product_purchase_report_form #location_id, #product_purchase_report_form #supplier_id, #product_purchase_report_form #product_pr_date_filter'
@@ -583,6 +613,7 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'product_name', name: 'p.name' },
+            { data: 'sub_sku', name: 'v.sub_sku' },
             { data: 'supplier', name: 'c.name' },
             { data: 'ref_no', name: 't.ref_no' },
             { data: 'transaction_date', name: 't.transaction_date' },
@@ -643,24 +674,23 @@ $(document).ready(function() {
 
     //Product Sell Report
     if ($('#product_sr_date_filter').length == 1) {
-        $('#product_sr_date_filter').daterangepicker(dateRangeSettings, function(start, end) {
-            $('#product_sr_date_filter').val(
-                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
-            );
-            product_sell_report.ajax.reload();
-            product_sell_grouped_report.ajax.reload();
-        });
+        $('#product_sr_date_filter').daterangepicker(
+            dateRangeSettings, 
+            function(start, end) {
+                $('#product_sr_date_filter').val(
+                    start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
+                );
+                product_sell_report.ajax.reload();
+                product_sell_grouped_report.ajax.reload();
+                product_sell_report_with_purchase_table.ajax.reload();
+            }
+        );
         $('#product_sr_date_filter').on('cancel.daterangepicker', function(ev, picker) {
             $('#product_sr_date_filter').val('');
             product_sell_report.ajax.reload();
             product_sell_grouped_report.ajax.reload();
+            product_sell_report_with_purchase_table.ajax.reload();
         });
-        $('#product_sr_date_filter')
-            .data('daterangepicker')
-            .setStartDate(moment());
-        $('#product_sr_date_filter')
-            .data('daterangepicker')
-            .setEndDate(moment());
     }
     product_sell_report = $('table#product_sell_report_table').DataTable({
         processing: true,
@@ -689,6 +719,7 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'product_name', name: 'p.name' },
+            { data: 'sub_sku', name: 'v.sub_sku' },
             { data: 'customer', name: 'c.name' },
             { data: 'contact_id', name: 'c.contact_id' },
             { data: 'invoice_no', name: 't.invoice_no' },
@@ -707,6 +738,48 @@ $(document).ready(function() {
             $('#footer_total_sold').html(__sum_stock($('#product_sell_report_table'), 'sell_qty'));
             $('#footer_tax').html(__sum_stock($('#product_sell_report_table'), 'tax', 'left'));
             __currency_convert_recursively($('#product_sell_report_table'));
+        },
+    });
+
+    var is_lot_enabled = $('#lot_enabled').length > 0 ? true : false;
+    product_sell_report_with_purchase_table = $('table#product_sell_report_with_purchase_table').DataTable({
+        processing: true,
+        serverSide: true,
+        aaSorting: [[4, 'desc']],
+        ajax: {
+            url: '/reports/product-sell-report-with-purchase',
+            data: function(d) {
+                var start = '';
+                var end = '';
+                if ($('#product_sr_date_filter').val()) {
+                    start = $('input#product_sr_date_filter')
+                        .data('daterangepicker')
+                        .startDate.format('YYYY-MM-DD');
+                    end = $('input#product_sr_date_filter')
+                        .data('daterangepicker')
+                        .endDate.format('YYYY-MM-DD');
+                }
+                d.start_date = start;
+                d.end_date = end;
+
+                d.variation_id = $('#variation_id').val();
+                d.customer_id = $('select#customer_id').val();
+                d.location_id = $('select#location_id').val();
+            },
+        },
+        columns: [
+            { data: 'product_name', name: 'p.name' },
+            { data: 'sub_sku', name: 'v.sub_sku' },
+            { data: 'customer', name: 'c.name' },
+            { data: 'invoice_no', name: 't.invoice_no' },
+            { data: 'transaction_date', name: 't.transaction_date' },
+            { data: 'ref_no', name: 'purchase.ref_no' },
+            { data: 'lot_number', name: 'pl.lot_number', visible: is_lot_enabled},
+            { data: 'supplier_name', name: 'supplier.name' },
+            { data: 'purchase_quantity', name: 'tspl.quantity' },
+        ],
+        fnDrawCallback: function(oSettings) {
+            __currency_convert_recursively($('#product_sell_report_with_purchase_table'));
         },
     });
 
@@ -737,6 +810,7 @@ $(document).ready(function() {
         },
         columns: [
             { data: 'product_name', name: 'p.name' },
+            { data: 'sub_sku', name: 'v.sub_sku' },
             { data: 'transaction_date', name: 't.transaction_date' },
             { data: 'current_stock', name: 'current_stock', searchable: false, orderable: false },
             { data: 'total_qty_sold', name: 'total_qty_sold', searchable: false },
@@ -758,6 +832,7 @@ $(document).ready(function() {
     ).change(function() {
         product_sell_report.ajax.reload();
         product_sell_grouped_report.ajax.reload();
+        product_sell_report_with_purchase_table.ajax.reload();
     });
 
     $('#product_sell_report_form #search_product').keyup(function() {
@@ -956,7 +1031,7 @@ $(document).ready(function() {
                 d.supplier_id = $('select#customer_id').val();
                 d.location_id = $('select#location_id').val();
                 d.payment_types = $('select#payment_types').val();
-
+                d.customer_group_id = $('select#customer_group_filter').val();
                 var start = '';
                 var end = '';
                 if ($('input#spr_date_filter').val()) {
@@ -982,6 +1057,7 @@ $(document).ready(function() {
             { data: 'paid_on', name: 'paid_on' },
             { data: 'amount', name: 'transaction_payments.amount' },
             { data: 'customer', orderable: false, searchable: false },
+            { data: 'customer_group', name: 'customer_group', searchable: false},
             { data: 'method', name: 'method' },
             { data: 'invoice_no', name: 't.invoice_no' },
             { data: 'action', orderable: false, searchable: false },
@@ -1045,13 +1121,37 @@ $(document).ready(function() {
         });
     }
 
-    $('#sell_payment_report_form #location_id, #sell_payment_report_form #customer_id, #sell_payment_report_form #payment_types').change(
+    $('#sell_payment_report_form #location_id, #sell_payment_report_form #customer_id, #sell_payment_report_form #payment_types, #sell_payment_report_form #customer_group_filter').change(
         function() {
             sell_payment_report.ajax.reload();
         }
     );
 
     //Items report
+    if ($('#ir_purchase_date_filter').length == 1) {
+        $('#ir_purchase_date_filter').daterangepicker(dateRangeSettings, function(start, end) {
+            $('#ir_purchase_date_filter').val(
+                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
+            );
+            items_report_table.ajax.reload();
+        });
+        $('#ir_purchase_date_filter').on('cancel.daterangepicker', function(ev, picker) {
+            $('#ir_purchase_date_filter').val('');
+            items_report_table.ajax.reload();
+        });
+    }
+    if ($('#ir_sale_date_filter').length == 1) {
+        $('#ir_sale_date_filter').daterangepicker(dateRangeSettings, function(start, end) {
+            $('#ir_sale_date_filter').val(
+                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
+            );
+            items_report_table.ajax.reload();
+        });
+        $('#ir_sale_date_filter').on('cancel.daterangepicker', function(ev, picker) {
+            $('#ir_sale_date_filter').val('');
+            items_report_table.ajax.reload();
+        });
+    }
     items_report_table = $('#items_report_table').DataTable({
         processing: true,
         serverSide: true,
@@ -1068,6 +1168,7 @@ $(document).ready(function() {
                         .data('daterangepicker')
                         .endDate.format('YYYY-MM-DD');
                 }
+                console.log(purchase_end);
 
                 var sale_start = '';
                 var sale_end = '';
@@ -1120,34 +1221,15 @@ $(document).ready(function() {
             __currency_convert_recursively($('#items_report_table'));
         },
     });
-
-    if ($('#ir_purchase_date_filter').length == 1) {
-        $('#ir_purchase_date_filter').daterangepicker(dateRangeSettings, function(start, end) {
-            $('#ir_purchase_date_filter').val(
-                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
-            );
-            items_report_table.ajax.reload();
-        });
-        $('#ir_purchase_date_filter').on('cancel.daterangepicker', function(ev, picker) {
-            $('#ir_purchase_date_filter').val('');
-            items_report_table.ajax.reload();
-        });
-    }
-    if ($('#ir_sale_date_filter').length == 1) {
-        $('#ir_sale_date_filter').daterangepicker(dateRangeSettings, function(start, end) {
-            $('#ir_sale_date_filter').val(
-                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
-            );
-            items_report_table.ajax.reload();
-        });
-        $('#ir_sale_date_filter').on('cancel.daterangepicker', function(ev, picker) {
-            $('#ir_sale_date_filter').val('');
-            items_report_table.ajax.reload();
-        });
-    }
     $(document).on('change', '#ir_supplier_id, #ir_customer_id, #ir_location_id', function(){
         items_report_table.ajax.reload();
     });
+
+    expense_report_table = $('#expense_report_table').DataTable();
+
+    if ($('#closing_stock_by_pp').length == 1) {
+        get_stock_value();
+    }
 });
 
 function updatePurchaseSell() {
@@ -1232,9 +1314,10 @@ function updateTaxReport() {
     var location_id = $('#tax_report_location_filter').val();
     var data = { start_date: start, end_date: end, location_id: location_id };
 
-    var loader = '<i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i>';
+    var loader = '<i class="fas fa-sync fa-spin fa-fw margin-bottom"></i>';
     $('.input_tax').html(loader);
     $('.output_tax').html(loader);
+    $('.expense_tax').html(loader);
     $('.tax_diff').html(loader);
     $.ajax({
         method: 'GET',
@@ -1246,6 +1329,8 @@ function updateTaxReport() {
             __currency_convert_recursively($('.input_tax'));
             $('.output_tax').html(data.output_tax);
             __currency_convert_recursively($('.output_tax'));
+            $('.expense_tax').html(data.expense_tax);
+            __currency_convert_recursively($('.expense_tax'));
             $('.tax_diff').html(__currency_trans_from_en(data.tax_diff, true));
             __highlight(data.tax_diff, $('.tax_diff'));
         },
@@ -1295,9 +1380,18 @@ function updateStockAdjustmentReport() {
 }
 
 function updateRegisterReport() {
+    var start = $('#register_report_date_range')
+        .data('daterangepicker')
+        .startDate.format('YYYY-MM-DD');
+    var end = $('#register_report_date_range')
+        .data('daterangepicker')
+        .endDate.format('YYYY-MM-DD');
+
     var data = {
         user_id: $('#register_user_id').val(),
         status: $('#register_status').val(),
+        start_date: start,
+        end_date: end
     };
     var out = [];
 
@@ -1441,4 +1535,29 @@ function show_child_payments(rowData) {
     });
 
     return div;
+}
+
+function get_stock_value() {
+    var loader = __fa_awesome();
+    $('#closing_stock_by_pp').html(loader);
+    $('#closing_stock_by_sp').html(loader);
+    $('#potential_profit').html(loader);
+    $('#profit_margin').html(loader);
+    var data = {
+        location_id: $('#location_id').val(),
+        category_id: $('#category_id').val(),
+        sub_category_id: $('#sub_category_id').val(),
+        brand_id: $('#brand').val(),
+        unit_id: $('#unit').val(),
+    }
+    $.ajax({
+        url: '/reports/get-stock-value',
+        data: data,
+        success: function(data) {
+            $('#closing_stock_by_pp').text(__currency_trans_from_en(data.closing_stock_by_pp));
+            $('#closing_stock_by_sp').text(__currency_trans_from_en(data.closing_stock_by_sp));
+            $('#potential_profit').text(__currency_trans_from_en(data.potential_profit));
+            $('#profit_margin').text(__currency_trans_from_en(data.profit_margin, false));
+        },
+    });
 }

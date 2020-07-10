@@ -110,10 +110,10 @@
 									</span>
 
 									<small>
-										/ {{$package->interval_count}} {{ucfirst($package->interval)}}
+										/ {{$package->interval_count}} {{__('lang_v1.' . $package->interval)}}
 									</small>
 								@else
-									@lang('superadmin::lang.free_for_duration', ['duration' => $package->interval_count . ' ' . ucfirst($package->interval)])
+									@lang('superadmin::lang.free_for_duration', ['duration' => $package->interval_count . ' ' . __('lang_v1.' . $package->interval)])
 								@endif
 							</h3>
 

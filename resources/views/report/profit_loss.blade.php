@@ -38,7 +38,8 @@
         </div>
     </div>
     <div class="row">
-        @include('report/partials/profit_loss_details')
+        <div id="pl_data_div">
+        </div>
     </div>
     
 
@@ -86,7 +87,7 @@
                     </li>
 
                     <li>
-                        <a href="#profit_by_invoice" data-toggle="tab" aria-expanded="true"><i class="fa fa-file-text-o" aria-hidden="true"></i> @lang('lang_v1.profit_by_invoice')</a>
+                        <a href="#profit_by_invoice" data-toggle="tab" aria-expanded="true"><i class="fa fa-file-alt" aria-hidden="true"></i> @lang('lang_v1.profit_by_invoice')</a>
                     </li>
 
                     <li>

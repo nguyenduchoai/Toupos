@@ -101,6 +101,13 @@
               </div>
             </div>
 
+            <div class="col-sm-4">
+              <div class="form-group">
+                {!! Form::label('product_locations', __('business.business_locations') . ':') !!} @show_tooltip(__('lang_v1.product_location_help'))
+                  {!! Form::select('product_locations[]', $business_locations, $product->product_locations->pluck('id'), ['class' => 'form-control select2', 'multiple', 'id' => 'product_locations']); !!}
+              </div>
+            </div>
+
             <div class="clearfix"></div>
             
             <div class="col-sm-4">
@@ -113,12 +120,27 @@
             </div>
             <div class="col-sm-4" id="alert_quantity_div" @if(!$product->enable_stock) style="display:none" @endif>
               <div class="form-group">
-                {!! Form::label('alert_quantity', __('product.alert_quantity') . ':*') !!} @show_tooltip(__('tooltip.alert_quantity'))
-                {!! Form::number('alert_quantity', $product->alert_quantity, ['class' => 'form-control', 'required',
+                {!! Form::label('alert_quantity', __('product.alert_quantity') . ':') !!} @show_tooltip(__('tooltip.alert_quantity'))
+                {!! Form::number('alert_quantity', $product->alert_quantity, ['class' => 'form-control',
                 'placeholder' => __('product.alert_quantity') , 'min' => '0']); !!}
               </div>
             </div>
-
+            @if(!empty($common_settings['enable_product_warranty']))
+            <div class="col-sm-4">
+              <div class="form-group">
+                {!! Form::label('warranty_id', __('lang_v1.warranty') . ':') !!}
+                {!! Form::select('warranty_id', $warranties, $product->warranty_id, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select')]); !!}
+              </div>
+            </div>
+            @endif
+            <!-- include module fields -->
+            @if(!empty($pos_module_data))
+                @foreach($pos_module_data as $key => $value)
+                    @if(!empty($value['view_path']))
+                        @includeIf($value['view_path'], ['view_data' => $value['view_data']])
+                    @endif
+                @endforeach
+            @endif
             <div class="clearfix"></div>
             <div class="col-sm-8">
               <div class="form-group">
@@ -239,32 +261,39 @@
           </div>
         </div>
         <div class="clearfix"></div>
+        @php
+          $custom_labels = json_decode(session('business.custom_labels'), true);
+          $product_custom_field1 = !empty($custom_labels['product']['custom_field_1']) ? $custom_labels['product']['custom_field_1'] : __('lang_v1.product_custom_field1');
+          $product_custom_field2 = !empty($custom_labels['product']['custom_field_2']) ? $custom_labels['product']['custom_field_2'] : __('lang_v1.product_custom_field2');
+          $product_custom_field3 = !empty($custom_labels['product']['custom_field_3']) ? $custom_labels['product']['custom_field_3'] : __('lang_v1.product_custom_field3');
+          $product_custom_field4 = !empty($custom_labels['product']['custom_field_4']) ? $custom_labels['product']['custom_field_4'] : __('lang_v1.product_custom_field4');
+        @endphp
         <!--custom fields-->
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field1',  __('lang_v1.product_custom_field1') . ':') !!}
-            {!! Form::text('product_custom_field1', $product->product_custom_field1, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field1')]); !!}
+            {!! Form::label('product_custom_field1',  $product_custom_field1 . ':') !!}
+            {!! Form::text('product_custom_field1', $product->product_custom_field1, ['class' => 'form-control', 'placeholder' => $product_custom_field1]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field2',  __('lang_v1.product_custom_field2') . ':') !!}
-            {!! Form::text('product_custom_field2', $product->product_custom_field2, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field2')]); !!}
+            {!! Form::label('product_custom_field2',  $product_custom_field2 . ':') !!}
+            {!! Form::text('product_custom_field2', $product->product_custom_field2, ['class' => 'form-control', 'placeholder' => $product_custom_field2]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field3',  __('lang_v1.product_custom_field3') . ':') !!}
-            {!! Form::text('product_custom_field3', $product->product_custom_field3, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field3')]); !!}
+            {!! Form::label('product_custom_field3',  $product_custom_field3 . ':') !!}
+            {!! Form::text('product_custom_field3', $product->product_custom_field3, ['class' => 'form-control', 'placeholder' => $product_custom_field3]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field4',  __('lang_v1.product_custom_field4') . ':') !!}
-            {!! Form::text('product_custom_field4', $product->product_custom_field4, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field4')]); !!}
+            {!! Form::label('product_custom_field4',  $product_custom_field4 . ':') !!}
+            {!! Form::text('product_custom_field4', $product->product_custom_field4, ['class' => 'form-control', 'placeholder' => $product_custom_field4]); !!}
           </div>
         </div>
         <!--custom fields-->
@@ -313,7 +342,9 @@
                 <button type="submit" value="submit_n_add_selling_prices" class="btn btn-warning submit_product_form">@lang('lang_v1.save_n_add_selling_price_group_prices')</button>
               @endif
 
+              @can('product.opening_stock')
               <button type="submit" @if(empty($product->enable_stock)) disabled="true" @endif id="opening_stock_button"  value="update_n_edit_opening_stock" class="btn bg-purple submit_product_form">@lang('lang_v1.update_n_edit_opening_stock')</button>
+              @endif
 
               <button type="submit" value="save_n_add_another" class="btn bg-maroon submit_product_form">@lang('lang_v1.update_n_add_another')</button>
 

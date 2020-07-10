@@ -59,6 +59,7 @@ class StockAdjustmentController extends Controller
                 '=',
                 'BL.id'
             )
+                ->leftJoin('users as u', 'transactions.created_by', '=', 'u.id')
                     ->where('transactions.business_id', $business_id)
                     ->where('transactions.type', 'stock_adjustment')
                     ->select(
@@ -70,7 +71,8 @@ class StockAdjustmentController extends Controller
                         'final_total',
                         'total_amount_recovered',
                         'additional_notes',
-                        'transactions.id as DT_RowId'
+                        'transactions.id as DT_RowId',
+                        DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
                     );
 
             $permitted_locations = auth()->user()->permitted_locations();

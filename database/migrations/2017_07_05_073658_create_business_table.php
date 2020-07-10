@@ -17,7 +17,7 @@ class CreateBusinessTable extends Migration
             $table->engine = 'InnoDB';
 
             $table->increments('id');
-            $table->string('name', 256);
+            $table->string('name');
             $table->integer('currency_id')->unsigned();
             $table->date('start_date')->nullable();
             $table->string('tax_number_1', 100);

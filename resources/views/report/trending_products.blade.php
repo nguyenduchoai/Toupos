@@ -1,10 +1,6 @@
 @extends('layouts.app')
 @section('title', __('report.trending_products'))
 
-@section('css')
-    {!! Charts::styles(['highcharts']) !!}
-@endsection
-
 @section('content')
 
 <!-- Content Header (Page header) -->
@@ -60,6 +56,12 @@
                         {!! Form::number('limit', 5, ['placeholder' => __('lang_v1.no_of_products'), 'class' => 'form-control', 'min' => 1]); !!}
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {!! Form::label('product_type', __('product.product_type') . ':') !!}
+                        {!! Form::select('product_type', ['single' => __('lang_v1.single'), 'variable' => __('lang_v1.variable'), 'combo' => __('lang_v1.combo')], request()->input('product_type'), ['placeholder' => __('messages.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
+                    </div>
+                </div>
                 <div class="col-sm-12">
                   <button type="submit" class="btn btn-primary pull-right">@lang('report.apply_filters')</button>
                 </div> 
@@ -73,7 +75,7 @@
                 @slot('title')
                     @lang('report.top_trending_products') @show_tooltip(__('tooltip.top_trending_products'))
                 @endslot
-                {!! $chart->html() !!}
+                {!! $chart->container() !!}
             @endcomponent
         </div>
     </div>
@@ -92,6 +94,5 @@
 
 @section('javascript')
     <script src="{{ asset('js/report.js?v=' . $asset_v) }}"></script>
-    {!! Charts::assets(['highcharts']) !!}
     {!! $chart->script() !!}
 @endsection

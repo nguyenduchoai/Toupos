@@ -26,6 +26,6 @@ return [
     'product_stock_alert' => 'Cảnh báo tồn kho',
     'payment_dues' => 'Payment Dues',
     'due_amount' => 'Chưa thanh toán',
-    'stock_expiry_alert' => 'Thông báo hết hạn cổ phiếu',
+    'stock_expiry_alert' => 'Thông báo hết hạn kho',
     'todays_profit' => "Lợi nhuận hôm nay",
     ];

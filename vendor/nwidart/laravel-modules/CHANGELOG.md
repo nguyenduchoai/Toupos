@@ -4,6 +4,26 @@ All Notable changes to `laravel-modules` will be documented in this file.
 
 ## Next
 
+## 4.1.0 - 2019-03-04
+
+### Changed
+
+- Updated to laravel mix 4
+- Add `--api` argument to `module:make-controller` command
+- Seeding modules outside out `Modules` namespace
+
+## 4.0.0 - 2018-09-30
+
+### Added
+
+- New way of handling routes by default using a RouteServiceProvider (instead of start.php)
+- Laravel 5.7 support
+
+### Changed
+
+- Allow class resolution on short name and abstract
+- `module:seed` accepts a `--class` option
+
 ## 3.3.1 - 2018-07-13
 
 ### Changed

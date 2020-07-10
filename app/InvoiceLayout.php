@@ -22,6 +22,7 @@ class InvoiceLayout extends Model
         'product_custom_fields' => 'array',
         'contact_custom_fields' => 'array',
         'location_custom_fields' => 'array',
+        'common_settings' => 'array',
     ];
 
     /**
@@ -30,5 +31,20 @@ class InvoiceLayout extends Model
     public function locations()
     {
         return $this->hasMany(\App\BusinessLocation::class);
+    }
+
+    /**
+     * Return list of invoice layouts for a business
+     *
+     * @param int $business_id
+     *
+     * @return array
+     */
+    public static function forDropdown($business_id)
+    {
+        $layouts = InvoiceLayout::where('business_id', $business_id)
+                    ->pluck('name', 'id');
+
+        return $layouts;
     }
 }

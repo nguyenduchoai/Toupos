@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\AccountTransaction;
+use App\Account;
 
+use App\AccountTransaction;
 use App\BusinessLocation;
 use App\ExpenseCategory;
+use App\TaxRate;
 use App\Transaction;
 use App\User;
 use App\Utils\ModuleUtil;
-    
-
 use App\Utils\TransactionUtil;
-
 use DB;
 use Illuminate\Http\Request;
-
 use Yajra\DataTables\Facades\DataTables;
 
 class ExpenseController extends Controller
@@ -30,6 +28,8 @@ class ExpenseController extends Controller
     {
         $this->transactionUtil = $transactionUtil;
         $this->moduleUtil = $moduleUtil;
+        $this->dummyPaymentLine = ['method' => 'cash', 'amount' => 0, 'note' => '', 'card_transaction_number' => '', 'card_number' => '', 'card_type' => '', 'card_holder_name' => '', 'card_month' => '', 'card_year' => '', 'card_security' => '', 'cheque_number' => '', 'bank_account_number' => '',
+        'is_return' => 0, 'transaction_no' => ''];
     }
 
     /**
@@ -39,7 +39,7 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        if (!auth()->user()->can('expense.access')) {
+        if (!auth()->user()->can('expense.access') && !auth()->user()->can('view_own_expense')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -53,7 +53,9 @@ class ExpenseController extends Controller
                             '=',
                             'bl.id'
                         )
+                        ->leftJoin('tax_rates as tr', 'transactions.tax_id', '=', 'tr.id')
                         ->leftJoin('users AS U', 'transactions.expense_for', '=', 'U.id')
+                        ->leftJoin('users AS usr', 'transactions.created_by', '=', 'usr.id')
                         ->leftJoin(
                             'transaction_payments AS TP',
                             'transactions.id',
@@ -73,7 +75,9 @@ class ExpenseController extends Controller
                             'final_total',
                             'bl.name as location_name',
                             DB::raw("CONCAT(COALESCE(U.surname, ''),' ',COALESCE(U.first_name, ''),' ',COALESCE(U.last_name,'')) as expense_for"),
-                            DB::raw('SUM(TP.amount) as amount_paid')
+                            DB::raw("CONCAT(tr.name ,' (', tr.amount ,' )') as tax"),
+                            DB::raw('SUM(TP.amount) as amount_paid'),
+                            DB::raw("CONCAT(COALESCE(usr.surname, ''),' ',COALESCE(usr.first_name, ''),' ',COALESCE(usr.last_name,'')) as added_by")
                         )
                         ->groupBy('transactions.id');
 
@@ -129,6 +133,11 @@ class ExpenseController extends Controller
                     $expenses->where('transactions.payment_status', $payment_status);
                 }
             }
+
+            $is_admin = $this->moduleUtil->is_admin(auth()->user(), $business_id);
+            if (!$is_admin && auth()->user()->can('view_own_expense')) {
+                $expenses->where('transactions.created_by', request()->session()->get('user.id'));
+            }
             
             return Datatables::of($expenses)
                 ->addColumn(
@@ -138,7 +147,7 @@ class ExpenseController extends Controller
                             data-toggle="dropdown" aria-expanded="false"> @lang("messages.actions")<span class="caret"></span><span class="sr-only">Toggle Dropdown
                                 </span>
                         </button>
-                    <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <ul class="dropdown-menu dropdown-menu-left" role="menu">
                     <li><a href="{{action(\'ExpenseController@edit\', [$id])}}"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</a></li>
                     @if($document)
                         <li><a href="{{ url(\'uploads/documents/\' . $document)}}" 
@@ -151,9 +160,9 @@ class ExpenseController extends Controller
                         <a data-href="{{action(\'ExpenseController@destroy\', [$id])}}" class="delete_expense"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</a></li>
                     <li class="divider"></li> 
                     @if($payment_status != "paid")
-                        <li><a href="{{action("TransactionPaymentController@addPayment", [$id])}}" class="add_payment_modal"><i class="fa fa-money" aria-hidden="true"></i> @lang("purchase.add_payment")</a></li>
+                        <li><a href="{{action("TransactionPaymentController@addPayment", [$id])}}" class="add_payment_modal"><i class="fas fa-money-bill-alt" aria-hidden="true"></i> @lang("purchase.add_payment")</a></li>
                     @endif
-                    <li><a href="{{action("TransactionPaymentController@show", [$id])}}" class="view_payment_modal"><i class="fa fa-money" aria-hidden="true" ></i> @lang("purchase.view_payments")</a></li>
+                    <li><a href="{{action("TransactionPaymentController@show", [$id])}}" class="view_payment_modal"><i class="fas fa-money-bill-alt" aria-hidden="true" ></i> @lang("purchase.view_payments")</a></li>
                     </ul></div>'
                 )
                 ->removeColumn('id')
@@ -211,9 +220,21 @@ class ExpenseController extends Controller
         $expense_categories = ExpenseCategory::where('business_id', $business_id)
                                 ->pluck('name', 'id');
         $users = User::forDropdown($business_id, true, true);
+
+        $taxes = TaxRate::forBusinessDropdown($business_id, true, true);
         
+        $payment_line = $this->dummyPaymentLine;
+
+        $payment_types = $this->transactionUtil->payment_types();
+
+        //Accounts
+        $accounts = [];
+        if ($this->moduleUtil->isModuleEnabled('account')) {
+            $accounts = Account::forDropdown($business_id, true, false, true);
+        }
+
         return view('expense.create')
-            ->with(compact('expense_categories', 'business_locations', 'users'));
+            ->with(compact('expense_categories', 'business_locations', 'users', 'taxes', 'payment_line', 'payment_types', 'accounts'));
     }
 
     /**
@@ -241,7 +262,7 @@ class ExpenseController extends Controller
                 'document' => 'file|max:'. (config('constants.document_size_limit') / 1000)
             ]);
 
-            $transaction_data = $request->only([ 'ref_no', 'transaction_date', 'location_id', 'final_total', 'expense_for', 'additional_notes', 'expense_category_id']);
+            $transaction_data = $request->only([ 'ref_no', 'transaction_date', 'location_id', 'final_total', 'expense_for', 'additional_notes', 'expense_category_id', 'tax_id']);
 
             $user_id = $request->session()->get('user.id');
             $transaction_data['business_id'] = $business_id;
@@ -254,13 +275,21 @@ class ExpenseController extends Controller
                 $transaction_data['final_total']
             );
 
+            $transaction_data['total_before_tax'] = $transaction_data['final_total'];
+            if (!empty($transaction_data['tax_id'])) {
+                $tax_details = TaxRate::find($transaction_data['tax_id']);
+                $transaction_data['total_before_tax'] = $this->transactionUtil->calc_percentage_base($transaction_data['final_total'], $tax_details->amount);
+                $transaction_data['tax_amount'] = $transaction_data['final_total'] - $transaction_data['total_before_tax'];
+            }
+
+            DB::beginTransaction();
+            
             //Update reference count
             $ref_count = $this->transactionUtil->setAndGetReferenceCount('expense');
             //Generate reference number
             if (empty($transaction_data['ref_no'])) {
                 $transaction_data['ref_no'] = $this->transactionUtil->generateReferenceNumber('expense', $ref_count);
             }
-
 
             //upload document
             $document_name = $this->transactionUtil->uploadFile($request, 'document', 'documents');
@@ -269,13 +298,21 @@ class ExpenseController extends Controller
             }
 
             $transaction = Transaction::create($transaction_data);
+            
+            //add expense payment
+            $this->transactionUtil->createOrUpdatePaymentLines($transaction, $request->input('payment'), $business_id);
 
+            //update payment status
+            $this->transactionUtil->updatePaymentStatus($transaction->id, $transaction->final_total);
 
+            DB::commit();
 
             $output = ['success' => 1,
                             'msg' => __('expense.expense_add_success')
                         ];
         } catch (\Exception $e) {
+            DB::rollBack();
+
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
             $output = ['success' => 0,
@@ -323,10 +360,13 @@ class ExpenseController extends Controller
         $expense = Transaction::where('business_id', $business_id)
                                 ->where('id', $id)
                                 ->first();
+
         $users = User::forDropdown($business_id, true, true);
 
+        $taxes = TaxRate::forBusinessDropdown($business_id, true, true);
+
         return view('expense.edit')
-            ->with(compact('expense', 'expense_categories', 'business_locations', 'users'));
+            ->with(compact('expense', 'expense_categories', 'business_locations', 'users', 'taxes'));
     }
 
     /**
@@ -348,7 +388,7 @@ class ExpenseController extends Controller
                 'document' => 'file|max:'. (config('constants.document_size_limit') / 1000)
             ]);
 
-            $transaction_data = $request->only([ 'ref_no', 'transaction_date', 'location_id', 'final_total', 'expense_for', 'additional_notes', 'expense_category_id']);
+            $transaction_data = $request->only([ 'ref_no', 'transaction_date', 'location_id', 'final_total', 'expense_for', 'additional_notes', 'expense_category_id', 'tax_id']);
 
             $business_id = $request->session()->get('user.business_id');
             
@@ -363,10 +403,16 @@ class ExpenseController extends Controller
             );
 
             //upload document
-            //upload document
             $document_name = $this->transactionUtil->uploadFile($request, 'document', 'documents');
             if (!empty($document_name)) {
                 $transaction_data['document'] = $document_name;
+            }
+
+            $transaction_data['total_before_tax'] = $transaction_data['final_total'];
+            if (!empty($transaction_data['tax_id'])) {
+                $tax_details = TaxRate::find($transaction_data['tax_id']);
+                $transaction_data['total_before_tax'] = $this->transactionUtil->calc_percentage_base($transaction_data['final_total'], $tax_details->amount);
+                $transaction_data['tax_amount'] = $transaction_data['final_total'] - $transaction_data['total_before_tax'];
             }
 
             $transaction = Transaction::where('business_id', $business_id)

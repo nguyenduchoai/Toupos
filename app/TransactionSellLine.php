@@ -84,4 +84,12 @@ class TransactionSellLine extends Model
     {
         return $this->belongsTo(\App\User::class, 'res_service_staff_id');
     }
+
+    /**
+     * The warranties that belong to the sell lines.
+     */
+    public function warranties()
+    {
+        return $this->belongsToMany('App\Warranty', 'sell_line_warranties', 'sell_line_id', 'warranty_id');
+    }
 }

@@ -22,21 +22,35 @@
     <div class="row">
         <div class="col-xs-6">
             <div class="form-group">
-                <div class="checkbox">
-                    <label>
-                    {!! Form::checkbox('superadmin_enable_register_tc', 1,!empty($settings["superadmin_enable_register_tc"]), 
-                    [ 'class' => 'input-icheck']); !!}
-                    @lang('superadmin::lang.enable_register_tc')
-                    </label>
-                </div>
+                <label>
+                {!! Form::checkbox('ALLOW_REGISTRATION', 1,!empty($default_values["ALLOW_REGISTRATION"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.allow_registration')
+                </label>
+            </div>
+        </div>
+        <div class="col-xs-6">
+            <div class="form-group">
+                <label>
+                {!! Form::checkbox('superadmin_enable_register_tc', 1,!empty($settings["superadmin_enable_register_tc"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.enable_register_tc')
+                </label>
             </div>
         </div>
         <div class="clearfix"></div>
-        <div class="col-xs-6">
+        <div class="col-xs-12">
             <div class="form-group">
                 {!! Form::label('superadmin_register_tc', __('superadmin::lang.register_tc') .":") !!}
 
-                {!! Form::textarea('superadmin_register_tc', !empty($settings['superadmin_register_tc']) ? $settings['superadmin_register_tc'] : '', ['class' => 'form-control', 'rows' => 5, 'cols' => 200]) !!}
+                {!! Form::textarea('superadmin_register_tc', !empty($settings['superadmin_register_tc']) ? $settings['superadmin_register_tc'] : '', ['class' => 'form-control']) !!}
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('GOOGLE_MAP_API_KEY', __('superadmin::lang.google_map_api_key') . ':') !!}
+                {!! Form::text('GOOGLE_MAP_API_KEY', $default_values['GOOGLE_MAP_API_KEY'], ['class' => 'form-control','placeholder' => __('superadmin::lang.google_map_api_key')]); !!}
             </div>
         </div>
     </div>

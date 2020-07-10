@@ -46,7 +46,7 @@
                         <th>{{ __('report.total_purchase') }}:</th>
                         <td>
                             <span class="total_purchase">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -54,7 +54,7 @@
                         <th>{{ __('report.purchase_inc_tax') }}:</th>
                         <td>
                              <span class="purchase_inc_tax">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -62,7 +62,7 @@
                         <th>{{ __('lang_v1.total_purchase_return_inc_tax') }}:</th>
                         <td>
                              <span class="purchase_return_inc_tax">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -70,7 +70,7 @@
                         <th>{{ __('report.purchase_due') }}: @show_tooltip(__('tooltip.purchase_due'))</th>
                         <td>
                              <span class="purchase_due">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -85,7 +85,7 @@
                         <th>{{ __('report.total_sell') }}:</th>
                         <td>
                             <span class="total_sell">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -93,7 +93,7 @@
                         <th>{{ __('report.sell_inc_tax') }}:</th>
                         <td>
                              <span class="sell_inc_tax">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -101,7 +101,7 @@
                         <th>{{ __('lang_v1.total_sell_return_inc_tax') }}:</th>
                         <td>
                              <span class="total_sell_return">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -109,7 +109,7 @@
                         <th>{{ __('report.sell_due') }}: @show_tooltip(__('tooltip.sell_due'))</th>
                         <td>
                             <span class="sell_due">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -127,14 +127,14 @@
                 <h3 class="text-muted">
                     {{ __('report.sell_minus_purchase') }}: 
                     <span class="sell_minus_purchase">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                 </h3>
 
                 <h3 class="text-muted">
                     {{ __('report.difference_due') }}: 
                     <span class="difference_due">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                 </h3>
             @endcomponent

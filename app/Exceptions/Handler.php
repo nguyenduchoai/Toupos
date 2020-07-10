@@ -87,7 +87,7 @@ class Handler extends ExceptionHandler
             $handler = new SymfonyExceptionHandler();
 
             $html = $handler->getHtml($e);
-            $email = env('MAIL_USERNAME');
+            $email = config('mail.username');
             
             if (!empty($email)) {
                 Mail::to($email)->send(new ExceptionOccured($html));

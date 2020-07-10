@@ -38,7 +38,7 @@
 
 		</td>
 		<td class="text-center">
-			<span class="purchase_price display_currency" data-currency_symbol="true">
+			<span class="purchase_price display_currency purchase_price_text" data-currency_symbol="true">
 				{{ $variation->default_purchase_price }}
 			</span>
 			<input type="hidden" class="purchase_price" value="{{ $variation->default_purchase_price }}">

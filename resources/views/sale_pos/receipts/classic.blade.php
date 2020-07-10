@@ -85,6 +85,20 @@
 				@endif
 				{{$receipt_details->invoice_no}}
 
+				@if(!empty($receipt_details->types_of_service))
+					<br/>
+					<span class="pull-left text-left">
+						<strong>{!! $receipt_details->types_of_service_label !!}:</strong>
+						{{$receipt_details->types_of_service}}
+						<!-- Waiter info -->
+						@if(!empty($receipt_details->types_of_service_custom_fields))
+							@foreach($receipt_details->types_of_service_custom_fields as $key => $value)
+								<br><strong>{{$key}}: </strong> {{$value}}
+							@endforeach
+						@endif
+					</span>
+				@endif
+
 				<!-- Table information-->
 		        @if(!empty($receipt_details->table_label) || !empty($receipt_details->table))
 		        	<br/>
@@ -130,6 +144,35 @@
 			<span class="pull-right text-left">
 				<b>{{$receipt_details->date_label}}</b> {{$receipt_details->invoice_date}}
 
+				@if(!empty($receipt_details->due_date_label))
+				<br><b>{{$receipt_details->due_date_label}}</b> {{$receipt_details->due_date ?? ''}}
+				@endif
+
+				@if(!empty($receipt_details->brand_label) || !empty($receipt_details->repair_brand))
+					<br>
+					@if(!empty($receipt_details->brand_label))
+						<b>{!! $receipt_details->brand_label !!}</b>
+					@endif
+					{{$receipt_details->repair_brand}}
+		        @endif
+
+
+		        @if(!empty($receipt_details->device_label) || !empty($receipt_details->repair_device))
+					<br>
+					@if(!empty($receipt_details->device_label))
+						<b>{!! $receipt_details->device_label !!}</b>
+					@endif
+					{{$receipt_details->repair_device}}
+		        @endif
+
+				@if(!empty($receipt_details->model_no_label) || !empty($receipt_details->repair_model_no))
+					<br>
+					@if(!empty($receipt_details->model_no_label))
+						<b>{!! $receipt_details->model_no_label !!}</b>
+					@endif
+					{{$receipt_details->repair_model_no}}
+		        @endif
+
 				@if(!empty($receipt_details->serial_no_label) || !empty($receipt_details->repair_serial_no))
 					<br>
 					@if(!empty($receipt_details->serial_no_label))
@@ -163,30 +206,22 @@
 			</span>
 		</p>
 	</div>
-	
-	@if(!empty($receipt_details->defects_label) || !empty($receipt_details->repair_defects))
-		<div class="col-xs-12">
-			<br>
-			@if(!empty($receipt_details->defects_label))
-				<b>{!! $receipt_details->defects_label !!}</b>
-			@endif
-			{{$receipt_details->repair_defects}}
-		</div>
-    @endif
-	<!-- /.col -->
 </div>
 
+<div class="row">
+	@includeIf('sale_pos.receipts.partial.common_repair_invoice')
+</div>
 
 <div class="row">
 	<div class="col-xs-12">
-		<br/><br/>
+		<br/>
 		<table class="table table-responsive">
 			<thead>
 				<tr>
 					<th>{{$receipt_details->table_product_label}}</th>
-					<th>{{$receipt_details->table_qty_label}}</th>
-					<th>{{$receipt_details->table_unit_price_label}}</th>
-					<th>{{$receipt_details->table_subtotal_label}}</th>
+					<th class="text-right">{{$receipt_details->table_qty_label}}</th>
+					<th class="text-right">{{$receipt_details->table_unit_price_label}}</th>
+					<th class="text-right">{{$receipt_details->table_subtotal_label}}</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -201,11 +236,14 @@
                             @if(!empty($line['product_custom_fields'])), {{$line['product_custom_fields']}} @endif
                             @if(!empty($line['sell_line_note']))({{$line['sell_line_note']}}) @endif 
                             @if(!empty($line['lot_number']))<br> {{$line['lot_number_label']}}:  {{$line['lot_number']}} @endif 
-                            @if(!empty($line['product_expiry'])), {{$line['product_expiry_label']}}:  {{$line['product_expiry']}} @endif 
+                            @if(!empty($line['product_expiry'])), {{$line['product_expiry_label']}}:  {{$line['product_expiry']}} @endif
+
+                            @if(!empty($line['warranty_name'])) <br><small>{{$line['warranty_name']}} </small>@endif @if(!empty($line['warranty_exp_date'])) <small>- {{@format_date($line['warranty_exp_date'])}} </small>@endif
+                            @if(!empty($line['warranty_description'])) <small> {{$line['warranty_description'] ?? ''}}</small>@endif
                         </td>
-						<td>{{$line['quantity']}} {{$line['units']}} </td>
-						<td>{{$line['unit_price_inc_tax']}}</td>
-						<td>{{$line['line_total']}}</td>
+						<td class="text-right">{{$line['quantity']}} {{$line['units']}} </td>
+						<td class="text-right">{{$line['unit_price_inc_tax']}}</td>
+						<td class="text-right">{{$line['line_total']}}</td>
 					</tr>
 					@if(!empty($line['modifiers']))
 						@foreach($line['modifiers'] as $modifier)
@@ -215,9 +253,9 @@
 		                            @if(!empty($modifier['sub_sku'])), {{$modifier['sub_sku']}} @endif @if(!empty($modifier['cat_code'])), {{$modifier['cat_code']}}@endif
 		                            @if(!empty($modifier['sell_line_note']))({{$modifier['sell_line_note']}}) @endif 
 		                        </td>
-								<td>{{$modifier['quantity']}} {{$modifier['units']}} </td>
-								<td>{{$modifier['unit_price_inc_tax']}}</td>
-								<td>{{$modifier['line_total']}}</td>
+								<td class="text-right">{{$modifier['quantity']}} {{$modifier['units']}} </td>
+								<td class="text-right">{{$modifier['unit_price_inc_tax']}}</td>
+								<td class="text-right">{{$modifier['line_total']}}</td>
 							</tr>
 						@endforeach
 					@endif
@@ -245,7 +283,7 @@
 				@foreach($receipt_details->payments as $payment)
 					<tr>
 						<td>{{$payment['method']}}</td>
-						<td>{{$payment['amount']}}</td>
+						<td class="text-right" >{{$payment['amount']}}</td>
 						<td>{{$payment['date']}}</td>
 					</tr>
 				@endforeach
@@ -257,7 +295,7 @@
 					<th>
 						{!! $receipt_details->total_paid_label !!}
 					</th>
-					<td>
+					<td class="text-right">
 						{{$receipt_details->total_paid}}
 					</td>
 				</tr>
@@ -269,7 +307,7 @@
 				<th>
 					{!! $receipt_details->total_due_label !!}
 				</th>
-				<td>
+				<td class="text-right">
 					{{$receipt_details->total_due}}
 				</td>
 			</tr>
@@ -280,7 +318,7 @@
 				<th>
 					{!! $receipt_details->all_bal_label !!}
 				</th>
-				<td>
+				<td class="text-right">
 					{{$receipt_details->all_due}}
 				</td>
 			</tr>
@@ -294,11 +332,21 @@
         <div class="table-responsive">
           	<table class="table">
 				<tbody>
+					@if(!empty($receipt_details->total_quantity_label))
+						<tr class="color-555">
+							<th style="width:70%">
+								{!! $receipt_details->total_quantity_label !!}
+							</th>
+							<td class="text-right">
+								{{$receipt_details->total_quantity}}
+							</td>
+						</tr>
+					@endif
 					<tr>
 						<th style="width:70%">
 							{!! $receipt_details->subtotal_label !!}
 						</th>
-						<td>
+						<td class="text-right">
 							{{$receipt_details->subtotal}}
 						</td>
 					</tr>
@@ -309,7 +357,7 @@
 							<th style="width:70%">
 								{!! $receipt_details->shipping_charges_label !!}
 							</th>
-							<td>
+							<td class="text-right">
 								{{$receipt_details->shipping_charges}}
 							</td>
 						</tr>
@@ -322,7 +370,7 @@
 								{!! $receipt_details->discount_label !!}
 							</th>
 
-							<td>
+							<td class="text-right">
 								(-) {{$receipt_details->discount}}
 							</td>
 						</tr>
@@ -334,7 +382,7 @@
 								{!! $receipt_details->reward_point_label !!}
 							</th>
 
-							<td>
+							<td class="text-right">
 								(-) {{$receipt_details->reward_point_amount}}
 							</td>
 						</tr>
@@ -346,8 +394,19 @@
 							<th>
 								{!! $receipt_details->tax_label !!}
 							</th>
-							<td>
+							<td class="text-right">
 								(+) {{$receipt_details->tax}}
+							</td>
+						</tr>
+					@endif
+
+					@if( !empty($receipt_details->round_off_label) )
+						<tr>
+							<th>
+								{!! $receipt_details->round_off_label !!}
+							</th>
+							<td class="text-right">
+								{{$receipt_details->round_off}}
 							</td>
 						</tr>
 					@endif
@@ -357,7 +416,7 @@
 						<th>
 							{!! $receipt_details->total_label !!}
 						</th>
-						<td>
+						<td class="text-right">
 							{{$receipt_details->total}}
 						</td>
 					</tr>

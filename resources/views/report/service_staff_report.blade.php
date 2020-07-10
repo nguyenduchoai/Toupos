@@ -113,7 +113,7 @@
             columns: [
                 { data: 'transaction_date', name: 'transaction_date'  },
                 { data: 'invoice_no', name: 'invoice_no'},
-                { data: 'service_staff', name: 'ss.first_name'},
+                { data: 'waiter', name: 'ss.first_name'},
                 { data: 'business_location', name: 'bl.name'},
                 { data: 'total_before_tax', name: 'transactions.total_before_tax'},
                 { data: 'discount_amount', name: 'transactions.discount_amount'},

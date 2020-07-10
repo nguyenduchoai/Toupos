@@ -37,6 +37,8 @@ class Business extends Model
         'enabled_modules' => 'array',
         'email_settings' => 'array',
         'sms_settings' => 'array',
+        'common_settings' => 'array',
+        'weighing_scale_setting' => 'array'
     ];
 
     /**
@@ -116,5 +118,14 @@ class Business extends Model
             Business::where('id', $business_id)
                 ->update($details);
         }
+    }
+
+    public function getBusinessAddressAttribute() 
+    {
+        $location = $this->locations->first();
+        $address = $location->city . 
+        ', ' . $location->state . '<br>' . $location->country . ', ' . $location->zip_code;
+
+        return $address;
     }
 }

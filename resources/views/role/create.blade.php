@@ -295,6 +295,7 @@
         </div>
         </div>
         <hr>
+        @if(in_array('purchases', $enabled_modules) || in_array('stock_adjustment', $enabled_modules) )
         <div class="row check_group">
         <div class="col-md-1">
           <h4>@lang( 'role.purchase' )</h4>
@@ -348,9 +349,27 @@
               @show_tooltip(__('lang_v1.purchase_payments'))
             </div>
           </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'purchase.update_status', false,['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.update_status') }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'view_own_purchase', false,['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.view_own_purchase') }}
+              </label>
+            </div>
+          </div>
+
         </div>
         </div>
         <hr>
+        @endif
         <div class="row check_group">
         <div class="col-md-1">
           <h4>@lang( 'sale.sale' )</h4>
@@ -371,6 +390,7 @@
               </label>
             </div>
           </div>
+          @if(in_array('pos_sale', $enabled_modules))
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -379,6 +399,7 @@
               </label>
             </div>
           </div>
+            @endif
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -395,11 +416,29 @@
               </label>
             </div>
           </div>
+          @if(in_array('add_sale', $enabled_modules))
           <div class="col-md-12">
             <div class="checkbox">
               <label>
                 {!! Form::checkbox('permissions[]', 'direct_sell.access', false, 
                 [ 'class' => 'input-icheck']); !!} {{ __( 'role.direct_sell.access' ) }}
+              </label>
+            </div>
+          </div>
+          @endif
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'list_drafts', false, 
+                [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.list_drafts' ) }}
+              </label>
+            </div>
+          </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'list_quotations', false, 
+                [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.list_quotations' ) }}
               </label>
             </div>
           </div>
@@ -468,6 +507,16 @@
               </label>
             </div>
           </div>
+          @if(in_array('types_of_service', $enabled_modules))
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'access_types_of_service', false, 
+                [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.access_types_of_service' ) }}
+              </label>
+            </div>
+          </div>
+          @endif
         </div>
         </div>
         <hr>
@@ -671,14 +720,16 @@
             </div>
         </div>
         <div class="col-md-9">
-          <div class="col-md-12">
-            <div class="checkbox">
-              <label>
-                {!! Form::checkbox('permissions[]', 'purchase_n_sell_report.view', false, 
-                [ 'class' => 'input-icheck']); !!} {{ __( 'role.purchase_n_sell_report.view' ) }}
-              </label>
-            </div>
-          </div>
+            @if(in_array('purchases', $enabled_modules) || in_array('add_sale', $enabled_modules) || in_array('pos_sale', $enabled_modules))
+              <div class="col-md-12">
+                <div class="checkbox">
+                  <label>
+                    {!! Form::checkbox('permissions[]', 'purchase_n_sell_report.view', false, 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'role.purchase_n_sell_report.view' ) }}
+                  </label>
+                </div>
+              </div>
+            @endif
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -695,6 +746,7 @@
               </label>
             </div>
           </div>
+          @if(in_array('expenses', $enabled_modules))
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -703,6 +755,7 @@
               </label>
             </div>
           </div>
+          @endif
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -784,6 +837,7 @@
               </label>
             </div>
           </div>
+          @if(in_array('expenses', $enabled_modules))
           <div class="col-md-12">
             <div class="checkbox">
               <label>
@@ -792,6 +846,24 @@
               </label>
             </div>
           </div>
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'view_own_expense', false,['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.view_own_expense') }}
+              </label>
+            </div>
+          </div>
+          @endif
+          <div class="col-md-12">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('permissions[]', 'access_printers', false,['class' => 'input-icheck']); !!}
+                {{ __('lang_v1.access_printers') }}
+              </label>
+            </div>
+          </div>
+
         </div>
         </div>
         <hr>
@@ -887,6 +959,23 @@
           @endif
         </div>
         </div>
+        @if(in_array('tables', $enabled_modules))
+          <div class="row">
+            <div class="col-md-3">
+              <h4>@lang( 'restaurant.restaurant' )</h4>
+            </div>
+            <div class="col-md-9">
+              <div class="col-md-12">
+                <div class="checkbox">
+                  <label>
+                    {!! Form::checkbox('permissions[]', 'access_tables', false, 
+                    [ 'class' => 'input-icheck']); !!} {{ __('lang_v1.access_tables') }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        @endif
         
         @include('role.partials.module_permissions')
         <div class="row">

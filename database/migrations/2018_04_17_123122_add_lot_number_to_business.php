@@ -18,7 +18,7 @@ class AddLotNumberToBusiness extends Migration
         });
 
         Schema::table('purchase_lines', function (Blueprint $table) {
-            $table->string('lot_number', 256)->after('exp_date')->nullable();
+            $table->string('lot_number')->after('exp_date')->nullable();
         });
     }
 

@@ -37,14 +37,17 @@ class InstallController extends Controller
         $is_installed = System::getProperty($this->module_name . '_version');
         if (empty($is_installed)) {
             DB::statement('SET default_storage_engine=INNODB;');
-            Artisan::call('migrate', ["--force"=> true]);
+            Artisan::call('module:migrate', ['module' => "Essentials"]);
+            Artisan::call('module:publish', ['module' => "Essentials"]);
+            System::addProperty($this->module_name . '_version', $this->appVersion);
         }
 
         $output = ['success' => 1,
                     'msg' => 'Essentials module installed succesfully'
                 ];
+
         return redirect()
-            ->action('HomeController@index')
+            ->action('\App\Http\Controllers\Install\ModulesController@index')
             ->with('status', $output);
     }
 
@@ -83,8 +86,9 @@ class InstallController extends Controller
                 $this->installSettings();
                 
                 DB::statement('SET default_storage_engine=INNODB;');
-                Artisan::call('migrate', ["--force"=> true]);
-
+                Artisan::call('module:migrate', ['module' => "Essentials"]);
+                Artisan::call('module:publish', ['module' => "Essentials"]);
+                
                 System::setProperty($this->module_name . '_version', $this->appVersion);
             } else {
                 abort(404);
@@ -95,12 +99,38 @@ class InstallController extends Controller
             $output = ['success' => 1,
                         'msg' => 'Essentials module updated Succesfully to version ' . $this->appVersion . ' !!'
                     ];
+
             return redirect()
-                ->action('HomeController@index')
-                ->with('status', $output);
+            ->action('\App\Http\Controllers\Install\ModulesController@index')
+            ->with('status', $output);
         } catch (Exception $e) {
             DB::rollBack();
             die($e->getMessage());
         }
+    }
+
+    /**
+     * Uninstall
+     * @return Response
+     */
+    public function uninstall()
+    {
+        if (!auth()->user()->can('superadmin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            System::removeProperty($this->module_name . '_version');
+
+            $output = ['success' => true,
+                            'msg' => __("lang_v1.success")
+                        ];
+        } catch (\Exception $e) {
+            $output = ['success' => false,
+                        'msg' => $e->getMessage()
+                    ];
+        }
+
+        return redirect()->back()->with(['status' => $output]);
     }
 }

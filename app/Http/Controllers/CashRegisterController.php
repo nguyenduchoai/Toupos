@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\BusinessLocation;
 use App\CashRegister;
 use App\Utils\CashRegisterUtil;
+use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
 
 class CashRegisterController extends Controller
@@ -13,6 +15,7 @@ class CashRegisterController extends Controller
      *
      */
     protected $cashRegisterUtil;
+    protected $moduleUtil;
 
     /**
      * Constructor
@@ -20,9 +23,10 @@ class CashRegisterController extends Controller
      * @param CashRegisterUtil $cashRegisterUtil
      * @return void
      */
-    public function __construct(CashRegisterUtil $cashRegisterUtil)
+    public function __construct(CashRegisterUtil $cashRegisterUtil, ModuleUtil $moduleUtil)
     {
         $this->cashRegisterUtil = $cashRegisterUtil;
+        $this->moduleUtil = $moduleUtil;
     }
 
     /**
@@ -42,12 +46,17 @@ class CashRegisterController extends Controller
      */
     public function create()
     {
+        //like:repair
+        $sub_type = request()->get('sub_type');
+
         //Check if there is a open register, if yes then redirect to POS screen.
         if ($this->cashRegisterUtil->countOpenedRegister() != 0) {
-            return redirect()->action('SellPosController@create');
+            return redirect()->action('SellPosController@create', ['sub_type' => $sub_type]);
         }
+        $business_id = request()->session()->get('user.business_id');
+        $business_locations = BusinessLocation::forDropdown($business_id);
 
-        return view('cash_register.create');
+        return view('cash_register.create')->with(compact('business_locations', 'sub_type'));
     }
 
     /**
@@ -58,6 +67,9 @@ class CashRegisterController extends Controller
      */
     public function store(Request $request)
     {
+        //like:repair
+        $sub_type = request()->get('sub_type');
+            
         try {
             $initial_amount = 0;
             if (!empty($request->input('amount'))) {
@@ -69,7 +81,9 @@ class CashRegisterController extends Controller
             $register = CashRegister::create([
                         'business_id' => $business_id,
                         'user_id' => $user_id,
-                        'status' => 'open'
+                        'status' => 'open',
+                        'location_id' => $request->input('location_id'),
+                        'created_at' => \Carbon::now()->format('Y-m-d H:i:00')
                     ]);
             $register->cash_register_transactions()->create([
                             'amount' => $initial_amount,
@@ -81,7 +95,7 @@ class CashRegisterController extends Controller
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
         }
 
-        return redirect()->action('SellPosController@create');
+        return redirect()->action('SellPosController@create', ['sub_type' => $sub_type]);
     }
 
     /**
@@ -95,13 +109,13 @@ class CashRegisterController extends Controller
         $register_details =  $this->cashRegisterUtil->getRegisterDetails($id);
         $user_id = $register_details->user_id;
         $open_time = $register_details['open_time'];
-        $close_time = \Carbon::now()->toDateTimeString();
+        $close_time = !empty($register_details['closed_at']) ? $register_details['closed_at'] : \Carbon::now()->toDateTimeString();
         $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
 
         $payment_types = $this->cashRegisterUtil->payment_types();
 
         return view('cash_register.register_details')
-                    ->with(compact('register_details', 'details', 'payment_types'));
+                    ->with(compact('register_details', 'details', 'payment_types', 'close_time'));
     }
 
     /**
@@ -117,11 +131,15 @@ class CashRegisterController extends Controller
         $user_id = auth()->user()->id;
         $open_time = $register_details['open_time'];
         $close_time = \Carbon::now()->toDateTimeString();
-        $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
-        $payment_types = $this->cashRegisterUtil->payment_types();
+
+        $is_types_of_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
+
+        $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time, $is_types_of_service_enabled);
+
+        $payment_types = $this->cashRegisterUtil->payment_types($register_details->location_id);
         
         return view('cash_register.register_details')
-                ->with(compact('register_details', 'details', 'payment_types'));
+                ->with(compact('register_details', 'details', 'payment_types', 'close_time'));
     }
 
     /**
@@ -137,8 +155,12 @@ class CashRegisterController extends Controller
         $user_id = auth()->user()->id;
         $open_time = $register_details['open_time'];
         $close_time = \Carbon::now()->toDateTimeString();
-        $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time);
-        $payment_types = $this->cashRegisterUtil->payment_types();
+
+        $is_types_of_service_enabled = $this->moduleUtil->isModuleEnabled('types_of_service');
+
+        $details = $this->cashRegisterUtil->getRegisterTransactionDetails($user_id, $open_time, $close_time, $is_types_of_service_enabled);
+        
+        $payment_types = $this->cashRegisterUtil->payment_types($register_details->location_id);
         return view('cash_register.close_register_modal')
                     ->with(compact('register_details', 'details', 'payment_types'));
     }

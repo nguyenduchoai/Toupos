@@ -290,7 +290,8 @@ class CurrenciesTableSeeder extends Seeder
             [ "country" => "United Arab Emirates", "currency" => "United Arab Emirates dirham", "code" => "AED", "symbol" => "د.إ", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
             [ "country" => "Uganda", "currency" => "Uganda shillings", "code" => "UGX", "symbol" => "USh", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
             [ "country" => "Tanzania", "currency" => "Tanzanian shilling", "code" => "TZS", "symbol" => "TSh", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
-            [ "country" => "Angola", "currency" => "Kwanza", "code" => "AOA", "symbol" => "Kz", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ]
+            [ "country" => "Angola", "currency" => "Kwanza", "code" => "AOA", "symbol" => "Kz", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ],
+            [ "country" => "Kuwait", "currency" => "Kuwaiti dinar", "code" => "KWD", "symbol" => "KD", "thousand_separator" => ",", "decimal_separator" => ".", "created_at" => null , "updated_at" => null ]
       ]);
     }
 }

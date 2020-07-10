@@ -12,7 +12,13 @@
 			</div>
 		</div>
 		<div class="modal-footer">
-		    <button type="button" class="btn btn-default" data-dismiss="modal">@lang('messages.close')</button>
+		    <button type="button" class="btn btn-default" data-dismiss="modal">
+		    	@lang('messages.close')
+		    </button>
+
+		    <a href="{{$url}}" id="view_invoice_url" target="_blank" rel="noopener" class="btn btn-primary">
+				@lang('messages.view')
+			</a>
 		</div>
 	</div><!-- /.modal-content -->
 </div><!-- /.modal-dialog -->

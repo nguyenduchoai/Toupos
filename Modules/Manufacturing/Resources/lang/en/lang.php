@@ -36,7 +36,7 @@ return [
     'production_cost_tooltip' => 'Percentage of total ingredients cost',
     'add_production' => 'Add Production',
     'edit_recipe' => 'Edit Recipe',
-    'disable_editing_ingredient_qty' => 'Disable editing ingredients quantity',
+    'disable_editing_ingredient_qty' => 'Disable editing ingredients quantity in production',
     'manufacturing_report' => 'Manufacturing Report',
     'total_production' => 'Total Production',
     'waste_percent' => 'Wastage Percent',
@@ -50,5 +50,15 @@ return [
     'mfg_stock_tooltip' => 'Stock left from total manufactured',
     'quantity_greater_than_zero' => 'Quantity must be greater than zero',
     'waste_qty_less_than_qty' => 'Quantity must be greater than wasted quantity',
-    'version_info' => 'Manufacturing module version - <code> :version </code>'
+    'version_info' => 'Manufacturing module version - <code> :version </code>',
+    'added_as_ingredient' => 'This product has been added as an ingredient to a recipe',
+    'enable_editing_product_price_after_production' => 'Update product purchase price based on production price, on finalizing production',
+    'add_ingredient_group' => 'Add production step',
+    'ingredient_group' => 'Step name',
+    'ingredient_group_tooltip' => 'Add a production step with step name, description & different ingredient for it.',
+    'update_product_price' => 'Update product price',
+    'update_product_price_help' => 'Product purchase price will be updated according to recipe unit price',
+    'continue' => 'Continue',
+    'copy_from_recipe' => 'Copy from recipe',
+    'price_updated_live' => 'Price is updated based on ingredient purchase cost'
 ];

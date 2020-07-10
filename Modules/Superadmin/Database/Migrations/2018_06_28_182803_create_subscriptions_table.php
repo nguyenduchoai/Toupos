@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreateSubscriptionsTable extends Migration
 {
@@ -22,7 +22,7 @@ class CreateSubscriptionsTable extends Migration
             $table->date('start_date')->nullable();
             $table->date('trial_end_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->decimal('package_price', 20, 2);
+            $table->decimal('package_price', 22, 4);
             $table->longText('package_details');
             $table->integer('created_id')->unsigned();
             $table->string('paid_via')->nullable();

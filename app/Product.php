@@ -32,7 +32,7 @@ class Product extends Model
     public function getImageUrlAttribute()
     {
         if (!empty($this->image)) {
-            $image_url = asset('/uploads/img/' . $this->image);
+            $image_url = asset('/uploads/img/' . rawurlencode($this->image));
         } else {
             $image_url = asset('/img/default.png');
         }
@@ -141,6 +141,17 @@ class Product extends Model
     }
 
     /**
+     * Scope a query to only include inactive products.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeInactive($query)
+    {
+        return $query->where('products.is_inactive', 1);
+    }
+
+    /**
      * Scope a query to only include products for sales.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
@@ -148,6 +159,45 @@ class Product extends Model
      */
     public function scopeProductForSales($query)
     {
+        return $query->where('not_for_selling', 0);
+    }
+
+    /**
+     * Scope a query to only include products not for sales.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeProductNotForSales($query)
+    {
         return $query->where('not_for_selling', 1);
+    }
+
+    public function product_locations()
+    {
+        return $this->belongsToMany(\App\BusinessLocation::class, 'product_locations', 'product_id', 'location_id');
+    }
+
+    /**
+     * Scope a query to only include products available for a location.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForLocation($query, $location_id)
+    {
+        return $query->where(function ($q) use ($location_id) {
+            $q->whereHas('product_locations', function ($query) use ($location_id) {
+                $query->where('product_locations.location_id', $location_id);
+            });
+        });
+    }
+
+    /**
+     * Get warranty associated with the product.
+     */
+    public function warranty()
+    {
+        return $this->belongsTo(\App\Warranty::class);
     }
 }

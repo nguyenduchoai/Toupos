@@ -16,6 +16,11 @@ class SellingPriceGroup extends Model
      */
     protected $guarded = ['id'];
 
+    public function scopeActive($query)
+    {
+        return $query->where('selling_price_groups.is_active', 1);
+    }
+
     /**
      * Return list of selling price groups
      *
@@ -26,6 +31,7 @@ class SellingPriceGroup extends Model
     public static function forDropdown($business_id)
     {
         $price_groups = SellingPriceGroup::where('business_id', $business_id)
+                                    ->active()
                                     ->get();
 
         $dropdown = [];
@@ -52,6 +58,7 @@ class SellingPriceGroup extends Model
     public static function countSellingPriceGroups($business_id)
     {
         $count = SellingPriceGroup::where('business_id', $business_id)
+                                ->active()
                                 ->count();
 
         return $count;

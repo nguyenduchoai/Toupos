@@ -26,6 +26,12 @@
                         {!! Form::select('register_status', ['open' => __('cash_register.open'), 'close' => __('cash_register.close')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('report.all')]); !!}
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        {!! Form::label('register_report_date_range', __('report.date_range') . ':') !!}
+                        {!! Form::text('register_report_date_range', null , ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'register_report_date_range', 'readonly']); !!}
+                    </div>
+                </div>
                 {!! Form::close() !!}
             @endcomponent
         </div>
@@ -39,6 +45,7 @@
                             <tr>
                                 <th>@lang('report.open_time')</th>
                                 <th>@lang('report.close_time')</th>
+                                <th>@lang('sale.location')</th>
                                 <th>@lang('report.user')</th>
                                 <th>@lang('cash_register.total_card_slips')</th>
                                 <th>@lang('cash_register.total_cheques')</th>

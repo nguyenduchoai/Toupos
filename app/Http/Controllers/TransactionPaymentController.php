@@ -76,7 +76,7 @@ class TransactionPaymentController extends Controller
                 $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
                 'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
                 'cheque_number', 'bank_account_number']);
-                $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
+                $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'), true);
                 $inputs['transaction_id'] = $transaction->id;
                 $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
                 $inputs['created_by'] = auth()->user()->id;
@@ -190,10 +190,10 @@ class TransactionPaymentController extends Controller
                                         ->with(['contact', 'location'])
                                         ->first();
 
-            $payment_types = $this->transactionUtil->payment_types();
+            $payment_types = $this->transactionUtil->payment_types($transaction->location);
 
             //Accounts
-            $accounts = $this->moduleUtil->accountsDropdown($business_id, true);
+            $accounts = $this->moduleUtil->accountsDropdown($business_id, true, false, true);
 
             return view('transaction_payment.edit_payment_row')
                         ->with(compact('transaction', 'payment_types', 'payment_line', 'accounts'));
@@ -217,7 +217,7 @@ class TransactionPaymentController extends Controller
             $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
             'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
             'cheque_number', 'bank_account_number']);
-            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
+            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'), true);
             $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
 
             if ($inputs['method'] == 'custom_pay_1') {
@@ -349,7 +349,7 @@ class TransactionPaymentController extends Controller
                                         ->with(['contact', 'location'])
                                         ->first();
             if ($transaction->payment_status != 'paid') {
-                $payment_types = $this->transactionUtil->payment_types();
+                $payment_types = $this->transactionUtil->payment_types($transaction->location);
 
                 $paid_amount = $this->transactionUtil->getTotalPaid($transaction_id);
                 $amount = $transaction->final_total - $paid_amount;
@@ -362,10 +362,10 @@ class TransactionPaymentController extends Controller
                 $payment_line = new TransactionPayment();
                 $payment_line->amount = $amount;
                 $payment_line->method = 'cash';
-                $payment_line->paid_on = \Carbon::now()->toDateString();
+                $payment_line->paid_on = \Carbon::now()->toDateTimeString();
 
                 //Accounts
-                $accounts = $this->moduleUtil->accountsDropdown($business_id, true);
+                $accounts = $this->moduleUtil->accountsDropdown($business_id, true, false, true);
 
                 $view = view('transaction_payment.payment_row')
                 ->with(compact('transaction', 'payment_types', 'payment_line', 'amount_formated', 'accounts'))->render();
@@ -472,7 +472,7 @@ class TransactionPaymentController extends Controller
             $contact_details->total_paid = empty($contact_details->total_paid) ? 0 : $contact_details->total_paid;
             
             $payment_line->method = 'cash';
-            $payment_line->paid_on = \Carbon::now()->toDateString();
+            $payment_line->paid_on = \Carbon::now()->toDateTimeString();
                    
             $payment_types = $this->transactionUtil->payment_types();
 
@@ -503,7 +503,7 @@ class TransactionPaymentController extends Controller
             $inputs = $request->only(['amount', 'method', 'note', 'card_number', 'card_holder_name',
                 'card_transaction_number', 'card_type', 'card_month', 'card_year', 'card_security',
                 'cheque_number', 'bank_account_number']);
-            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'));
+            $inputs['paid_on'] = $this->transactionUtil->uf_date($request->input('paid_on'), true);
             $inputs['amount'] = $this->transactionUtil->num_uf($inputs['amount']);
             $inputs['created_by'] = auth()->user()->id;
             $inputs['payment_for'] = $contact_id;
@@ -666,7 +666,7 @@ class TransactionPaymentController extends Controller
             }
             
             return Datatables::of($query)
-                ->editColumn('paid_on', '{{@format_date($paid_on)}}')
+                ->editColumn('paid_on', '{{@format_datetime($paid_on)}}')
                 ->editColumn('method', function ($row) {
                     $method = __('lang_v1.' . $row->method);
                     if ($row->method == 'cheque') {
@@ -687,7 +687,7 @@ class TransactionPaymentController extends Controller
                 ->editColumn('amount', function ($row) {
                     return '<span class="display_currency paid-amount" data-orig-value="' . $row->amount . '" data-currency_symbol = true>' . $row->amount . '</span>';
                 })
-                ->addColumn('action', '<button type="button" class="btn btn-primary btn-xs view_payment" data-href="{{ action("TransactionPaymentController@viewPayment", [$id]) }}"><i class="fa fa-external-link"></i> @lang("messages.view")
+                ->addColumn('action', '<button type="button" class="btn btn-primary btn-xs view_payment" data-href="{{ action("TransactionPaymentController@viewPayment", [$id]) }}"><i class="fas fa-eye"></i> @lang("messages.view")
                     </button> <button type="button" class="btn btn-info btn-xs edit_payment" 
                     data-href="{{action("TransactionPaymentController@edit", [$id]) }}"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</button>
                     &nbsp; <button type="button" class="btn btn-danger btn-xs delete_payment" 

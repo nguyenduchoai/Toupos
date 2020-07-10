@@ -17,7 +17,7 @@
       		</div>
       		<div class="row">
       			<div class="col-md-12">
-      				<table class="table table-striped">
+      				<table class="table">
 						<thead>
 							<tr>
 								<th>@lang('manufacturing::lang.ingredient')</th>
@@ -27,21 +27,53 @@
 							</tr>
 						</thead>
 						<tbody>
+							@php
+								$ingredient_groups = [];
+								$ingredient_total_price = 0;
+							@endphp
 							@foreach($ingredients as $ingredient)
+								@php
+									$ingredient_price = $ingredient['quantity']*$ingredient['dpp_inc_tax']*$ingredient['multiplier'];
+									$ingredient_total_price += $ingredient_price;
+								@endphp
+								@if(empty($ingredient['mfg_ingredient_group_id']))
+									<tr>
+										<td>
+											{{$ingredient['full_name']}}
+										</td>
+										<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['quantity']}}</span> {{$ingredient['unit']}}</td>
+										<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['waste_percent']}}</span>%</td>
+										<td><span class="display_currency" data-currency_symbol="true">{{$ingredient_price}}</span></td>
+									</tr>
+								@else
+									@php
+										$ingredient_groups[$ingredient['mfg_ingredient_group_id']][] = $ingredient;
+									@endphp
+								@endif	
+							@endforeach
+							@foreach($ingredient_groups as $ingredient_group)
 								<tr>
-									<td>
-										{{$ingredient['full_name']}}
-									</td>
-									<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['quantity']}}</span> {{$ingredient['unit']}}</td>
-									<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['waste_percent']}}</span>%</td>
-									<td><span class="display_currency" data-currency_symbol="true">{{$ingredient['quantity']*$ingredient['dpp_inc_tax']*$ingredient['multiplier']}}</span></td>
-								</tr>	
+									<td colspan="4" class="bg-gray"><strong>{{$ingredient_group[0]['ingredient_group_name'] ?? ''}}</strong> @if(!empty($ingredient_group[0]['ig_description']))
+									- {{$ingredient_group[0]['ig_description']}}
+								@endif</td>
+								</tr>
+								
+								@foreach($ingredient_group as $ingredient)
+									<tr>
+										<td>
+											{{$ingredient['full_name']}}
+										</td>
+										<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['quantity']}}</span> {{$ingredient['unit']}}</td>
+										<td><span class="display_currency" data-currency_symbol="false">{{$ingredient['waste_percent']}}</span>%</td>
+										<td><span class="display_currency" data-currency_symbol="true">{{$ingredient['quantity']*$ingredient['dpp_inc_tax']*$ingredient['multiplier']}}</span></td>
+									</tr>
+								@endforeach
 							@endforeach
 						</tbody>
 						<tfoot>
 							<tr>
 								<td colspan="3" class="text-right"><strong>@lang('manufacturing::lang.ingredients_cost')</strong></td>
-								<td><span class="display_currency" data-currency_symbol="true">{{$recipe->ingredients_cost}}</span></td>
+								<td><span class="display_currency" data-currency_symbol="true">{{$ingredient_total_price}}</span></td>
 							</tr>
 						</tfoot>
 					</table>
@@ -56,9 +88,15 @@
       			</div>
       			<div class="col-md-6">
       				<strong>@lang('manufacturing::lang.extra_cost'):</strong>
-      				<span class="display_currency" data-currency_symbol="false"></span>% <br>
+      				<span ></span>{{@num_format($recipe->extra_cost)}}% <br>
+      				@php
+      					$final_price = $ingredient_total_price;
+      					if(!empty($recipe->extra_cost)) {
+      						$final_price = $final_price + ($final_price * $recipe->extra_cost / 100);
+      					}
+      				@endphp
       				<strong>@lang('sale.total'):</strong>
-      				<span class="display_currency" data-currency_symbol="true">{{$recipe->final_price}}</span>
+      				<span class="display_currency" data-currency_symbol="true">{{$final_price}}</span>
       			</div>
       		</div>
       		<div class="row">

@@ -1,6 +1,17 @@
+@php
+  $custom_labels = json_decode(session('business.custom_labels'), true);
+  $user_custom_field1 = !empty($custom_labels['user']['custom_field_1']) ? $custom_labels['user']['custom_field_1'] : __('lang_v1.user_custom_field1');
+  $user_custom_field2 = !empty($custom_labels['user']['custom_field_2']) ? $custom_labels['user']['custom_field_2'] : __('lang_v1.user_custom_field2');
+  $user_custom_field3 = !empty($custom_labels['user']['custom_field_3']) ? $custom_labels['user']['custom_field_3'] : __('lang_v1.user_custom_field3');
+  $user_custom_field4 = !empty($custom_labels['user']['custom_field_4']) ? $custom_labels['user']['custom_field_4'] : __('lang_v1.user_custom_field4');
+@endphp
 <div class="form-group col-md-3">
     {!! Form::label('user_dob', __( 'lang_v1.dob' ) . ':') !!}
     {!! Form::text('dob', !empty($user->dob) ? @format_date($user->dob) : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.dob'), 'readonly', 'id' => 'user_dob' ]); !!}
+</div>
+<div class="form-group col-md-3">
+    {!! Form::label('gender', __( 'lang_v1.gender' ) . ':') !!}
+    {!! Form::select('gender', ['male' => __('lang_v1.male'), 'female' => __('lang_v1.female'), 'others' => __('lang_v1.others')], !empty($user->gender) ? $user->gender : null, ['class' => 'form-control', 'id' => 'gender', 'placeholder' => __( 'messages.please_select') ]); !!}
 </div>
 <div class="form-group col-md-3">
     {!! Form::label('marital_status', __( 'lang_v1.marital_status' ) . ':') !!}
@@ -10,11 +21,11 @@
     {!! Form::label('blood_group', __( 'lang_v1.blood_group' ) . ':') !!}
     {!! Form::text('blood_group', !empty($user->blood_group) ? $user->blood_group : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.blood_group') ]); !!}
 </div>
+<div class="clearfix"></div>
 <div class="form-group col-md-3">
     {!! Form::label('contact_number', __( 'lang_v1.contact_no' ) . ':') !!}
     {!! Form::text('contact_number', !empty($user->contact_number) ? $user->contact_number : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.contact_no') ]); !!}
 </div>
-<div class="clearfix"></div>
 <div class="form-group col-md-3">
     {!! Form::label('fb_link', __( 'lang_v1.fb_link' ) . ':') !!}
     {!! Form::text('fb_link', !empty($user->fb_link) ? $user->fb_link : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.fb_link') ]); !!}
@@ -27,26 +38,26 @@
     {!! Form::label('social_media_1', __( 'lang_v1.social_media', ['number' => 1] ) . ':') !!}
     {!! Form::text('social_media_1', !empty($user->social_media_1) ? $user->social_media_1 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.social_media', ['number' => 1] ) ]); !!}
 </div>
+<div class="clearfix"></div>
 <div class="form-group col-md-3">
     {!! Form::label('social_media_2', __( 'lang_v1.social_media', ['number' => 2] ) . ':') !!}
     {!! Form::text('social_media_2', !empty($user->social_media_2) ? $user->social_media_2 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.social_media', ['number' => 2] ) ]); !!}
 </div>
-<div class="clearfix"></div>
 <div class="form-group col-md-3">
-    {!! Form::label('custom_field_1', __( 'lang_v1.custom_field', ['number' => 1] ) . ':') !!}
-    {!! Form::text('custom_field_1', !empty($user->custom_field_1) ? $user->custom_field_1 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.custom_field', ['number' => 1] ) ]); !!}
+    {!! Form::label('custom_field_1', $user_custom_field1 . ':') !!}
+    {!! Form::text('custom_field_1', !empty($user->custom_field_1) ? $user->custom_field_1 : null, ['class' => 'form-control', 'placeholder' => $user_custom_field1 ]); !!}
 </div>
 <div class="form-group col-md-3">
-    {!! Form::label('custom_field_2', __( 'lang_v1.custom_field', ['number' => 2] ) . ':') !!}
-    {!! Form::text('custom_field_2', !empty($user->custom_field_2) ? $user->custom_field_2 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.custom_field', ['number' => 2] ) ]); !!}
+    {!! Form::label('custom_field_2', $user_custom_field2 . ':') !!}
+    {!! Form::text('custom_field_2', !empty($user->custom_field_2) ? $user->custom_field_2 : null, ['class' => 'form-control', 'placeholder' => $user_custom_field2 ]); !!}
 </div>
 <div class="form-group col-md-3">
-    {!! Form::label('custom_field_3', __( 'lang_v1.custom_field', ['number' => 3] ) . ':') !!}
-    {!! Form::text('custom_field_3', !empty($user->custom_field_3) ? $user->custom_field_3 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.custom_field', ['number' => 3] ) ]); !!}
+    {!! Form::label('custom_field_3', $user_custom_field3 . ':') !!}
+    {!! Form::text('custom_field_3', !empty($user->custom_field_3) ? $user->custom_field_3 : null, ['class' => 'form-control', 'placeholder' => $user_custom_field3 ]); !!}
 </div>
 <div class="form-group col-md-3">
-    {!! Form::label('custom_field_4', __( 'lang_v1.custom_field', ['number' => 4] ) . ':') !!}
-    {!! Form::text('custom_field_4', !empty($user->custom_field_4) ? $user->custom_field_4 : null, ['class' => 'form-control', 'placeholder' => __( 'lang_v1.custom_field', ['number' => 4] ) ]); !!}
+    {!! Form::label('custom_field_4', $user_custom_field4 . ':') !!}
+    {!! Form::text('custom_field_4', !empty($user->custom_field_4) ? $user->custom_field_4 : null, ['class' => 'form-control', 'placeholder' => $user_custom_field4 ]); !!}
 </div>
 <div class="form-group col-md-3">
     {!! Form::label('guardian_name', __( 'lang_v1.guardian_name') . ':') !!}

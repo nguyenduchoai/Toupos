@@ -35,7 +35,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('expense_date_range', __('report.date_range') . ':') !!}
-                        {!! Form::text('date_range', @format_date('first day of this month') . ' ~ ' . @format_date('last day of this month') , ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'expense_date_range', 'readonly']); !!}
+                        {!! Form::text('date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'expense_date_range', 'readonly']); !!}
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -50,7 +50,7 @@
     <div class="row">
         <div class="col-md-12">
             @component('components.widget', ['class' => 'box-primary', 'title' => __('expense.all_expenses')])
-                @can('category.create')
+                @can('expense.access')
                     @slot('tool')
                         <div class="box-tools">
                             <a class="btn btn-block btn-primary" href="{{action('ExpenseController@create')}}">
@@ -58,35 +58,35 @@
                         </div>
                     @endslot
                 @endcan
-                @can('category.view')
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped" id="expense_table">
-                            <thead>
-                                <tr>
-                                    <th>@lang('messages.date')</th>
-                                    <th>@lang('purchase.ref_no')</th>
-                                    <th>@lang('expense.expense_category')</th>
-                                    <th>@lang('business.location')</th>
-                                    <th>@lang('sale.payment_status')</th>
-                                    <th>@lang('sale.total_amount')</th>
-                                    <th>@lang('purchase.payment_due')
-                                    <th>@lang('expense.expense_for')</th>
-                                    <th>@lang('expense.expense_note')</th>
-                                    <th>@lang('messages.action')</th>
-                                </tr>
-                            </thead>
-                            <tfoot>
-                                <tr class="bg-gray font-17 text-center footer-total">
-                                    <td colspan="4"><strong>@lang('sale.total'):</strong></td>
-                                    <td id="footer_payment_status_count"></td>
-                                    <td><span class="display_currency" id="footer_expense_total" data-currency_symbol ="true"></span></td>
-                                    <td><span class="display_currency" id="footer_total_due" data-currency_symbol ="true"></span></td>
-                                    <td colspan="3"></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                @endcan
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="expense_table">
+                        <thead>
+                            <tr>
+                                <th>@lang('messages.action')</th>
+                                <th>@lang('messages.date')</th>
+                                <th>@lang('purchase.ref_no')</th>
+                                <th>@lang('expense.expense_category')</th>
+                                <th>@lang('business.location')</th>
+                                <th>@lang('sale.payment_status')</th>
+                                <th>@lang('product.tax')</th>
+                                <th>@lang('sale.total_amount')</th>
+                                <th>@lang('purchase.payment_due')
+                                <th>@lang('expense.expense_for')</th>
+                                <th>@lang('expense.expense_note')</th>
+                                <th>@lang('lang_v1.added_by')</th>
+                            </tr>
+                        </thead>
+                        <tfoot>
+                            <tr class="bg-gray font-17 text-center footer-total">
+                                <td colspan="6"><strong>@lang('sale.total'):</strong></td>
+                                <td id="footer_payment_status_count"></td>
+                                <td><span class="display_currency" id="footer_expense_total" data-currency_symbol ="true"></span></td>
+                                <td><span class="display_currency" id="footer_total_due" data-currency_symbol ="true"></span></td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             @endcomponent
         </div>
     </div>

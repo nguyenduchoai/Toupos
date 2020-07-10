@@ -36,7 +36,7 @@
                         <div class="col-sm-8">
                             <div class="form-group">
                                 {!! Form::label('name', __( 'product.file_to_import' ) . ':') !!}
-                                {!! Form::file('products_csv', ['accept'=> '.xls', 'required' => 'required']); !!}
+                                {!! Form::file('products_csv', ['accept'=> '.xls, .xlsx, .csv', 'required' => 'required']); !!}
                               </div>
                         </div>
                         <div class="col-sm-4">
@@ -115,7 +115,7 @@
                     </tr>
                     <tr>
                         <td>9</td>
-                        <td>@lang('product.alert_quantity') <small class="text-muted">(@lang('lang_v1.alert_qty_ins'))</small></td>
+                        <td>@lang('product.alert_quantity') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>@lang('product.alert_quantity')</td>
                     </tr>
                     <tr>
@@ -188,7 +188,7 @@
                     </tr>
                     <tr>
                         <td>22</td>
-                        <td>@lang('business.location') <small class="text-muted">(@lang('lang_v1.optional')) <br>@lang('lang_v1.location_ins')</small></td>
+                        <td>@lang('lang_v1.opening_stock_location') <small class="text-muted">(@lang('lang_v1.optional')) <br>@lang('lang_v1.location_ins')</small></td>
                         <td>@lang('lang_v1.location_ins1')<br>
                         </td>
                     </tr>
@@ -229,7 +229,7 @@
                     <tr>
                         <td>29</td>
                         <td>@lang('lang_v1.image') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
-                        <td>{!! __('lang_v1.image_help_text', ['path' => config('constants.product_img_path')]) !!}</td>
+                        <td>{!! __('lang_v1.image_help_text', ['path' => 'public/uploads/'.config('constants.product_img_path')]) !!}</td>
                         <td></td>
                     </tr>
                     <tr>
@@ -261,6 +261,12 @@
                         <td>@lang('lang_v1.not_for_selling') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td><strong>1 = @lang('messages.yes')<br>
                             0 = @lang('messages.no')</strong><br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>36</td>
+                        <td>@lang('lang_v1.product_locations') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td>@lang('lang_v1.product_locations_ins')
                         </td>
                     </tr>
 

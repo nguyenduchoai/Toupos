@@ -15,7 +15,7 @@
 
 	<div class="box">
         <div class="box-header">
-        	<h3 class="box-title">@lang( 'lang_v1.all_your_discounts' )</h3>
+        	<h3 class="box-title">@lang('lang_v1.all_your_discounts')</h3>
             @can('brand.create')
             	<div class="box-tools">
                     <button type="button" class="btn btn-block btn-primary btn-modal" 
@@ -95,7 +95,7 @@
         }    
     });
 
-    $('table#discounts_table tbody').on('click', '.activate-discount', function(e){
+    $(document).on('click', '.activate-discount', function(e){
         e.preventDefault();
         var href = $(this).data('href');
         $.ajax({

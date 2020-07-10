@@ -13,7 +13,7 @@
 	    data-placement="bottom"
 	    title="@lang('essentials::lang.clock_in')" 
 	    >
-	    <i class="fa fa-arrow-circle-down"></i>
+	    <i class="fas fa-arrow-circle-down"></i>
 	</button>
 
 	<button 
@@ -32,6 +32,6 @@
                     <br><small>(@lang('essentials::lang.clocked_in_at'): {{@format_datetime($clock_in->clock_in_time)}})</small>
                 @endif" 
 	    >
-	    <i class="fa fa-hourglass-2 fa-spin"></i>
+	    <i class="fas fa-hourglass-half fa-spin"></i>
 	</button>
 @endif

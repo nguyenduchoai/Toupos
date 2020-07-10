@@ -64,10 +64,13 @@
 			
 			@if(count($business_locations) == 1)
 				@php 
-					$default_location = current(array_keys($business_locations->toArray())) 
+					$default_location = current(array_keys($business_locations->toArray()));
+					$search_disable = false; 
 				@endphp
 			@else
-				@php $default_location = null; @endphp
+				@php $default_location = null;
+				$search_disable = true;
+				@endphp
 			@endif
 			<div class="col-sm-3">
 				<div class="form-group">
@@ -94,11 +97,30 @@
 				</div>
 			</div>
 
+			<div class="col-md-3">
+		          <div class="form-group">
+		            <div class="multi-input">
+		              {!! Form::label('pay_term_number', __('contact.pay_term') . ':') !!} @show_tooltip(__('tooltip.pay_term'))
+		              <br/>
+		              {!! Form::number('pay_term_number', null, ['class' => 'form-control width-40 pull-left', 'placeholder' => __('contact.pay_term')]); !!}
+
+		              {!! Form::select('pay_term_type', 
+		              	['months' => __('lang_v1.months'), 
+		              		'days' => __('lang_v1.days')], 
+		              		null, 
+		              	['class' => 'form-control width-60 pull-left','placeholder' => __('messages.please_select'), 'id' => 'pay_term_type']); !!}
+		            </div>
+		        </div>
+		    </div>
+
 			<div class="col-sm-3">
                 <div class="form-group">
                     {!! Form::label('document', __('purchase.attach_document') . ':') !!}
-                    {!! Form::file('document', ['id' => 'upload_document']); !!}
-                    <p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])</p>
+                    {!! Form::file('document', ['id' => 'upload_document', 'accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]); !!}
+                    <p class="help-block">
+                    	@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])
+                    	@includeIf('components.document_help_text')
+                    </p>
                 </div>
             </div>
 		</div>
@@ -112,7 +134,7 @@
 						<span class="input-group-addon">
 							<i class="fa fa-search"></i>
 						</span>
-						{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'), 'autofocus']); !!}
+						{!! Form::text('search_product', null, ['class' => 'form-control mousetrap', 'id' => 'search_product', 'placeholder' => __('lang_v1.search_product_placeholder'), 'disabled' => $search_disable]); !!}
 					</div>
 				</div>
 			</div>
@@ -171,6 +193,12 @@
 				<hr/>
 				<div class="pull-right col-md-5">
 					<table class="pull-right col-md-12">
+						<tr>
+							<th class="col-md-7 text-right">@lang( 'lang_v1.total_items' ):</th>
+							<td class="col-md-5 text-left">
+								<span id="total_quantity" class="display_currency" data-currency_symbol="false"></span>
+							</td>
+						</tr>
 						<tr class="hide">
 							<th class="col-md-7 text-right">@lang( 'purchase.total_before_tax' ):</th>
 							<td class="col-md-5 text-left">

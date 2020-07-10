@@ -360,19 +360,33 @@ $(document).ready(function() {
     var contact_table_type = $('#contact_type').val();
     if (contact_table_type == 'supplier') {
         var columns = [
+            { data: 'action', searchable: false, orderable: false },
             { data: 'contact_id', name: 'contact_id' },
             { data: 'supplier_business_name', name: 'supplier_business_name' },
             { data: 'name', name: 'name' },
+            { data: 'email', name: 'email' },
+            { data: 'tax_number', name: 'tax_number' },
+            { data: 'pay_term', name: 'pay_term', searchable: false, orderable: false },
+            { data: 'opening_balance', name: 'opening_balance', searchable: false },
             { data: 'created_at', name: 'contacts.created_at' },
             { data: 'mobile', name: 'mobile' },
             { data: 'due', searchable: false, orderable: false },
             { data: 'return_due', searchable: false, orderable: false },
-            { data: 'action', searchable: false, orderable: false },
+            { data: 'custom_field1', name: 'custom_field1', searchable: false, orderable: false},
+            { data: 'custom_field2', name: 'custom_field2', searchable: false, orderable: false},
+            { data: 'custom_field3', name: 'custom_field3', searchable: false, orderable: false},
+            { data: 'custom_field4', name: 'custom_field4', searchable: false, orderable: false},
         ];
     } else if (contact_table_type == 'customer') {
         var columns = [
+            { data: 'action', searchable: false, orderable: false },
             { data: 'contact_id', name: 'contact_id' },
             { data: 'name', name: 'name' },
+            { data: 'email', name: 'email' },
+            { data: 'tax_number', name: 'tax_number' },
+            { data: 'credit_limit', name: 'credit_limit' },
+            { data: 'pay_term', name: 'pay_term', searchable: false, orderable: false },
+            { data: 'opening_balance', name: 'opening_balance', searchable: false },
             { data: 'created_at', name: 'contacts.created_at' }
         ];
 
@@ -384,13 +398,24 @@ $(document).ready(function() {
             { data: 'mobile', name: 'mobile' },
             { data: 'due', searchable: false, orderable: false },
             { data: 'return_due', searchable: false, orderable: false },
-            { data: 'action', searchable: false, orderable: false }]);
+            { data: 'custom_field1', name: 'custom_field1'},
+            { data: 'custom_field2', name: 'custom_field2'},
+            { data: 'custom_field3', name: 'custom_field3'},
+            { data: 'custom_field4', name: 'custom_field4'},
+            ]);
     }
     
-    var contact_table = $('#contact_table').DataTable({
+    contact_table = $('#contact_table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '/contacts?type=' + $('#contact_type').val(),
+        "ajax": {
+            "url": "/contacts",
+            "data": function ( d ) {
+                d.type = $('#contact_type').val();
+                d = __datatable_ajax_callback(d);
+            }
+        },
+        aaSorting: [[1, 'desc']],
         columns: columns,
         fnDrawCallback: function(oSettings) {
             var total_due = sum_table_col($('#contact_table'), 'contact_due');
@@ -404,12 +429,21 @@ $(document).ready(function() {
 
     //On display of add contact modal
     $('.contact_modal').on('shown.bs.modal', function(e) {
+
+        $('div.lead_additional_div').hide();
+
         if ($('select#contact_type').val() == 'customer') {
             $('div.supplier_fields').hide();
             $('div.customer_fields').show();
         } else if ($('select#contact_type').val() == 'supplier') {
             $('div.supplier_fields').show();
             $('div.customer_fields').hide();
+        }  else if ($('select#contact_type').val() == 'lead') {
+            $('div.supplier_fields').hide();
+            $('div.customer_fields').hide();
+            $('div.opening_balance').hide();
+            $('div.pay_term').hide();
+            $('div.lead_additional_div').show();
         }
 
         $('select#contact_type').change(function() {
@@ -424,7 +458,17 @@ $(document).ready(function() {
             } else if (t == 'customer') {
                 $('div.customer_fields').fadeIn();
                 $('div.supplier_fields').fadeOut();
+            } else if (t == 'lead') {
+                $('div.customer_fields').fadeOut();
+                $('div.supplier_fields').fadeOut();
+                $('div.opening_balance').fadeOut();
+                $('div.pay_term').fadeOut();
+                $('div.lead_additional_div').fadeIn();
             }
+        });
+
+        $(".contact_modal").find('.select2').each( function(){
+            $(this).select2();
         });
 
         $('form#contact_add_form, form#contact_edit_form')
@@ -472,7 +516,18 @@ $(document).ready(function() {
                             if (result.success == true) {
                                 $('div.contact_modal').modal('hide');
                                 toastr.success(result.msg);
-                                contact_table.ajax.reload();
+
+                                if (typeof(contact_table) != 'undefined') {
+                                    contact_table.ajax.reload();
+                                }
+
+                                var lead_view = urlSearchParam('lead_view');
+                                if (lead_view == 'kanban') {
+                                    initializeLeadKanbanBoard();
+                                } else if(lead_view == 'list_view' && typeof(leads_datatable) != 'undefined') {
+                                    leads_datatable.ajax.reload();
+                                }
+                                
                             } else {
                                 toastr.error(result.msg);
                             }
@@ -519,104 +574,6 @@ $(document).ready(function() {
             }
         });
     });
-
-    //Start: CRUD for category
-    //Category table
-    var category_table = $('#category_table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: '/categories',
-        columnDefs: [
-            {
-                targets: 2,
-                orderable: false,
-                searchable: false,
-            },
-        ],
-    });
-    $(document).on('submit', 'form#category_add_form', function(e) {
-        e.preventDefault();
-        $(this)
-            .find('button[type="submit"]')
-            .attr('disabled', true);
-        var data = $(this).serialize();
-
-        $.ajax({
-            method: 'POST',
-            url: $(this).attr('action'),
-            dataType: 'json',
-            data: data,
-            success: function(result) {
-                if (result.success === true) {
-                    $('div.category_modal').modal('hide');
-                    toastr.success(result.msg);
-                    category_table.ajax.reload();
-                } else {
-                    toastr.error(result.msg);
-                }
-            },
-        });
-    });
-    $(document).on('click', 'button.edit_category_button', function() {
-        $('div.category_modal').load($(this).data('href'), function() {
-            $(this).modal('show');
-
-            $('form#category_edit_form').submit(function(e) {
-                e.preventDefault();
-                $(this)
-                    .find('button[type="submit"]')
-                    .attr('disabled', true);
-                var data = $(this).serialize();
-
-                $.ajax({
-                    method: 'POST',
-                    url: $(this).attr('action'),
-                    dataType: 'json',
-                    data: data,
-                    success: function(result) {
-                        if (result.success === true) {
-                            $('div.category_modal').modal('hide');
-                            toastr.success(result.msg);
-                            category_table.ajax.reload();
-                        } else {
-                            toastr.error(result.msg);
-                        }
-                    },
-                });
-            });
-        });
-    });
-
-    $(document).on('click', 'button.delete_category_button', function() {
-        swal({
-            title: LANG.sure,
-            text: LANG.confirm_delete_category,
-            icon: 'warning',
-            buttons: true,
-            dangerMode: true,
-        }).then(willDelete => {
-            if (willDelete) {
-                var href = $(this).data('href');
-                var data = $(this).serialize();
-
-                $.ajax({
-                    method: 'DELETE',
-                    url: href,
-                    dataType: 'json',
-                    data: data,
-                    success: function(result) {
-                        if (result.success === true) {
-                            toastr.success(result.msg);
-                            category_table.ajax.reload();
-                        } else {
-                            toastr.error(result.msg);
-                        }
-                    },
-                });
-            }
-        });
-    });
-    //End: CRUD for category
 
     //Start: CRUD for product variations
     //Variations table
@@ -768,7 +725,7 @@ $(document).ready(function() {
         }
     });
     //Start: CRUD for products
-    $('#category_id').change(function() {
+    $(document).on('change', '#category_id', function() {
         get_sub_categories();
     });
     $(document).on('change', '#unit_id', function() {
@@ -1173,7 +1130,7 @@ $(document).ready(function() {
         ajax: '/business-location',
         columnDefs: [
             {
-                targets: 8,
+                targets: 10,
                 orderable: false,
                 searchable: false,
             },
@@ -1235,14 +1192,65 @@ $(document).ready(function() {
                     });
                 },
             });
+
+        $('form#business_location_add_form').find('#featured_products').select2({
+            minimumInputLength: 2,
+            allowClear: true,
+            placeholder: '',
+            ajax: {
+                url: '/products/list?not_for_selling=true',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        term: params.term, // search term
+                        page: params.page,
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data, function(obj) {
+                            var string = obj.name;
+                            if (obj.type == 'variable') {
+                                string += '-' + obj.variation;
+                            }
+
+                            string += ' (' + obj.sub_sku + ')';
+                            return { id: obj.variation_id, text: string };
+                        })
+                    };
+                },
+            },
+        })
     });
 
     if ($('#header_text').length) {
-        CKEDITOR.replace('header_text', { customConfig: '/AdminLTE/plugins/ckeditor/config.js' });
+        init_tinymce('header_text');
     }
+
     if ($('#footer_text').length) {
-        CKEDITOR.replace('footer_text', { customConfig: '/AdminLTE/plugins/ckeditor/config.js' });
+        init_tinymce('footer_text');
     }
+
+    //initialize tinyMCE editor for invoice template
+    function init_tinymce(editor_id) {
+        tinymce.init({
+            selector: 'textarea#' + editor_id,
+            plugins: [
+            'advlist autolink link image lists charmap print preview hr anchor pagebreak',
+            'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking',
+            'table template paste help'
+            ],
+            toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify |' +
+              ' bullist numlist outdent indent | link image | print preview fullpage | ' +
+              'forecolor backcolor',
+            menu: {
+              favs: {title: 'My Favorites', items: 'code | searchreplace'}
+            },
+            menubar: 'favs file edit view insert format tools table help'
+        });
+    }
+
 
     //Start: CRUD for expense category
     //Expense category table
@@ -1310,29 +1318,27 @@ $(document).ready(function() {
 
     //date filter for expense table
     if ($('#expense_date_range').length == 1) {
-        $('#expense_date_range').daterangepicker(dateRangeSettings, function(start, end) {
-            $('#expense_date_range').val(
-                start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
-            );
-            expense_table.ajax.reload();
-        });
+        $('#expense_date_range').daterangepicker(
+            dateRangeSettings, 
+            function(start, end) {
+                $('#expense_date_range').val(
+                    start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format)
+                );
+                expense_table.ajax.reload();
+            }
+        );
+
         $('#expense_date_range').on('cancel.daterangepicker', function(ev, picker) {
             $('#product_sr_date_filter').val('');
             expense_table.ajax.reload();
         });
-        $('#expense_date_range')
-            .data('daterangepicker')
-            .setStartDate(moment().startOf('month'));
-        $('#expense_date_range')
-            .data('daterangepicker')
-            .setEndDate(moment().endOf('month'));
     }
 
     //Expense table
     expense_table = $('#expense_table').DataTable({
         processing: true,
         serverSide: true,
-        aaSorting: [[0, 'desc']],
+        aaSorting: [[1, 'desc']],
         ajax: {
             url: '/expenses',
             data: function(d) {
@@ -1348,24 +1354,19 @@ $(document).ready(function() {
                     .endDate.format('YYYY-MM-DD');
             },
         },
-        columnDefs: [
-            {
-                targets: [6, 7],
-                orderable: false,
-                searchable: false,
-            },
-        ],
         columns: [
+            { data: 'action', name: 'action', orderable: false, searchable: false },
             { data: 'transaction_date', name: 'transaction_date' },
             { data: 'ref_no', name: 'ref_no' },
             { data: 'category', name: 'ec.name' },
             { data: 'location_name', name: 'bl.name' },
-            { data: 'payment_status', name: 'payment_status' },
+            { data: 'payment_status', name: 'payment_status', orderable: false },
+            { data: 'tax', name: 'tr.name' },
             { data: 'final_total', name: 'final_total' },
             { data: 'payment_due', name: 'payment_due' },
             { data: 'expense_for', name: 'expense_for' },
             { data: 'additional_notes', name: 'additional_notes' },
-            { data: 'action', name: 'action' },
+            { data: 'added_by', name: 'usr.first_name'},
         ],
         fnDrawCallback: function(oSettings) {
             var expense_total = sum_table_col($('#expense_table'), 'final-total');
@@ -1499,8 +1500,9 @@ $(document).ready(function() {
                     .html(result)
                     .modal('show');
                 __currency_convert_recursively($('.pay_contact_due_modal'));
-                $('#paid_on').datepicker({
-                    autoclose: true,
+                $('#paid_on').datetimepicker({
+                    format: moment_date_format + ' ' + moment_time_format,
+                    ignoreReadonly: true,
                 });
                 $('.pay_contact_due_modal')
                     .find('form#pay_contact_due_form')
@@ -1511,6 +1513,8 @@ $(document).ready(function() {
 
     //Todays profit modal
     $('#view_todays_profit').click(function() {
+        var loader = '<div class="text-center">' + __fa_awesome() + '</div>';
+        $('#todays_profit').html(loader);
         $('#todays_profit_modal').modal('show');
     });
     $('#todays_profit_modal').on('shown.bs.modal', function() {
@@ -1518,7 +1522,7 @@ $(document).ready(function() {
         var end = start;
         var location_id = '';
 
-        updateProfitLoss(start, end, location_id);
+        updateProfitLoss(start, end, location_id, $('#todays_profit'));
     });
 
     //Used for Purchase & Sell invoice.
@@ -1621,7 +1625,7 @@ $(document).ready(function() {
 
     $('button#full_screen').click(function(e) {
         element = document.documentElement;
-        if (screenfull.enabled) {
+        if (screenfull.isEnabled) {
             screenfull.toggle(element);
         }
     });
@@ -1729,6 +1733,7 @@ $(document).ready(function() {
         }).then(willDelete => {
             if (willDelete) {
                 var href = $(this).attr('href');
+                var is_suspended = $(this).hasClass('is_suspended');
                 $.ajax({
                     method: 'DELETE',
                     url: href,
@@ -1743,6 +1748,9 @@ $(document).ready(function() {
                             if (typeof get_recent_transactions !== 'undefined') {
                                 get_recent_transactions('final', $('div#tab_final'));
                                 get_recent_transactions('draft', $('div#tab_draft'));
+                            }
+                            if (is_suspended) {
+                                $('.view_modal').modal('hide');
                             }
                         } else {
                             toastr.error(result.msg);
@@ -1779,6 +1787,108 @@ $(document).ready(function() {
     $('#user_dob').datepicker({
         autoclose: true
     });
+
+    setInterval(function(){ getTotalUnreadNotifications() }, __new_notification_count_interval);
+
+    discounts_table = $('#discounts_table').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: base_path + '/discount',
+                    columnDefs: [
+                        {
+                            targets: [0, 8],
+                            orderable: false,
+                            searchable: false,
+                        },
+                    ],
+                    aaSorting: [1, 'asc'],
+                    columns: [
+                        { data: 'row_select'},
+                        { data: 'name', name: 'discounts.name' },
+                        { data: 'starts_at', name: 'starts_at' },
+                        { data: 'ends_at', name: 'ends_at' },
+                        { data: 'priority', name: 'priority' },
+                        { data: 'brand', name: 'b.name' },
+                        { data: 'category', name: 'c.name' },
+                        { data: 'location', name: 'l.name' },
+                        { data: 'action', name: 'action' },
+                    ],
+                });
+
+
+    types_of_service_table = $('#types_of_service_table').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        ajax: base_path + '/types-of-service',
+                        columnDefs: [
+                            {
+                                targets: [3],
+                                orderable: false,
+                                searchable: false,
+                            },
+                        ],
+                        aaSorting: [1, 'asc'],
+                        columns: [
+                            { data: 'name', name: 'name' },
+                            { data: 'description', name: 'description' },
+                            { data: 'packing_charge', name: 'packing_charge' },
+                            { data: 'action', name: 'action' },
+                        ],
+                        fnDrawCallback: function(oSettings) {
+                            __currency_convert_recursively($('#types_of_service_table'));
+                        },
+                    });
+
+    //Search Settings
+    //Set all labels as select2 options
+    label_objects = [];
+    search_options = [{
+        id: '',
+        text: ''
+    }];
+    var i = 0;
+    $('.pos-tab-container label').each( function(){
+        label_objects.push($(this));
+        var label_text = $(this).text().trim().replace(":", "").replace("*", "");
+        search_options.push(
+            {
+                id: i,
+                text: label_text
+            }
+        );
+        i++;
+    });
+    $('#search_settings').select2({
+        data: search_options,
+        placeholder: LANG.search,
+    });
+    $('#search_settings').change( function(){
+        //Get label position and add active class to the tab
+        var label_index = $(this).val();
+        var label = label_objects[label_index];
+        $('.pos-tab-content.active').removeClass('active');
+        var tab_content = label.closest('.pos-tab-content');
+        tab_content.addClass('active');
+        tab_index = $('.pos-tab-content').index(tab_content);
+        $('.list-group-item.active').removeClass('active');
+        $('.list-group-item').eq(tab_index).addClass('active');
+
+        //Highlight the label for three seconds
+        $([document.documentElement, document.body]).animate({
+            scrollTop: label.offset().top - 100
+        }, 500);
+        label.css('background-color', 'yellow');
+        setTimeout(function(){ 
+            label.css('background-color', ''); 
+        }, 3000);
+    });
+    $('#add_invoice_layout_form #design').change( function(){
+        if ($(this).val() == 'slim') {
+            $('#hide_price_div').removeClass('hide');
+        } else {
+            $('#hide_price_div').addClass('hide');
+        }
+    });
 });
 
 $('.quick_add_product_modal').on('shown.bs.modal', function() {
@@ -1798,30 +1908,6 @@ $('.quick_add_product_modal').on('shown.bs.modal', function() {
         });
 });
 
-discounts_table = $('#discounts_table').DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: base_path + '/discount',
-    columnDefs: [
-        {
-            targets: [0, 8],
-            orderable: false,
-            searchable: false,
-        },
-    ],
-    aaSorting: [1, 'asc'],
-    columns: [
-        { data: 'row_select'},
-        { data: 'name', name: 'discounts.name' },
-        { data: 'starts_at', name: 'starts_at' },
-        { data: 'ends_at', name: 'ends_at' },
-        { data: 'priority', name: 'priority' },
-        { data: 'brand', name: 'b.name' },
-        { data: 'category', name: 'c.name' },
-        { data: 'location', name: 'l.name' },
-        { data: 'action', name: 'action' },
-    ],
-});
 
 $('.discount_modal').on('shown.bs.modal', function() {
     $('.discount_modal')
@@ -1998,7 +2084,7 @@ $(document).on('click', 'table.ajax_view tbody tr', function(e) {
 $(document).on('click', 'td.clickable_td', function(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (e.target.tagName == 'SPAN') {
+    if (e.target.tagName == 'SPAN' || e.target.tagName == 'TD') {
         return false;
     }
     var link = $(this).find('a');
@@ -2117,7 +2203,8 @@ $(document).on('click', '.load_more_notifications', function(e) {
         dataType: 'html',
         success: function(result) {
             if ($('li.no-notification').length == 0) {
-                $(result).insertBefore(this_link.closest('li'));
+                $('ul#notifications_list').append(result);
+                // $(result).append(this_link.closest('li'));
             }
 
             this_link.text(LANG.load_more);
@@ -2129,8 +2216,7 @@ $(document).on('click', '.load_more_notifications', function(e) {
 });
 
 $(document).on('click', 'a.load_notifications', function(e) {
-    if (!$(this).data('loaded')) {
-        e.preventDefault();
+    e.preventDefault();
         $('li.load_more_li').addClass('hide');
         var this_link = $(this);
         var href = '/load-more-notifications?page=1';
@@ -2139,13 +2225,12 @@ $(document).on('click', 'a.load_notifications', function(e) {
             url: href,
             dataType: 'html',
             success: function(result) {
+                $('li.notification-li').remove();
                 $('ul#notifications_list').prepend(result);
                 $('span.notifications_count').text('');
-                this_link.data('loaded', true);
                 $('li.load_more_li').removeClass('hide');
             },
         });
-    }
 });
 
 $(document).on('click', 'a.delete_purchase_return', function(e) {
@@ -2178,6 +2263,57 @@ $(document).on('click', 'a.delete_purchase_return', function(e) {
     });
 });
 
+$(document).on('submit', 'form#types_of_service_form', function(e) {
+    e.preventDefault();
+    var data = $(this).serialize();
+    $(this).find('button[type="submit"]').attr('disabled', true);
+    $.ajax({
+        method: $(this).attr('method'),
+        url: $(this).attr('action'),
+        dataType: 'json',
+        data: data,
+        success: function(result) {
+            if (result.success == true) {
+                $('div.type_of_service_modal').modal('hide');
+                toastr.success(result.msg);
+                types_of_service_table.ajax.reload();
+            } else {
+                toastr.error(result.msg);
+            }
+        },
+    });
+});
+
+$(document).on('click', 'button.delete_type_of_service', function(e) {
+    e.preventDefault();
+    swal({
+        title: LANG.sure,
+        icon: 'warning',
+        buttons: true,
+        dangerMode: true,
+    }).then(willDelete => {
+        if (willDelete) {
+            var href = $(this).data('href');
+            var data = $(this).serialize();
+
+            $.ajax({
+                method: 'DELETE',
+                url: href,
+                dataType: 'json',
+                data: data,
+                success: function(result) {
+                    if (result.success == true) {
+                        toastr.success(result.msg);
+                        types_of_service_table.ajax.reload();
+                    } else {
+                        toastr.error(result.msg);
+                    }
+                },
+            });
+        }
+    });
+});
+
 $(document).on('submit', 'form#edit_shipping_form', function(e){
     e.preventDefault();
     var data = $(this).serialize();
@@ -2201,78 +2337,36 @@ $(document).on('submit', 'form#edit_shipping_form', function(e){
     });
 });
 
+$(document).on('show.bs.modal', '.register_details_modal, .close_register_modal', function () {
+    __currency_convert_recursively($(this));
+});
 
-function updateProfitLoss(start = null, end = null, location_id = null) {
+function updateProfitLoss(start = null, end = null, location_id = null, selector = null) {
     if(start == null){
         var start = $('#profit_loss_date_filter')
                     .data('daterangepicker')
                     .startDate.format('YYYY-MM-DD');
     }
-    
     if(end == null){
         var end = $('#profit_loss_date_filter')
                     .data('daterangepicker')
                     .endDate.format('YYYY-MM-DD');
     }
-
     if(location_id == null){
         var location_id = $('#profit_loss_location_filter').val();
     }
-
     var data = { start_date: start, end_date: end, location_id: location_id };
-
-    var loader = __fa_awesome();
-    var pl_span = $('span#pl_span');
-
-    pl_span.find(
-        '.opening_stock, .total_transfer_shipping_charges, .closing_stock, .total_sell, .total_purchase, \
-        .total_expense, .net_profit, .total_adjustment, .total_recovered, .total_sell_discount, \
-        .total_purchase_discount, .total_purchase_return, .total_sell_return, .gross_profit, \
-        .total_reward_amount, .total_payroll'
-    ).html(loader);
-
+    selector = selector == null ? $('#pl_data_div') : selector;
+    var loader = '<div class="text-center">' + __fa_awesome() + '</div>';
+    selector.html(loader);
     $.ajax({
         method: 'GET',
         url: '/reports/profit-loss',
-        dataType: 'json',
+        dataType: 'html',
         data: data,
-        success: function(data) {
-            pl_span.find('.opening_stock').html(__currency_trans_from_en(data.opening_stock, true));
-            pl_span.find('.closing_stock').html(__currency_trans_from_en(data.closing_stock, true));
-            pl_span.find('.total_sell').html(__currency_trans_from_en(data.total_sell, true));
-            pl_span.find('.total_purchase').html(__currency_trans_from_en(data.total_purchase, true));
-            pl_span.find('.total_expense').html(__currency_trans_from_en(data.total_expense, true));
-
-            if($('.total_payroll').length > 0) {
-                pl_span.find('.total_payroll').html(__currency_trans_from_en(data.total_payroll, true));
-            }
-
-            if($('.total_production_cost').length > 0) {
-                pl_span.find('.total_production_cost').html(__currency_trans_from_en(data.total_production_cost, true));
-            }
-
-            pl_span.find('.net_profit').html(__currency_trans_from_en(data.net_profit, true));
-            pl_span.find('.gross_profit').html(__currency_trans_from_en(data.gross_profit, true));
-            pl_span.find('.total_adjustment').html(__currency_trans_from_en(data.total_adjustment, true));
-            pl_span.find('.total_recovered').html(__currency_trans_from_en(data.total_recovered, true));
-            pl_span.find('.total_purchase_return').html(
-                __currency_trans_from_en(data.total_purchase_return, true)
-            );
-            pl_span.find('.total_transfer_shipping_charges').html(
-                __currency_trans_from_en(data.total_transfer_shipping_charges, true)
-            );
-            pl_span.find('.total_purchase_discount').html(
-                __currency_trans_from_en(data.total_purchase_discount, true)
-            );
-            pl_span.find('.total_sell_discount').html(
-                __currency_trans_from_en(data.total_sell_discount, true)
-            );
-            pl_span.find('.total_reward_amount').html(
-                __currency_trans_from_en(data.total_reward_amount, true)
-            );
-            pl_span.find('.total_sell_return').html(__currency_trans_from_en(data.total_sell_return, true));
-            __highlight(data.net_profit, pl_span.find('.net_profit'));
-            __highlight(data.net_profit, pl_span.find('.gross_profit'));
+        success: function(html) {
+            selector.html(html);
+            __currency_convert_recursively(selector);
         },
     });
 }
@@ -2298,5 +2392,74 @@ $(document).on('click', 'button.activate-deactivate-location', function(){
                 },
             });
         }
+    });
+});
+
+function getTotalUnreadNotifications(){
+    if ($('span.notifications_count').lenght) {
+        var href = '/get-total-unread';
+        $.ajax({
+            url: href,
+            dataType: 'json',
+            global: false,
+            success: function(data) {
+                if (data.total_unread != 0 ) {
+                    $('span.notifications_count').text(data.total_unread);
+                }
+            },
+        });
+    }
+}
+
+$(document).on('shown.bs.modal', '.view_modal', function (e) {
+    if ($(this).find('#email_body').length) {
+        tinymce.init({
+            selector: 'textarea#email_body',
+        });
+    }
+});
+$(document).on('hidden.bs.modal', '.view_modal', function (e) {
+    if ($(this).find('#email_body').length) {
+        tinymce.remove("textarea#email_body");
+    }
+
+    //check if modal opened then make it scrollable
+    if($('.modal.in').length > 0)
+    {
+        $('body').addClass('modal-open');
+    }
+});
+$(document).on('shown.bs.modal', '.quick_add_product_modal', function (e) {
+    tinymce.init({
+        selector: 'textarea#product_description',
+    });
+});
+$(document).on('hidden.bs.modal', '.quick_add_product_modal', function (e) {
+    tinymce.remove("textarea#product_description");
+});
+
+$(window).scroll(function() {
+    if ($(this).scrollTop() > 100 ) {
+        $('.scrolltop:hidden').stop(true, true).fadeIn();
+    } else {
+        $('.scrolltop').stop(true, true).fadeOut();
+    }
+});
+$(function(){$(".scroll").click(function(){$("html,body").animate({scrollTop:$(".thetop").offset().top},"1000");return false})})
+
+$(document).on('click', 'a.update_contact_status', function(e){
+    e.preventDefault();
+    var href = $(this).attr('href');
+    $.ajax({
+        url: href,
+        dataType: 'json',
+        success: function(data) {
+            if (data.success == true) {
+                toastr.success(data.msg);
+                contact_table.ajax.reload();
+            } else {
+                toastr.error(data.msg);
+            }
+        },
     });
 });

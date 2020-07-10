@@ -43,10 +43,11 @@ class CreateDummyBusiness extends Command
     public function handle()
     {
         //Drop database and create the db with same name.
-        $servername = env('DB_HOST');
-        $username = env('DB_USERNAME');
-        $password = env('DB_PASSWORD');
-        $db = env('DB_DATABASE');
+        $servername = config('database.connections.mysql.host');
+        $username = config('database.connections.mysql.username');
+        $password = config('database.connections.mysql.password');
+        $db = config('database.connections.mysql.database');
+
         $conn = mysqli_connect($servername, $username, $password);
         if (!$conn) {
             die("Connection failed: " . mysqli_connect_error());

@@ -1,4 +1,3 @@
-<script src="{{ asset('plugins/mousetrap/mousetrap.min.js?v=' . $asset_v) }}"></script>
 <script type="text/javascript">
 	$(document).ready( function() {
 		//shortcut for express checkout
@@ -120,6 +119,14 @@
 		@if(!empty($shortcuts["pos"]["add_new_product"]))
 			Mousetrap.bind('{{$shortcuts["pos"]["add_new_product"]}}', function(e) {
 				$('input#search_product').focus().select();
+			});
+		@endif
+
+		//shortcut for weighing scale
+		@if(!empty($shortcuts["pos"]["weighing_scale"]))
+			Mousetrap.bind('{{$shortcuts["pos"]["weighing_scale"]}}', function(e) {
+				e.preventDefault();
+				$('button#weighing_scale_btn').trigger('click');
 			});
 		@endif
 	});

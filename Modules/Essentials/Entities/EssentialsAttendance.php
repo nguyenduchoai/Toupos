@@ -17,4 +17,9 @@ class EssentialsAttendance extends Model
     {
         return $this->belongsTo(\App\User::class, 'user_id');
     }
+
+    public function shift()
+    {
+        return $this->belongsTo(\Modules\Essentials\Entities\Shift::class, 'essentials_shift_id');
+    }
 }

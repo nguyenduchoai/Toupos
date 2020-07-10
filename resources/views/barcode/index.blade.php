@@ -29,7 +29,7 @@
                     <tr>
                         <th>@lang('barcode.setting_name')</th>
                         <th>@lang('barcode.setting_description')</th>
-                        <th>Action</th>
+                        <th>@lang('messages.action')</th>
                     </tr>
                 </thead>
             </table>

@@ -44,83 +44,86 @@
                     </div>
                 </div>
             @endcomponent
-            @component('components.widget')   
-                <div class="col-md-6">
-                    <h4>@lang('essentials::lang.allowances'):</h4>
-                    <table class="table table-condenced" id="allowance_table">
-                        <thead>
-                            <tr>
-                                <th>@lang('essentials::lang.allowance')</th>
-                                <th>@lang('sale.amount')</th>
-                                <th>&nbsp;</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $total_allowances = 0;
-                            @endphp
-                            @forelse($allowances['allowance_names'] as $key => $value)
-                                @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => $loop->index == 0 ? true : false, 'type' => 'allowance', 'name' => $value, 'value' => $allowances['allowance_amounts'][$key]])
-
-                                @php
-                                    $total_allowances += !empty($allowances['allowance_amounts'][$key]) ? $allowances['allowance_amounts'][$key] : 0;
-                                @endphp
-                            @empty
-                                @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => true, 'type' => 'allowance'])
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>@lang('sale.total')</th>
-                                <td><span id="total_allowances" class="display_currency" data-currency_symbol="true">{{$total_allowances}}</span></td>
-                                <td>&nbsp;</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="col-md-6">
-                    <h4>@lang('essentials::lang.deductions'):</h4>
-                    <table class="table table-condenced" id="deductions_table">
-                        <thead>
-                            <tr>
-                                <th>@lang('essentials::lang.deduction')</th>
-                                <th>@lang('sale.amount')</th>
-                                <th>&nbsp;</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $total_deductions = 0;
-                            @endphp
-                            @forelse($deductions['deduction_names'] as $key => $value)
-                                @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => $loop->index == 0 ? true : false, 'type' => 'deduction', 'name' => $value, 'value' => $deductions['deduction_amounts'][$key]])
-
-                                @php
-                                    $total_deductions += !empty($deductions['deduction_amounts'][$key]) ? $deductions['deduction_amounts'][$key] : 0;
-                                @endphp
-                            @empty
-                                @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => true, 'type' => 'deduction'])
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th>@lang('sale.total')</th>
-                                <td><span id="total_deductions" class="display_currency" data-currency_symbol="true">{{$total_deductions}}</span></td>
-                                <td>&nbsp;</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                <div class="clearfix"></div>
-                <div class="col-md-6">
-                    <div class="col-md-6">
-                        <h4>@lang('essentials::lang.gross_amount'): <span id="gross_amount_text" class="display_currency" data-currency_symbol="true">{{$payroll->gross_amount}}</span></h4>
-                        {!! Form::hidden('final_total', $payroll->final_total, ['id' => 'gross_amount']); !!}
-                    </div>
-                </div>
-
-            @endcomponent
         </div>
+        <div class="col-md-12">
+            @component('components.widget')   
+                <h4>@lang('essentials::lang.allowances'):</h4>
+                <table class="table table-condenced" id="allowance_table">
+                    <thead>
+                        <tr>
+                            <th class="col-md-5">@lang('essentials::lang.allowance')</th>
+                            <th class="col-md-3">@lang('essentials::lang.amount_type')</th>
+                            <th class="col-md-3">@lang('sale.amount')</th>
+                            <th class="col-md-1">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $total_allowances = 0;
+                        @endphp
+                        @forelse($allowances['allowance_names'] as $key => $value)
+                            @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => $loop->index == 0 ? true : false, 'type' => 'allowance', 'name' => $value, 'value' => $allowances['allowance_amounts'][$key], 'amount_type' => !empty($allowances['allowance_types'][$key]) ? $allowances['allowance_types'][$key] : 'fixed',
+                            'percent' => !empty($allowances['allowance_percents'][$key]) ? $allowances['allowance_percents'][$key] : 0])
+
+                            @php
+                                $total_allowances += !empty($allowances['allowance_amounts'][$key]) ? $allowances['allowance_amounts'][$key] : 0;
+                            @endphp
+                        @empty
+                            @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => true, 'type' => 'allowance'])
+                        @endforelse
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2">@lang('sale.total')</th>
+                            <td><span id="total_allowances" class="display_currency" data-currency_symbol="true">{{$total_allowances}}</span></td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                @endcomponent
+            </div>
+            <div class="col-md-12">
+            @component('components.widget')
+                <h4>@lang('essentials::lang.deductions'):</h4>
+                <table class="table table-condenced" id="deductions_table">
+                    <thead>
+                        <tr>
+                            <th class="col-md-5">@lang('essentials::lang.deduction')</th>
+                            <th class="col-md-3">@lang('essentials::lang.amount_type')</th>
+                            <th class="col-md-3">@lang('sale.amount')</th>
+                            <th class="col-md-1">&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @php
+                            $total_deductions = 0;
+                        @endphp
+                        @forelse($deductions['deduction_names'] as $key => $value)
+                            @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => $loop->index == 0 ? true : false, 'type' => 'deduction', 'name' => $value, 'value' => $deductions['deduction_amounts'][$key], 
+                            'amount_type' => !empty($deductions['deduction_types'][$key]) ? $deductions['deduction_types'][$key] : 'fixed', 'percent' => !empty($deductions['deduction_percents'][$key]) ? $deductions['deduction_percents'][$key] : 0 ])
+
+                            @php
+                                $total_deductions += !empty($deductions['deduction_amounts'][$key]) ? $deductions['deduction_amounts'][$key] : 0;
+                            @endphp
+                        @empty
+                            @include('essentials::payroll.allowance_and_deduction_row', ['add_button' => true, 'type' => 'deduction'])
+                        @endforelse
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="2">@lang('sale.total')</th>
+                            <td><span id="total_deductions" class="display_currency" data-currency_symbol="true">{{$total_deductions}}</span></td>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </tfoot>
+                </table>
+             @endcomponent
+            </div>
+            <div class="col-md-12">
+                <h4 class="pull-right">@lang('essentials::lang.gross_amount'): <span id="gross_amount_text" class="display_currency" data-currency_symbol="true">{{$payroll->final_total}}</span></h4>
+                {!! Form::hidden('final_total', $payroll->final_total, ['id' => 'gross_amount']); !!}<br>
+            </div>
+       
     </div>
     <div class="row">
         <div class="col-md-12">

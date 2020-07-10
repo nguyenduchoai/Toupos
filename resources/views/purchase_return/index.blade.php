@@ -11,6 +11,20 @@
 
 <!-- Main content -->
 <section class="content no-print">
+    @component('components.filters', ['title' => __('report.filters')])
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('purchase_list_filter_location_id',  __('purchase.business_location') . ':') !!}
+                {!! Form::select('purchase_list_filter_location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('purchase_list_filter_date_range', __('report.date_range') . ':') !!}
+                {!! Form::text('purchase_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+            </div>
+        </div>
+    @endcomponent
     @component('components.widget', ['class' => 'box-primary', 'title' => __('lang_v1.all_purchase_returns')])
         @can('purchase.update')
             @slot('tool')
@@ -21,20 +35,6 @@
             @endslot
         @endcan
         @can('purchase.view')
-            <div class="row">
-                <div class="col-sm-12">
-                    <div class="form-group">
-                        <div class="input-group">
-                          <button type="button" class="btn btn-primary" id="daterange-btn">
-                            <span>
-                              <i class="fa fa-calendar"></i> {{ __('messages.filter_by_date') }}
-                            </span>
-                            <i class="fa fa-caret-down"></i>
-                          </button>
-                        </div>
-                      </div>
-                </div>
-            </div>
             @include('purchase_return.partials.purchase_return_list')
         @endcan
     @endcomponent
@@ -55,12 +55,44 @@
 <script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>
 <script>
     $(document).ready( function(){
+        $('#purchase_list_filter_date_range').daterangepicker(
+            dateRangeSettings,
+            function (start, end) {
+                $('#purchase_list_filter_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+               purchase_return_table.ajax.reload();
+            }
+        );
+        $('#purchase_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $('#purchase_list_filter_date_range').val('');
+            purchase_return_table.ajax.reload();
+        });
+
         //Purchase table
         purchase_return_table = $('#purchase_return_datatable').DataTable({
             processing: true,
             serverSide: true,
             aaSorting: [[0, 'desc']],
-            ajax: '/purchase-return',
+            ajax: {
+            url: '/purchase-return',
+            data: function(d) {
+                if ($('#purchase_list_filter_location_id').length) {
+                    d.location_id = $('#purchase_list_filter_location_id').val();
+                }
+
+                var start = '';
+                var end = '';
+                if ($('#purchase_list_filter_date_range').val()) {
+                    start = $('input#purchase_list_filter_date_range')
+                        .data('daterangepicker')
+                        .startDate.format('YYYY-MM-DD');
+                    end = $('input#purchase_list_filter_date_range')
+                        .data('daterangepicker')
+                        .endDate.format('YYYY-MM-DD');
+                }
+                d.start_date = start;
+                d.end_date = end;
+            },
+        },
             columnDefs: [ {
                 "targets": [7, 8],
                 "orderable": false,
@@ -92,19 +124,14 @@
                 $( row ).find('td:eq(5)').attr('class', 'clickable_td');
             }
         });
-        //Date range as a button
-        $('#daterange-btn').daterangepicker(
-            dateRangeSettings,
-            function (start, end) {
-                $('#daterange-btn span').html(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
-                purchase_return_table.ajax.url( '/purchase-return?start_date=' + start.format('YYYY-MM-DD') +
-                    '&end_date=' + end.format('YYYY-MM-DD') ).load();
+
+        $(document).on(
+        'change',
+            '#purchase_list_filter_location_id',
+            function() {
+                purchase_return_table.ajax.reload();
             }
         );
-        $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-            purchase_return_table.ajax.url( '/purchase-return').load();
-            $('#daterange-btn span').html('<i class="fa fa-calendar"></i> {{ __("messages.filter_by_date") }}');
-        });
     });
 </script>
 	

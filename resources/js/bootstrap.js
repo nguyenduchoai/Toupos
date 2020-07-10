@@ -10,8 +10,49 @@ window._ = require('lodash');
 try {
     window.$ = window.jQuery = require('jquery');
 
-    require('bootstrap-sass');
+    //require('bootstrap-sass');
 } catch (e) {}
+
+window.moment = require('moment');
+require('moment-timezone');
+
+window.Highcharts = require('highcharts');  
+// Load module after Highcharts is loaded
+require('highcharts/modules/exporting')(Highcharts);  
+
+//import all the 3rd party libraries
+window.Ladda = require('ladda');
+require('icheck/icheck.min.js');
+window.PerfectScrollbar = require('perfect-scrollbar').default;
+window.screenfull = require('screenfull');
+
+import jkanban from 'jkanban/dist/jkanban.min.js';
+import tinymce from 'tinymce/tinymce';
+import 'tinymce/themes/silver';
+import 'tinymce/plugins/paste';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/advlist';
+import 'tinymce/plugins/autolink';
+import 'tinymce/plugins/image';
+import 'tinymce/plugins/lists';
+import 'tinymce/plugins/charmap';
+import 'tinymce/plugins/print';
+import 'tinymce/plugins/preview';
+import 'tinymce/plugins/hr';
+import 'tinymce/plugins/anchor';
+import 'tinymce/plugins/pagebreak';
+import 'tinymce/plugins/searchreplace';
+import 'tinymce/plugins/wordcount';
+import 'tinymce/plugins/visualblocks';
+import 'tinymce/plugins/visualchars';
+import 'tinymce/plugins/code';
+import 'tinymce/plugins/fullscreen';
+import 'tinymce/plugins/insertdatetime';
+import 'tinymce/plugins/media';
+import 'tinymce/plugins/nonbreaking';
+import 'tinymce/plugins/table';
+import 'tinymce/plugins/template';
+import 'tinymce/plugins/help';
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -43,11 +84,50 @@ if (token) {
  * allows your team to easily build robust real-time web applications.
  */
 
-// import Echo from 'laravel-echo'
+import Echo from 'laravel-echo'
 
-// window.Pusher = require('pusher-js');
+window.Pusher = require('pusher-js');
 
-// window.Echo = new Echo({
-//     broadcaster: 'pusher',
-//     key: 'your-pusher-key'
-// });
+//if pusher enabled initialize push notification
+if (typeof APP != 'undefined' && APP.PUSHER_ENABLED) {
+
+    window.Echo = new Echo({
+    	authEndpoint: base_path + '/broadcasting/auth',
+        broadcaster: 'pusher',
+        key: APP.PUSHER_APP_KEY,
+        cluster: APP.PUSHER_APP_CLUSTER,
+      	forceTLS: true
+    });
+
+    //if notification permission is not granted then request for permission
+    if (Notification.permission !== 'denied' || Notification.permission === "default") {
+    	Notification.requestPermission();
+    }
+
+    window.Echo.private('App.User.' + APP.USER_ID)
+    	.notification((notification) => {
+    	//if permission is granted then notify user
+        if (Notification.permission === 'granted') {
+
+        	//specify any additional options like: icon,image
+        	var options = {
+    		    body: notification.body
+    		  };
+
+            //notification title, link is optional but body is mandatory
+            if (_.isUndefined(notification.title)) {
+                notification.title = '';
+            }
+
+    		//create notification
+            var notification_obj = new Notification(notification.title, options);
+
+            //if action defined & clicked take user to that link
+            if (!_.isUndefined(notification.link)) {
+                notification_obj.onclick = function() {
+                   window.open(notification.link);
+                };
+            }
+        }
+    });
+}

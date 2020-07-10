@@ -9,13 +9,11 @@
       </div>
       <div class="modal-body">
         <div class="row">
-          <div class="col-md-12">
-            <p>
+            <div class="col-md-12">
               @if(!empty($system_settings['superadmin_register_tc']))
-                {!! nl2br($system_settings['superadmin_register_tc']) !!}
+                {!!$system_settings['superadmin_register_tc']!!}
               @endif
-            </p>
-          </div>
+            </div>
         </div>
       </div>
       <div class="modal-footer">

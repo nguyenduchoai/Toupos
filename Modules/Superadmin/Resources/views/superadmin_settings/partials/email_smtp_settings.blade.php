@@ -51,16 +51,58 @@
             </div>
         </div>
         <div class="clearfix"></div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>
+                {!! Form::checkbox('allow_email_settings_to_businesses', 1,!empty($settings["allow_email_settings_to_businesses"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.allow_email_settings_to_businesses') 
+                </label>
+                @show_tooltip(__('superadmin::lang.allow_email_settings_tooltip'))
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>
+                {!! Form::checkbox('enable_new_business_registration_notification', 1,!empty($settings["enable_new_business_registration_notification"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.enable_new_business_registration_notification') 
+                </label> @show_tooltip(__('superadmin::lang.new_business_notification_tooltip'))
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label>
+                {!! Form::checkbox('enable_new_subscription_notification', 1,!empty($settings["enable_new_subscription_notification"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.enable_new_subscription_notification') 
+                </label> @show_tooltip(__('superadmin::lang.new_subscription_tooltip'))
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="col-xs-12">
+            <hr>
+            <div class="form-group">
+                <label>
+                    {!! Form::checkbox('enable_welcome_email', 1, isset($settings["enable_welcome_email"]) ? (int)$settings["enable_welcome_email"] : false, 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'superadmin::lang.enable_welcome_email' ) }}
+                </label> @show_tooltip(__('superadmin::lang.new_business_welcome_notification_tooltip'))
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <h4>@lang('superadmin::lang.welcome_email_template'):</h4>
+            <strong>@lang('lang_v1.available_tags'):</strong> {business_name}, {owner_name} <br><br>
+        </div>
         <div class="col-xs-12">
             <div class="form-group">
-                <div class="checkbox">
-                    <label>
-                    {!! Form::checkbox('allow_email_settings_to_businesses', 1,!empty($settings["allow_email_settings_to_businesses"]), 
-                    [ 'class' => 'input-icheck']); !!}
-                    @lang('superadmin::lang.allow_email_settings_to_businesses') 
-                    </label>
-                    @show_tooltip(__('superadmin::lang.allow_email_settings_tooltip'))
-                </div>
+                {!! Form::label('welcome_email_subject', __('superadmin::lang.welcome_email_subject') . ':') !!}
+                {!! Form::text('welcome_email_subject', isset($settings["welcome_email_subject"]) ? $settings["welcome_email_subject"] : '', ['class' => 'form-control','placeholder' => __('superadmin::lang.welcome_email_subject')]); !!}
+            </div>
+        </div>
+        <div class="col-xs-12">
+            <div class="form-group">
+                {!! Form::label('welcome_email_body', __('superadmin::lang.welcome_email_body') . ':') !!}
+                {!! Form::textarea('welcome_email_body', isset($settings["welcome_email_body"]) ? $settings["welcome_email_body"] : '', ['class' => 'form-control','placeholder' => __('superadmin::lang.welcome_email_body')]); !!}
             </div>
         </div>
     </div>

@@ -170,13 +170,13 @@ class NotificationUtil extends Util
 
         //Check if prefered email setting is superadmin email settings
         if (!empty($is_superadmin_settings_allowed) && !empty($email_settings['use_superadmin_settings']) && $check_superadmin) {
-            $email_settings['mail_driver'] = env('MAIL_DRIVER');
-            $email_settings['mail_host'] = env('MAIL_HOST');
-            $email_settings['mail_port'] = env('MAIL_PORT');
-            $email_settings['mail_username'] = env('MAIL_USERNAME');
-            $email_settings['mail_password'] = env('MAIL_PASSWORD');
-            $email_settings['mail_encryption'] = env('MAIL_ENCRYPTION');
-            $email_settings['mail_from_address'] = env('MAIL_FROM_ADDRESS');
+            $email_settings['mail_driver'] = config('mail.driver');
+            $email_settings['mail_host'] = config('mail.host');
+            $email_settings['mail_port'] = config('mail.port');
+            $email_settings['mail_username'] = config('mail.username');
+            $email_settings['mail_password'] = config('mail.password');
+            $email_settings['mail_encryption'] = config('mail.encryption');
+            $email_settings['mail_from_address'] = config('mail.from.address');
         }
 
         $mail_driver = !empty($email_settings['mail_driver']) ? $email_settings['mail_driver'] : 'smtp';

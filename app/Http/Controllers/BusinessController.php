@@ -50,25 +50,6 @@ class BusinessController extends Controller
     {
         $this->businessUtil = $businessUtil;
         $this->moduleUtil = $moduleUtil;
-
-        $this->avlble_modules = [
-            'tables' => [ 'name' => __('restaurant.tables'),
-                        'tooltip' => __('restaurant.tooltip_tables')
-                    ] ,
-            'modifiers' => [ 'name' => __('restaurant.modifiers'),
-                    'tooltip' => __('restaurant.tooltip_modifiers')
-                ],
-            'service_staff' => [
-                    'name' => __('restaurant.service_staff'),
-                    'tooltip' => __('restaurant.tooltip_service_staff')
-                ],
-            'kitchen' => [
-                'name' => __('restaurant.kitchen_for_restaurant')
-            ],
-            'account' => ['name' => __('lang_v1.account')],
-            'subscription' => ['name' => __('lang_v1.enable_subscription')],
-            'booking' => ['name' => __('lang_v1.enable_booking')]
-        ];
         
         $this->theme_colors = [
             'blue' => 'Blue',
@@ -86,11 +67,11 @@ class BusinessController extends Controller
 
         $this->mailDrivers = [
                 'smtp' => 'SMTP',
-                'sendmail' => 'Sendmail',
-                'mailgun' => 'Mailgun',
-                'mandrill' => 'Mandrill',
-                'ses' => 'SES',
-                'sparkpost' => 'Sparkpost'
+                // 'sendmail' => 'Sendmail',
+                // 'mailgun' => 'Mailgun',
+                // 'mandrill' => 'Mandrill',
+                // 'ses' => 'SES',
+                // 'sparkpost' => 'Sparkpost'
             ];
     }
 
@@ -101,7 +82,7 @@ class BusinessController extends Controller
      */
     public function getRegister()
     {
-        if (!env('ALLOW_REGISTRATION', true)) {
+        if (!config('constants.allow_registration')) {
             return redirect('/');
         }
 
@@ -136,7 +117,7 @@ class BusinessController extends Controller
      */
     public function postRegister(Request $request)
     {
-        if (!env('ALLOW_REGISTRATION', true)) {
+        if (!config('constants.allow_registration')) {
             return redirect('/');
         }
         
@@ -202,10 +183,13 @@ class BusinessController extends Controller
             }
             
             //upload logo
-            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos');
+            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos', 'image');
             if (!empty($logo_name)) {
                 $business_details['logo'] = $logo_name;
             }
+            
+            //default enabled modules
+            $business_details['enabled_modules'] = ['purchases','add_sale','pos_sale','stock_transfers','stock_adjustment','expenses'];
             
             $business = $this->businessUtil->createNewBusiness($business_details);
 
@@ -268,6 +252,7 @@ class BusinessController extends Controller
         }
 
         $count = User::where('username', $username)->count();
+
         if ($count == 0) {
             echo "true";
             exit;
@@ -329,7 +314,7 @@ class BusinessController extends Controller
 
         $sms_settings = empty($business->sms_settings) ? $this->businessUtil->defaultSmsSettings() : $business->sms_settings;
 
-        $modules = $this->avlble_modules;
+        $modules = $this->moduleUtil->availableModules();
 
         $theme_colors = $this->theme_colors;
 
@@ -339,9 +324,11 @@ class BusinessController extends Controller
 
         $custom_labels = !empty($business->custom_labels) ? json_decode($business->custom_labels, true) : [];
 
-        $common_settings = !empty($business->common_settings) ? json_decode($business->common_settings, true) : [];
+        $common_settings = !empty($business->common_settings) ? $business->common_settings : [];
 
-        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings', 'custom_labels', 'common_settings'));
+        $weighing_scale_setting = !empty($business->weighing_scale_setting) ? $business->weighing_scale_setting : [];
+
+        return view('business.settings', compact('business', 'currencies', 'tax_rates', 'timezone_list', 'months', 'accounting_methods', 'commission_agent_dropdown', 'units_dropdown', 'date_formats', 'shortcuts', 'pos_settings', 'modules', 'theme_colors', 'email_settings', 'sms_settings', 'mail_drivers', 'allow_superadmin_email_settings', 'custom_labels', 'common_settings', 'weighing_scale_setting'));
     }
 
     /**
@@ -357,6 +344,11 @@ class BusinessController extends Controller
         }
         
         try {
+            $notAllowed = $this->businessUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
+            }
+        
             $business_details = $request->only(['name', 'start_date', 'currency_id', 'tax_label_1', 'tax_number_1', 'tax_label_2', 'tax_number_2', 'default_profit_percent', 'default_sales_tax', 'default_sales_discount', 'sell_price_tax', 'sku_prefix', 'time_zone', 'fy_start_month', 'accounting_method', 'transaction_edit_days', 'sales_cmsn_agnt', 'item_addition_method', 'currency_symbol_placement', 'on_product_expiry',
                 'stop_selling_before', 'default_unit', 'expiry_type', 'date_format',
                 'time_format', 'ref_no_prefixes', 'theme_color', 'email_settings',
@@ -364,7 +356,7 @@ class BusinessController extends Controller
                 'min_order_total_for_rp', 'max_rp_per_order',
                 'redeem_amount_per_unit_rp', 'min_order_total_for_redeem',
                 'min_redeem_point', 'max_redeem_point', 'rp_expiry_period',
-                'rp_expiry_type', 'custom_labels']);
+                'rp_expiry_type', 'custom_labels', 'weighing_scale_setting']);
 
             if (!empty($request->input('enable_rp')) &&  $request->input('enable_rp') == 1) {
                 $business_details['enable_rp'] = 1;
@@ -410,7 +402,7 @@ class BusinessController extends Controller
             }
 
             //upload logo
-            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos');
+            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos', 'image');
             if (!empty($logo_name)) {
                 $business_details['logo'] = $logo_name;
             }
@@ -449,9 +441,7 @@ class BusinessController extends Controller
 
             $business_details['custom_labels'] = json_encode($business_details['custom_labels']);
 
-            $common_settings = !empty($request->input('common_settings')) ? $request->input('common_settings') : [];
-
-            $business_details['common_settings'] = json_encode($common_settings);
+            $business_details['common_settings'] = !empty($request->input('common_settings')) ? $request->input('common_settings') : [];
 
             //Enabled modules
             $enabled_modules = $request->input('enabled_modules');
@@ -579,15 +569,17 @@ class BusinessController extends Controller
     {
         try {
             $sms_settings = $request->input();
-            
+            //DanhVT add
+            $settings = empty(request()->session()->get('business.sms_settings')) ? $this->businessUtil->defaultSmsSettings() : request()->session()->get('business.sms_settings');
+            //DanhVT end
+
             $data = [
-                //28/11/19 DanhVT edit
-                // 'sms_settings' => $sms_settings,
-                'sms_settings' => request()->session()->get('business.sms_settings'),
+              //DanhVT edit
+                //'sms_settings' => $sms_settings,
+                'sms_settings' => $settings,
+              //DanhVT end
                 'mobile_number' => $sms_settings['test_number'],
-                'sms_body' => 'Day la tin nhan mau tu TouPOS',
-                // 'sms_body' => 'This is a test SMS',
-                //28/11/19 DanhVT end
+                'sms_body' => 'This is a  SMS from TouPOS',
             ];
             if (!empty($sms_settings['test_number'])) {
                 $response = $this->businessUtil->sendSms($data);

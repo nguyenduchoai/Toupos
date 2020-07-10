@@ -61,9 +61,14 @@ class Kernel extends HttpKernel
         'language' => \App\Http\Middleware\Language::class,
         'timezone' => \App\Http\Middleware\Timezone::class,
         'SetSessionData' => \App\Http\Middleware\SetSessionData::class,
-        'IsInstalled' => \App\Http\Middleware\IsInstalled::class,
-        'bootstrap' => \App\Http\Middleware\Callbacks::class,
-        'EcomApi' => \App\Http\Middleware\EcomApi::class
+        'authh' => \App\Http\Middleware\IsInstalled::class,
+        'EcomApi' => \App\Http\Middleware\EcomApi::class,
+        'AdminSidebarMenu' => \App\Http\Middleware\AdminSidebarMenu::class,
+        'superadmin' => \App\Http\Middleware\Superadmin::class,
+        'CheckContactLogin' => \Modules\Crm\Http\Middleware\CheckContactLogin::class,
+        'CheckUserLogin' => \App\Http\Middleware\CheckUserLogin::class,
+        'ContactSidebarMenu' =>  \Modules\Crm\Http\Middleware\ContactSidebarMenu::class,
+        
     ];
     /**
      * The priority-sorted list of middleware.

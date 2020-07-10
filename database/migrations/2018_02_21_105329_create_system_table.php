@@ -16,7 +16,7 @@ class CreateSystemTable extends Migration
     {
         Schema::create('system', function (Blueprint $table) {
             $table->string('key');
-            $table->string('value');
+            $table->text('value')->nullable();
         });
 
         $version = config('author.app_version');

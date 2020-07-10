@@ -2,7 +2,7 @@ $(document).ready(function() {
     var start = $('input[name="date-filter"]:checked').data('start');
     var end = $('input[name="date-filter"]:checked').data('end');
     update_statistics(start, end);
-    $(document).on('change', 'input[name="date-filter"]', function() {
+    $(document).on('change', 'input[name="date-filter"], #dashboard_location', function() {
         var start = $('input[name="date-filter"]:checked').data('start');
         var end = $('input[name="date-filter"]:checked').data('end');
         update_statistics(start, end);
@@ -14,8 +14,7 @@ $(document).ready(function() {
         serverSide: true,
         ordering: false,
         searching: false,
-        dom: 'tirp',
-        buttons: [],
+        dom: 'Btirp',
         ajax: '/home/product-stock-alert',
         fnDrawCallback: function(oSettings) {
             __currency_convert_recursively($('#stock_alert_table'));
@@ -27,8 +26,7 @@ $(document).ready(function() {
         serverSide: true,
         ordering: false,
         searching: false,
-        dom: 'tirp',
-        buttons: [],
+        dom: 'Btirp',
         ajax: '/home/purchase-payment-dues',
         fnDrawCallback: function(oSettings) {
             __currency_convert_recursively($('#purchase_payment_dues_table'));
@@ -41,8 +39,7 @@ $(document).ready(function() {
         serverSide: true,
         ordering: false,
         searching: false,
-        dom: 'tirp',
-        buttons: [],
+        dom: 'Btirp',
         ajax: '/home/sales-payment-dues',
         fnDrawCallback: function(oSettings) {
             __currency_convert_recursively($('#sales_payment_dues_table'));
@@ -54,7 +51,7 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         searching: false,
-        dom: 'tirp',
+        dom: 'Btirp',
         ajax: {
             url: '/reports/stock-expiry',
             data: function(d) {
@@ -76,13 +73,18 @@ $(document).ready(function() {
 });
 
 function update_statistics(start, end) {
-    var data = { start: start, end: end };
+    var location_id = '';
+    if ($('#dashboard_location').length > 0) {
+        location_id = $('#dashboard_location').val();
+    }
+    var data = { start: start, end: end, location_id: location_id };
     //get purchase details
-    var loader = '<i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i>';
+    var loader = '<i class="fas fa-sync fa-spin fa-fw margin-bottom"></i>';
     $('.total_purchase').html(loader);
     $('.purchase_due').html(loader);
     $('.total_sell').html(loader);
     $('.invoice_due').html(loader);
+    $('.total_expense').html(loader);
     $.ajax({
         method: 'get',
         url: '/home/get-totals',
@@ -96,6 +98,8 @@ function update_statistics(start, end) {
             //sell details
             $('.total_sell').html(__currency_trans_from_en(data.total_sell, true));
             $('.invoice_due').html(__currency_trans_from_en(data.invoice_due, true));
+            //expense details
+            $('.total_expense').html(__currency_trans_from_en(data.total_expense, true));
         },
     });
 }

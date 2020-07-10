@@ -2,12 +2,9 @@
 
 namespace App\Listeners;
 
-use App\Events\TransactionPaymentAdded;
-
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-
 use App\AccountTransaction;
+
+use App\Events\TransactionPaymentAdded;
 
 use App\Utils\ModuleUtil;
 
@@ -33,12 +30,12 @@ class AddAccountTransaction
      */
     public function handle(TransactionPaymentAdded $event)
     {
-        if(!$this->moduleUtil->isModuleEnabled('account')){
+        if (!$this->moduleUtil->isModuleEnabled('account')) {
             return true;
         }
 
         // //Create new account transaction
-        if(!empty($event->formInput['account_id'])){
+        if (!empty($event->formInput['account_id'])) {
             $account_transaction_data = [
                 'amount' => $event->formInput['amount'],
                 'account_id' => $event->formInput['account_id'],
@@ -48,6 +45,11 @@ class AddAccountTransaction
                 'transaction_id' => $event->transactionPayment->transaction_id,
                 'transaction_payment_id' =>  $event->transactionPayment->id
             ];
+
+            //If change return then set type as debit
+            if ($event->formInput['transaction_type'] == 'sell' && isset($event->formInput['is_return']) && $event->formInput['is_return'] == 1) {
+                $account_transaction_data['type'] = 'debit';
+            }
 
             AccountTransaction::createAccountTransaction($account_transaction_data);
         }

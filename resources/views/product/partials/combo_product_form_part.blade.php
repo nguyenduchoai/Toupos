@@ -85,10 +85,9 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-
+		__currency_convert_recursively($(".combo_product_table"));
 		//Use when editing product
 		update_net_total_amount();
-		__currency_convert_recursively($(".combo_product_table"));
 
 		//Add products
 	    if($( "#search_product" ).length > 0){
@@ -147,7 +146,7 @@
 	    });
 
 	    function update_combo_product_row_values(row) {
-			var purchase_price = __read_number(row.find('input.purchase_price'), false);
+			var purchase_price = parseFloat(row.find('input.purchase_price').val());
 			var quantity = __read_number(row.find('input.quantity'), false);
 			var multiplier = __getUnitMultiplier(row);
 
@@ -166,12 +165,13 @@
 	    	var purchase_price_inc_tax = 0;
 
 	    	$('.combo_product_table').find('tr').each(function(){
-	    		item_level_purchase_price_total += __read_number($(this).find('input.item_level_purchase_price'),false);
+	    		if ($(this).find('input.item_level_purchase_price').length) {
+	    			item_level_purchase_price_total += parseFloat($(this).find('input.item_level_purchase_price').val());
+	    		}
 	    	});
 
 	    	var tax_rate = $('select#tax').find(':selected').data('rate');
 	    	purchase_price_inc_tax = __add_percent(item_level_purchase_price_total, tax_rate);
-
 	    	//Set selling price.
 	    	$(".combo_product_table").find('span.item_level_purchase_price_total').text(item_level_purchase_price_total);
 	    	$(".combo_product_table").find('input#item_level_purchase_price_total').val(item_level_purchase_price_total);
@@ -192,9 +192,10 @@
 	    	var quantity = __read_number(row.find('input.quantity'), false);
 	    	var multiplier = __getUnitMultiplier(row);
 
-	    	var purchase_price = __read_number(row.find('input.purchase_price'), false);
+	    	var purchase_price = parseFloat(row.find('input.purchase_price').val());
 	    	var item_level_purchase_price = quantity * multiplier * purchase_price;
 
+	    	row.find('span.purchase_price_text').text(purchase_price);
 	    	row.find('span.item_level_purchase_price').text(item_level_purchase_price);
 	    	row.find('input.item_level_purchase_price').val(item_level_purchase_price);
 	    	__currency_convert_recursively(row);
@@ -220,7 +221,7 @@
 
 	    $(document).on('change', 'input#selling_price', function(){
 	    	var amount = __read_number($('input#selling_price'), false);
-			var principal = __read_number($('input#item_level_purchase_price_total'), false);
+			var principal = parseFloat($('input#item_level_purchase_price_total').val());
 
 	    	var margin = __get_rate(principal, amount);
 	    	__write_number($('input#margin'), margin);

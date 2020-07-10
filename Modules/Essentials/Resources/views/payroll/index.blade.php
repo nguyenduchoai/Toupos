@@ -131,6 +131,36 @@
                 format: 'mm/yyyy',
                 minViewMode: "months"
             });
+
+            $(document).on('click', '.delete-payroll', function(e) {
+                e.preventDefault();
+                swal({
+                    title: LANG.sure,
+                    icon: 'warning',
+                    buttons: true,
+                    dangerMode: true,
+                }).then(willDelete => {
+                    if (willDelete) {
+                        var href = $(this).attr('href');
+                        var data = $(this).serialize();
+
+                        $.ajax({
+                            method: 'DELETE',
+                            url: href,
+                            dataType: 'json',
+                            data: data,
+                            success: function(result) {
+                                if (result.success == true) {
+                                    toastr.success(result.msg);
+                                    payrolls_table.ajax.reload();
+                                } else {
+                                    toastr.error(result.msg);
+                                }
+                            },
+                        });
+                    }
+                });
+            });
         });
     </script>
     <script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>

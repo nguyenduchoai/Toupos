@@ -20,7 +20,7 @@ $(document).ready( function () {
         $(this).closest('tr').remove();
         calculateTotal();
     });
-    $(document).on('change', '#essentials_duration, #essentials_amount_per_unit_duration, input.allowance, input.deduction', function() {
+    $(document).on('change', '#essentials_duration, #essentials_amount_per_unit_duration, input.allowance, input.deduction, input.percent', function() {
         calculateTotal();
     });
     $(document).on('change', '#total', function() {
@@ -41,12 +41,29 @@ function calculateTotal() {
 
     var total_allowance = 0;
     $('input.allowance').each( function(){
+        var tr = $(this).closest('tr');
+        var type = tr.find('.amount_type').val();
+        if (type == 'percent') {
+            var percent = __read_number(tr.find('.percent'));
+            var row_total = __calculate_amount('percentage', percent, total);
+            __write_number($(this), row_total);
+        }
+
         total_allowance += __read_number($(this));
+        
     });
     $('#total_allowances').text(__currency_trans_from_en(total_allowance, true));
 
     var total_deduction = 0;
     $('input.deduction').each( function(){
+        var tr = $(this).closest('tr');
+        var type = tr.find('.amount_type').val();
+        if (type == 'percent') {
+            var percent = __read_number(tr.find('.percent'));
+            var row_total = __calculate_amount('percentage', percent, total);
+            __write_number($(this), row_total);
+        }
+
         total_deduction += __read_number($(this));
     });
     $('#total_deductions').text(__currency_trans_from_en(total_deduction, true));
@@ -55,5 +72,16 @@ function calculateTotal() {
     $('#gross_amount').val(gross_amount);
     $('#gross_amount_text').text(__currency_trans_from_en(gross_amount, true));
 }
+
+$(document).on('change', '.amount_type', function(){
+    var tr = $(this).closest('tr');
+    if ($(this).val() == 'percent') {
+        tr.find('.percent_field').removeClass('hide');
+        tr.find('.value_field').attr('readonly', true);
+    } else {
+        tr.find('.percent_field').addClass('hide');
+        tr.find('.value_field').removeAttr('readonly');
+    }
+});
 
 </script>

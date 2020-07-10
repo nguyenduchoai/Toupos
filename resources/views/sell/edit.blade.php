@@ -9,6 +9,8 @@
 </section>
 <!-- Main content -->
 <section class="content">
+<input type="hidden" id="amount_rounding_method" value="{{$pos_settings['amount_rounding_method'] ?? ''}}">
+<input type="hidden" id="amount_rounding_method" value="{{$pos_settings['amount_rounding_method'] ?? 'none'}}">
 @if(!empty($pos_settings['allow_overselling']))
 	<input type="hidden" id="is_overselling_allowed">
 @endif
@@ -22,26 +24,48 @@
 	<div class="row">
 		<div class="col-md-12 col-sm-12">
 			@component('components.widget', ['class' => 'box-primary'])
-				@if(!empty($price_groups))
-					@if(count($price_groups) > 1)
-						<div class="col-md-4 col-sm-6">
-							<div class="form-group">
-								<div class="input-group">
-									<span class="input-group-addon">
-										<i class="fa fa-money"></i>
-									</span>
-									{!! Form::hidden('hidden_price_group', $transaction->selling_price_group_id, ['id' => 'hidden_price_group']) !!}
-									{!! Form::select('price_group', $price_groups, $transaction->selling_price_group_id, ['class' => 'form-control select2', 'id' => 'price_group']); !!}
-									<span class="input-group-addon">
-										@show_tooltip(__('lang_v1.price_group_help_text'))
-									</span> 
-								</div>
+				@if(!empty($transaction->selling_price_group_id))
+					<div class="col-md-4 col-sm-6">
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">
+									<i class="fas fa-money-bill-alt"></i>
+								</span>
+								{!! Form::hidden('price_group', $transaction->selling_price_group_id, ['id' => 'price_group']) !!}
+								{!! Form::text('price_group_text', $transaction->price_group->name, ['class' => 'form-control', 'readonly']); !!}
+								<span class="input-group-addon">
+									@show_tooltip(__('lang_v1.price_group_help_text'))
+								</span> 
 							</div>
 						</div>
-					@else
-						{!! Form::hidden('price_group', $transaction->selling_price_group_id, ['id' => 'price_group']) !!}
-					@endif
+					</div>
 				@endif
+
+				@if(in_array('types_of_service', $enabled_modules) && !empty($transaction->types_of_service))
+					<div class="col-md-4 col-sm-6">
+						<div class="form-group">
+							<div class="input-group">
+								<span class="input-group-addon">
+									<i class="fas fa-external-link-square-alt text-primary service_modal_btn"></i>
+								</span>
+								{!! Form::text('types_of_service_text', $transaction->types_of_service->name, ['class' => 'form-control', 'readonly']); !!}
+
+								{!! Form::hidden('types_of_service_id', $transaction->types_of_service_id, ['id' => 'types_of_service_id']) !!}
+
+								<span class="input-group-addon">
+									@show_tooltip(__('lang_v1.types_of_service_help'))
+								</span> 
+							</div>
+							<small><p class="help-block @if(empty($transaction->selling_price_group_id)) hide @endif" id="price_group_text">@lang('lang_v1.price_group'): <span>@if(!empty($transaction->selling_price_group_id)){{$transaction->price_group->name}}@endif</span></p></small>
+						</div>
+					</div>
+					<div class="modal fade types_of_service_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+						@if(!empty($transaction->types_of_service))
+						@include('types_of_service.pos_form_modal', ['types_of_service' => $transaction->types_of_service])
+						@endif
+					</div>
+				@endif
+
 				@if(in_array('subscription', $enabled_modules))
 					<div class="col-md-4 pull-right col-sm-6">
 						<div class="checkbox">
@@ -195,7 +219,7 @@
 						</thead>
 						<tbody>
 							@foreach($sell_details as $sell_line)
-								@include('sale_pos.product_row', ['product' => $sell_line, 'row_count' => $loop->index, 'tax_dropdown' => $taxes, 'sub_units' => !empty($sell_line->unit_details) ? $sell_line->unit_details : [] ])
+								@include('sale_pos.product_row', ['product' => $sell_line, 'row_count' => $loop->index, 'tax_dropdown' => $taxes, 'sub_units' => !empty($sell_line->unit_details) ? $sell_line->unit_details : [], 'action' => 'edit' ])
 							@endforeach
 						</tbody>
 					</table>
@@ -230,6 +254,9 @@
 			            </div>
 			        </div>
 			    </div>
+			    @php
+			    	$max_discount = !is_null(auth()->user()->max_sales_discount_percent) ? auth()->user()->max_sales_discount_percent : '';
+			    @endphp
 			    <div class="col-md-4">
 			        <div class="form-group">
 			            {!! Form::label('discount_amount', __('sale.discount_amount') . ':*' ) !!}
@@ -237,7 +264,7 @@
 			                <span class="input-group-addon">
 			                    <i class="fa fa-info"></i>
 			                </span>
-			                {!! Form::text('discount_amount', @num_format($transaction->discount_amount), ['class' => 'form-control input_number', 'data-default' => $business_details->default_sales_discount]); !!}
+			                {!! Form::text('discount_amount', @num_format($transaction->discount_amount), ['class' => 'form-control input_number', 'data-default' => $business_details->default_sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
 			            </div>
 			        </div>
 			    </div>
@@ -335,6 +362,12 @@
 			        </div>
 			    </div>
 			    <div class="col-md-4 col-md-offset-8">
+			    	@if(!empty($pos_settings['amount_rounding_method']) && $pos_settings['amount_rounding_method'] > 0)
+			    	<small id="round_off"><br>(@lang('lang_v1.round_off'): <span id="round_off_text">0</span>)</small>
+					<br/>
+					<input type="hidden" name="round_off_amount" 
+						id="round_off_amount" value=0>
+					@endif
 			    	<div><b>@lang('sale.total_payable'): </b>
 						<input type="hidden" name="final_total" id="final_total_input">
 						<span id="total_payable">0</span>
@@ -347,8 +380,10 @@
 					</div>
 			    </div>
 			    <input type="hidden" name="is_direct_sale" value="1">
-			    <div class="col-md-12">
-			    	<button type="button" class="btn btn-primary pull-right" id="submit-sell">@lang('messages.update')</button>
+			    <div class="col-md-12 text-right">
+			    	{!! Form::hidden('is_save_and_print', 0, ['id' => 'is_save_and_print']); !!}
+			    	<button type="button" class="btn btn-primary" id="submit-sell">@lang('messages.update')</button>
+			    	<button type="button" id="save-and-print" class="btn btn-primary btn-flat">@lang('lang_v1.update_and_print')</button>
 			    </div>
 			@endcomponent
 

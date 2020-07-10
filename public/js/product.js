@@ -463,8 +463,10 @@ $(document).ready(function() {
     $('#upload_image').fileinput(img_fileinput_setting);
 
     if ($('textarea#product_description').length > 0) {
-        CKEDITOR.config.height = 120;
-        CKEDITOR.replace('product_description');
+        tinymce.init({
+            selector: 'textarea#product_description',
+            height:250
+        });
     }
 });
 
@@ -605,4 +607,14 @@ $(document).on('click', '.delete-media', function () {
             });
         }
     });
-})
+});
+
+$(document).on('click', 'button.apply-all', function(){
+    var val = $(this).closest('.input-group').find('input').val();
+    var target_class = $(this).data('target-class');
+    $(this).closest('tbody').find('tr').each( function(){
+        element =  $(this).find(target_class);
+        element.val(val);
+        element.change();
+    });
+});

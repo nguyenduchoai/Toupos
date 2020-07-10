@@ -55,7 +55,7 @@ function add_selected_modifiers(selected, index) {
     if (selected.length > 0) {
         $.ajax({
             method: 'GET',
-            url: '/modules/add-selected-modifiers/',
+            url: $('button.add_modifier').data('url'),
             data: { selected: selected, index: index },
             dataType: 'html',
             success: function(result) {

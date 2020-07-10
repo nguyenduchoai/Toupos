@@ -14,7 +14,7 @@ $(document).ready(function() {
         var status = $('#status_span').attr('data-status');
         if (status === '1') {
             toastr.success($('#status_span').attr('data-msg'));
-        } else if (status === '0') {
+        } else if (status == '' || status === '0') {
             toastr.error($('#status_span').attr('data-msg'));
         }
     }
@@ -115,19 +115,19 @@ $(document).ready(function() {
     __currency_convert_recursively($(document), $('input#p_symbol').length);
 
     var buttons = [
-        {
-            extend: 'copy',
-            text: '<i class="fa fa-files-o" aria-hidden="true"></i> ' + LANG.copy,
-            className: 'bg-info',
-            exportOptions: {
-                columns: ':visible',
-            },
-            footer: true,
-        },
+        // {
+        //     extend: 'copy',
+        //     text: '<i class="fa fa-files-o" aria-hidden="true"></i> ' + LANG.copy,
+        //     className: 'btn-sm',
+        //     exportOptions: {
+        //         columns: ':visible',
+        //     },
+        //     footer: true,
+        // },
         {
             extend: 'csv',
-            text: '<i class="fa fa-file-text-o" aria-hidden="true"></i> ' + LANG.export_to_csv,
-            className: 'bg-info',
+            text: '<i class="fa fa-file-csv" aria-hidden="true"></i> ' + LANG.export_to_csv,
+            className: 'btn-sm',
             exportOptions: {
                 columns: ':visible',
             },
@@ -135,8 +135,8 @@ $(document).ready(function() {
         },
         {
             extend: 'excel',
-            text: '<i class="fa fa-file-excel-o" aria-hidden="true"></i> ' + LANG.export_to_excel,
-            className: 'bg-info',
+            text: '<i class="fa fa-file-excel" aria-hidden="true"></i> ' + LANG.export_to_excel,
+            className: 'btn-sm',
             exportOptions: {
                 columns: ':visible',
             },
@@ -145,15 +145,18 @@ $(document).ready(function() {
         {
             extend: 'print',
             text: '<i class="fa fa-print" aria-hidden="true"></i> ' + LANG.print,
-            className: 'bg-info',
+            className: 'btn-sm',
             exportOptions: {
                 columns: ':visible',
-                stripHtml: false,
+                stripHtml: true,
             },
             footer: true,
             customize: function ( win ) {
                 if ($('.print_table_part').length > 0 ) {
                     $($('.print_table_part').html()).insertBefore($(win.document.body).find( 'table' ));
+                }
+                if ($(win.document.body).find( 'table.hide-footer').length) {
+                    $(win.document.body).find( 'table.hide-footer tfoot' ).remove();
                 }
                 __currency_convert_recursively($(win.document.body).find( 'table' ));
             }
@@ -161,14 +164,14 @@ $(document).ready(function() {
         {
             extend: 'colvis',
             text: '<i class="fa fa-columns" aria-hidden="true"></i> ' + LANG.col_vis,
-            className: 'bg-info',
+            className: 'btn-sm',
         },
     ];
 
     var pdf_btn = {
         extend: 'pdf',
-        text: '<i class="fa fa-file-pdf-o" aria-hidden="true"></i> ' + LANG.export_to_pdf,
-        className: 'bg-info',
+        text: '<i class="fa fa-file-pdf" aria-hidden="true"></i> ' + LANG.export_to_pdf,
+        className: 'btn-sm',
         exportOptions: {
             columns: ':visible',
         },
@@ -183,22 +186,13 @@ $(document).ready(function() {
     jQuery.extend($.fn.dataTable.defaults, {
         fixedHeader: true,
         dom:
-            '<"row margin-bottom-12"<"col-sm-12"<"pull-left"l><"pull-right margin-left-10"B><"pull-right"fr>>>tip',
-        buttons: [
-            {
-                extend: 'collection',
-                text: '<i class="fa fa-list" aria-hidden="true"></i> &nbsp;' + LANG.action,
-                className: 'btn-info',
-                init: function(api, node, config) {
-                    $(node).removeClass('btn-default');
-                },
-                buttons: buttons,
-            },
-        ],
+            '<"row margin-bottom-20 text-center"<"col-sm-2"l><"col-sm-7"B><"col-sm-3"f> r>tip',
+        buttons: buttons,
         aLengthMenu: [[25, 50, 100, 200, 500, 1000, -1], [25, 50, 100, 200, 500, 1000, LANG.all]],
         iDisplayLength: __default_datatable_page_entries,
         language: {
-            search: LANG.search + ':',
+            searchPlaceholder: LANG.search + ' ...',
+            search: '',
             lengthMenu: LANG.show + ' _MENU_ ' + LANG.entries,
             emptyTable: LANG.table_emptyTable,
             info: LANG.table_info,
@@ -264,6 +258,10 @@ $(document).ready(function() {
         $('div.pos-tab>div.pos-tab-content')
             .eq(index)
             .addClass('active');
+    });
+
+    $('.scroll-top-bottom').each( function(){
+        $(this).topScrollbar();
     });
 });
 
@@ -439,3 +437,46 @@ $(document).on('click', '#accordion .box-header', function(e) {
         .find('.box-title a')
         .click();
 });
+
+$(document).on('shown.bs.modal', '.contains_select2', function(){
+    $(this).find('.select2').each( function(){
+        var $p = $(this).parent();
+        $(this).select2({ dropdownParent: $p });
+    });
+})
+
+//common configuration : tinyMCE editor
+tinymce.overrideDefaults({
+    height: 300,
+    theme: 'silver',
+    plugins: [
+      'advlist autolink link image lists charmap print preview hr anchor pagebreak',
+      'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking',
+      'table template paste help'
+    ],
+    toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify |' +
+      ' bullist numlist outdent indent | link image | print preview media fullpage | ' +
+      'forecolor backcolor',
+    menu: {
+      favs: {title: 'My Favorites', items: 'code | searchreplace'}
+    },
+    menubar: 'favs file edit view insert format tools table help'
+});
+
+// Prevent Bootstrap dialog from blocking focusin
+$(document).on('focusin', function(e) {
+  if ($(e.target).closest(".tox-tinymce-aux, .moxman-window, .tam-assetmanager-root").length) {
+    e.stopImmediatePropagation();
+  }
+});
+
+
+//search parameter in url
+function urlSearchParam(param){
+    var results = new RegExp('[\?&]' + param + '=([^&#]*)').exec(window.location.href);
+    if (results == null){
+       return null;
+    } else{
+       return results[1];
+    }
+}

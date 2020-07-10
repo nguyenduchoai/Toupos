@@ -28,7 +28,10 @@
 	                                <div class="form-group">
                                    		{!! Form::label('name', __('essentials::lang.document') . ":*") !!}
 
-                                   		{!! Form::file('name', ['required']) !!}
+                                   		{!! Form::file('name', ['required', 'accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]) !!}
+                                   		<p class="help-block">
+                        					@includeIf('components.document_help_text')
+                        				</p>
 	                                 </div>
 	                            </div>
 	                            <div class="clearfix"></div>
@@ -140,12 +143,15 @@
 			e.preventDefault();
 			var url = $(this).attr("action");
 			var data = $("form#share_document_form").serialize();
+			var ladda = Ladda.create(document.querySelector('.doc-share-btn'));
+			ladda.start();
 			$.ajax({
 				method: "PUT",
 				url: url,
 				dataType: "json",
 				data: data,
 				success:function(result){
+					ladda.stop();
 					if(result.success == true){
 						$(".document").html(result).modal("hide");
 						toastr.success(result.msg);

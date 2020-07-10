@@ -1,7 +1,7 @@
 {
     "name": "Superadmin",
     "alias": "superadmin",
-    "description": "",
+    "description": "Allows you to create packages & sell subscription to multiple businesses",
     "keywords": [],
     "active": 1,
     "order": 0,

@@ -18,9 +18,9 @@ class TableController extends Controller
      */
     public function index()
     {
-        // if (!auth()->user()->can('table.view') && !auth()->user()->can('table.create')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
 
         if (request()->ajax()) {
             $business_id = request()->session()->get('user.business_id');
@@ -55,6 +55,10 @@ class TableController extends Controller
      */
     public function create()
     {
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         $business_id = request()->session()->get('user.business_id');
         $business_locations = BusinessLocation::forDropdown($business_id);
 
@@ -69,9 +73,9 @@ class TableController extends Controller
      */
     public function store(Request $request)
     {
-        // if (!auth()->user()->can('table.create')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
 
         try {
             $input = $request->only(['name', 'description', 'location_id']);
@@ -101,6 +105,10 @@ class TableController extends Controller
      */
     public function show()
     {
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         return view('restaurant.table.show');
     }
 
@@ -110,6 +118,10 @@ class TableController extends Controller
      */
     public function edit($id)
     {
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
+        
         if (request()->ajax()) {
             $business_id = request()->session()->get('user.business_id');
             $table = ResTable::where('business_id', $business_id)->find($id);
@@ -126,9 +138,9 @@ class TableController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // if (!auth()->user()->can('table.update')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
 
         if (request()->ajax()) {
             try {
@@ -161,9 +173,9 @@ class TableController extends Controller
      */
     public function destroy($id)
     {
-        // if (!auth()->user()->can('table.delete')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
+        if (!auth()->user()->can('access_tables')) {
+             abort(403, 'Unauthorized action.');
+        }
 
         if (request()->ajax()) {
             try {

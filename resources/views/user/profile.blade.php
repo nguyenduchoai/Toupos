@@ -66,7 +66,7 @@
 {!! Form::close() !!}
 {!! Form::open(['url' => action('UserController@updateProfile'), 'method' => 'post', 'id' => 'edit_user_profile_form', 'files' => true ]) !!}
 <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-8">
         <div class="box box-solid"> <!--business info box start-->
             <div class="box-header">
                 <div class="box-header">
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="box-body">
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-2">
                     {!! Form::label('surname', __('business.prefix') . ':') !!}
                     <div class="input-group">
                         <span class="input-group-addon">
@@ -83,7 +83,7 @@
                         {!! Form::text('surname', $user->surname, ['class' => 'form-control','placeholder' => __('business.prefix_placeholder')]); !!}
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-5">
                     {!! Form::label('first_name', __('business.first_name') . ':') !!}
                     <div class="input-group">
                         <span class="input-group-addon">
@@ -92,7 +92,7 @@
                         {!! Form::text('first_name', $user->first_name, ['class' => 'form-control','placeholder' => __('business.first_name'), 'required']); !!}
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-5">
                     {!! Form::label('last_name', __('business.last_name') . ':') !!}
                     <div class="input-group">
                         <span class="input-group-addon">
@@ -101,7 +101,7 @@
                         {!! Form::text('last_name', $user->last_name, ['class' => 'form-control','placeholder' => __('business.last_name')]); !!}
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-6">
                     {!! Form::label('email', __('business.email') . ':') !!}
                     <div class="input-group">
                         <span class="input-group-addon">
@@ -110,7 +110,7 @@
                         {!! Form::email('email',  $user->email, ['class' => 'form-control','placeholder' => __('business.email') ]); !!}
                     </div>
                 </div>
-                <div class="form-group col-md-3">
+                <div class="form-group col-md-6">
                     {!! Form::label('language', __('business.language') . ':') !!}
                     <div class="input-group">
                         <span class="input-group-addon">
@@ -121,6 +121,22 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="col-md-4">
+        @component('components.widget', ['title' => __('lang_v1.profile_photo')])
+            @if(!empty($user->media))
+                <div class="col-md-12 text-center">
+                    {!! $user->media->thumbnail([150, 150], 'img-circle') !!}
+                </div>
+            @endif
+            <div class="col-md-12">
+                <div class="form-group">
+                    {!! Form::label('profile_photo', __('lang_v1.upload_image') . ':') !!}
+                    {!! Form::file('profile_photo', ['id' => 'profile_photo', 'accept' => 'image/*']); !!}
+                    <small><p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])</p></small>
+                </div>
+            </div>
+        @endcomponent
     </div>
 </div>
 @include('user.edit_profile_form_part', ['bank_details' => !empty($user->bank_details) ? json_decode($user->bank_details, true) : null])
@@ -133,5 +149,4 @@
 
 </section>
 <!-- /.content -->
-
 @endsection

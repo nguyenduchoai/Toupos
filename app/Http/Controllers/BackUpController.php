@@ -72,11 +72,9 @@ class BackUpController extends Controller
 
         try {
             //Disable in demo
-            if (config('app.env') == 'demo') {
-                $output = ['success' => 0,
-                                'msg' => 'Feature disabled in demo!!'
-                            ];
-                return back()->with('status', $output);
+            $notAllowed = $this->commonUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
             }
 
             // start the backup process

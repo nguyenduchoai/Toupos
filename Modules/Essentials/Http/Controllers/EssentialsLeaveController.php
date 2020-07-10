@@ -83,7 +83,7 @@ class EssentialsLeaveController extends Controller
                 $leaves->where('essentials_leaves.user_id', request()->input('user_id'));
             }
 
-            if (!$is_admin) {
+            if (!$is_admin && !auth()->user()->can('essentials.approve_leave')) {
                 $leaves->where('essentials_leaves.user_id', auth()->user()->id);
             }
 
@@ -130,7 +130,7 @@ class EssentialsLeaveController extends Controller
                     $status = '<span class="label ' . $this->leave_statuses[$row->status]['class'] . '">'
                     . $this->leave_statuses[$row->status]['name'] . '</span>';
 
-                    if ($is_admin) {
+                    if ($is_admin || auth()->user()->can('essentials.approve_leave')) {
                         $status = '<a href="#" class="change_status" data-status_note="' . $row->status_note . '" data-leave-id="' . $row->id . '" data-orig-value="' . $row->status . '" data-status-name="' . $this->leave_statuses[$row->status]['name'] . '"> ' . $status . '</a>';
                     }
                     return $status;
@@ -143,7 +143,7 @@ class EssentialsLeaveController extends Controller
                 ->make(true);
         }
         $users = [];
-        if ($is_admin) {
+        if ($is_admin || auth()->user()->can('essentials.approve_leave')) {
             $users = User::forDropdown($business_id, false);
         }
         $leave_statuses = $this->leave_statuses;
@@ -293,40 +293,34 @@ class EssentialsLeaveController extends Controller
     {
         $business_id = request()->session()->get('user.business_id');
 
-        if (!(auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'essentials_module'))) {
+        if (!(auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'essentials_module')) || !auth()->user()->can('essentials.approve_leave')) {
             abort(403, 'Unauthorized action.');
         }
 
         try {
-            if ($this->moduleUtil->is_admin(auth()->user(), $business_id)) {
-                $input = $request->only(['status', 'leave_id', 'status_note']);
+            $input = $request->only(['status', 'leave_id', 'status_note']);
             
-                $leave = EssentialsLeave::where('business_id', $business_id)
-                                ->find($input['leave_id']);
+            $leave = EssentialsLeave::where('business_id', $business_id)
+                            ->find($input['leave_id']);
 
-                $leave->status = $input['status'];
-                $leave->status_note = $input['status_note'];
-                $leave->save();
+            $leave->status = $input['status'];
+            $leave->status_note = $input['status_note'];
+            $leave->save();
 
-                $leave->status = $this->leave_statuses[$leave->status]['name'];
+            $leave->status = $this->leave_statuses[$leave->status]['name'];
 
-                $leave->changed_by = auth()->user()->id;
+            $leave->changed_by = auth()->user()->id;
 
-                $leave->user->notify(new LeaveStatusNotification($leave));
+            $leave->user->notify(new LeaveStatusNotification($leave));
 
-                $output = ['success' => true,
-                                'msg' => __("lang_v1.added_success")
-                            ];
-            } else {
-                $output = ['success' => false,
-                            'msg' => __("messages.something_went_wrong")
+            $output = ['success' => true,
+                            'msg' => __("lang_v1.updated_success")
                         ];
-            }
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
             $output = ['success' => false,
-                            'msg' => "File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage()
+                            'msg' => __("messages.something_went_wrong")
                         ];
         }
 

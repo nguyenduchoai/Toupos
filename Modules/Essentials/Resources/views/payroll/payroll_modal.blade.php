@@ -14,7 +14,7 @@
 	      	<div class="form-group">
 	      		{!! Form::label('month_year', __( 'essentials::lang.month_year' ) . ':*') !!}
 	      		<div class="input-group">
-	          		{!! Form::text('month_year', null, ['class' => 'form-control', 'placeholder' => __( 'essentials::lang.month_year' ), 'required' ]); !!}
+	          		{!! Form::text('month_year', null, ['class' => 'form-control', 'placeholder' => __( 'essentials::lang.month_year' ), 'required', 'readonly' ]); !!}
 	          		<span class="input-group-addon"><i class="fa fa-calendar"></i></span>
 	      		</div>
 	      	</div>

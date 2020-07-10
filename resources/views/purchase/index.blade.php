@@ -38,7 +38,7 @@
         <div class="col-md-3">
             <div class="form-group">
                 {!! Form::label('purchase_list_filter_payment_status',  __('purchase.payment_status') . ':') !!}
-                {!! Form::select('purchase_list_filter_payment_status', ['paid' => __('lang_v1.paid'), 'due' => __('lang_v1.due'), 'partial' => __('lang_v1.partial')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+                {!! Form::select('purchase_list_filter_payment_status', ['paid' => __('lang_v1.paid'), 'due' => __('lang_v1.due'), 'partial' => __('lang_v1.partial'), 'overdue' => __('lang_v1.overdue')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
             </div>
         </div>
         <div class="col-md-3">
@@ -58,37 +58,7 @@
                 </div>
             @endslot
         @endcan
-        @can('purchase.view')
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped ajax_view" id="purchase_table">
-                    <thead>
-                        <tr>
-                            <th>@lang('messages.date')</th>
-                            <th>@lang('purchase.ref_no')</th>
-                            <th>@lang('purchase.location')</th>
-                            <th>@lang('purchase.supplier')</th>
-                            <th>@lang('purchase.purchase_status')</th>
-                            <th>@lang('purchase.payment_status')</th>
-                            <th>@lang('purchase.grand_total')</th>
-                            <th>@lang('purchase.payment_due') &nbsp;&nbsp;<i class="fa fa-info-circle text-info" data-toggle="tooltip" data-placement="bottom" data-html="true" data-original-title="{{ __('messages.purchase_due_tooltip')}}" aria-hidden="true"></i></th>
-                            <th>@lang('messages.action')</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr class="bg-gray font-17 text-center footer-total">
-                            <td colspan="4"><strong>@lang('sale.total'):</strong></td>
-                            <td id="footer_status_count"></td>
-                            <td id="footer_payment_status_count"></td>
-                            <td><span class="display_currency" id="footer_purchase_total" data-currency_symbol ="true"></span></td>
-                            <td class="text-left"><small>@lang('report.purchase_due') - <span class="display_currency" id="footer_total_due" data-currency_symbol ="true"></span><br>
-                            @lang('lang_v1.purchase_return') - <span class="display_currency" id="footer_total_purchase_return_due" data-currency_symbol ="true"></span>
-                            </small></td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        @endcan
+        @include('purchase.partials.purchase_table')
     @endcomponent
 
     <div class="modal fade product_modal" tabindex="-1" role="dialog" 
@@ -102,6 +72,8 @@
     <div class="modal fade edit_payment_modal" tabindex="-1" role="dialog" 
         aria-labelledby="gridSystemModalLabel">
     </div>
+
+    @include('purchase.partials.update_purchase_status_modal')
 
 </section>
 
@@ -124,6 +96,40 @@
     $('#purchase_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
         $('#purchase_list_filter_date_range').val('');
         purchase_table.ajax.reload();
+    });
+
+    $(document).on('click', '.update_status', function(e){
+        e.preventDefault();
+        $('#update_purchase_status_form').find('#status').val($(this).data('status'));
+        $('#update_purchase_status_form').find('#purchase_id').val($(this).data('purchase_id'));
+        $('#update_purchase_status_modal').modal('show');
+    });
+
+    $(document).on('submit', '#update_purchase_status_form', function(e){
+        e.preventDefault();
+        $(this)
+            .find('button[type="submit"]')
+            .attr('disabled', true);
+        var data = $(this).serialize();
+
+        $.ajax({
+            method: 'POST',
+            url: $(this).attr('action'),
+            dataType: 'json',
+            data: data,
+            success: function(result) {
+                if (result.success == true) {
+                    $('#update_purchase_status_modal').modal('hide');
+                    toastr.success(result.msg);
+                    purchase_table.ajax.reload();
+                    $('#update_purchase_status_form')
+                        .find('button[type="submit"]')
+                        .attr('disabled', false);
+                } else {
+                    toastr.error(result.msg);
+                }
+            },
+        });
     });
 </script>
 	

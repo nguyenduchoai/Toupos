@@ -1,5 +1,5 @@
 @if($__is_essentials_enabled)
-<li class="treeview {{ in_array($request->segment(1), ['hrm']) ? 'active active-sub' : '' }}">
+<li class="bg-info treeview {{ in_array($request->segment(1), ['hrm']) ? 'active active-sub' : '' }}">
     <a href="#">
         <i class="fa fa-users"></i>
         <span class="title">@lang('essentials::lang.hrm')</span>
@@ -30,6 +30,14 @@
                 <span class="title">@lang('essentials::lang.attendance')</span>
             </a>
         </li>
+        @can('essentials.add_allowance_and_deduction')
+        <li class="{{ $request->segment(2) == 'allowance-deduction' ? 'active active-sub' : '' }}">
+            <a href="{{action('\Modules\Essentials\Http\Controllers\EssentialsAllowanceAndDeductionController@index')}}">
+                <i class="fa fa-money"></i>
+                <span class="title">@lang('essentials::lang.allowance_and_deduction')</span>
+            </a>
+        </li>
+        @endcan
         <li class="{{ $request->segment(2) == 'payroll' ? 'active active-sub' : '' }}">
             <a href="{{action('\Modules\Essentials\Http\Controllers\PayrollController@index')}}">
                 <i class="fa fa-money"></i>

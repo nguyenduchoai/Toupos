@@ -46,15 +46,18 @@ class SellingPriceGroupController extends Controller
             $business_id = request()->session()->get('user.business_id');
 
             $price_groups = SellingPriceGroup::where('business_id', $business_id)
-                        ->select(['name', 'description', 'id']);
+                        ->select(['name', 'description', 'id', 'is_active']);
 
             return Datatables::of($price_groups)
                 ->addColumn(
                     'action',
                     '<button data-href="{{action(\'SellingPriceGroupController@edit\', [$id])}}" class="btn btn-xs btn-primary btn-modal" data-container=".view_modal"><i class="glyphicon glyphicon-edit"></i> @lang("messages.edit")</button>
                         &nbsp;
-                        <button data-href="{{action(\'SellingPriceGroupController@destroy\', [$id])}}" class="btn btn-xs btn-danger delete_spg_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</button>'
+                        <button data-href="{{action(\'SellingPriceGroupController@destroy\', [$id])}}" class="btn btn-xs btn-danger delete_spg_button"><i class="glyphicon glyphicon-trash"></i> @lang("messages.delete")</button>
+                        &nbsp;
+                        <button data-href="{{action(\'SellingPriceGroupController@activateDeactivate\', [$id])}}" class="btn btn-xs @if($is_active) btn-danger @else btn-success @endif activate_deactivate_spg"><i class="fas fa-power-off"></i> @if($is_active) @lang("messages.deactivate") @else @lang("messages.activate") @endif</button>'
                 )
+                ->removeColumn('is_active')
                 ->removeColumn('id')
                 ->rawColumns([2])
                 ->make(false);
@@ -226,13 +229,13 @@ class SellingPriceGroupController extends Controller
     public function export()
     {
         $business_id = request()->user()->business_id;
-        $price_groups = SellingPriceGroup::where('business_id', $business_id)->get();
+        $price_groups = SellingPriceGroup::where('business_id', $business_id)->active()->get();
 
         $variations = Variation::join('products as p', 'variations.product_id', '=', 'p.id')
                             ->join('product_variations as pv', 'variations.product_variation_id', '=', 'pv.id')
                             ->where('p.business_id', $business_id)
                             ->whereIn('p.type', ['single', 'variable'])
-                            ->select('sub_sku', 'p.name as product_name', 'variations.name as variation_name', 'p.type', 'variations.id', 'pv.name as product_variation_name')
+                            ->select('sub_sku', 'p.name as product_name', 'variations.name as variation_name', 'p.type', 'variations.id', 'pv.name as product_variation_name', 'sell_price_inc_tax')
                             ->with(['group_prices'])
                             ->get();
         $export_data = [];
@@ -240,6 +243,7 @@ class SellingPriceGroupController extends Controller
             $temp = [];
             $temp['product'] = $variation->type == 'single' ? $variation->product_name : $variation->product_name . ' - ' . $variation->product_variation_name . ' - ' . $variation->variation_name;
             $temp['sku'] = $variation->sub_sku;
+            $temp['Base Selling Price'] = $variation->sell_price_inc_tax;
 
             foreach ($price_groups as $price_group) {
                 $price_group_id = $price_group->id;
@@ -252,7 +256,7 @@ class SellingPriceGroupController extends Controller
             $export_data[] = $temp;
         }
 
-        ob_end_clean();
+        if (ob_get_contents()) ob_end_clean();
         ob_start();
         return collect($export_data)->downloadExcel(
             'product_group_prices.xlsx',
@@ -270,6 +274,12 @@ class SellingPriceGroupController extends Controller
     public function import(Request $request)
     {
         try {
+
+            $notAllowed = $this->commonUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
+            }
+        
             //Set maximum php execution time
             ini_set('max_execution_time', 0);
             ini_set('memory_limit', -1);
@@ -285,12 +295,12 @@ class SellingPriceGroupController extends Controller
                 $imported_data = array_splice($parsed_array[0], 1);
 
                 $business_id = request()->user()->business_id;
-                $price_groups = SellingPriceGroup::where('business_id', $business_id)->get();
+                $price_groups = SellingPriceGroup::where('business_id', $business_id)->active()->get();
 
                 //Get price group names from headers
                 $imported_pgs = [];
                 foreach ($headers as $key => $value) {
-                    if (!empty($value) && $key > 1) {
+                    if (!empty($value) && $key > 2) {
                         $imported_pgs[$key] = $value;
                     }
                 }
@@ -354,5 +364,29 @@ class SellingPriceGroupController extends Controller
         }
 
         return redirect('selling-price-group')->with('status', $output);
+    }
+
+    /**
+     * Activate/deactivate selling price group.
+     *
+     */
+    public function activateDeactivate($id)
+    {
+        if (!auth()->user()->can('product.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (request()->ajax()) {
+            $business_id = request()->session()->get('user.business_id');
+            $spg = SellingPriceGroup::where('business_id', $business_id)->find($id);
+            $spg->is_active = $spg->is_active == 1 ? 0 : 1;
+            $spg->save();
+
+            $output = ['success' => true,
+                            'msg' => __("lang_v1.updated_success")
+                            ];
+
+            return $output;
+        }
     }
 }

@@ -39,7 +39,7 @@ class Media extends Model
      */
     public function getDisplayUrlAttribute()
     {
-        $path = asset('/uploads/media/' . $this->file_name);
+        $path = asset('/uploads/media/' . rawurlencode($this->file_name));
 
         return $path;
     }
@@ -49,7 +49,7 @@ class Media extends Model
      */
     public function getDisplayPathAttribute()
     {
-        $path = public_path('uploads/media') . '/' . $this->file_name;
+        $path = public_path('uploads/media') . '/' . rawurlencode($this->file_name);
 
         return $path;
     }
@@ -78,7 +78,7 @@ class Media extends Model
      *
      * @param  int $business_id, obj $model, $obj $request, string $file_name
      */
-    public static function uploadMedia($business_id, $model, $request, $file_name)
+    public static function uploadMedia($business_id, $model, $request, $file_name, $is_single = false)
     {
         //If app environment is demo return null
         if (config('app.env') == 'demo') {
@@ -105,6 +105,10 @@ class Media extends Model
                 }
             }
 
+            //If one to one relationship upload single file
+            if ($is_single) {
+                $uploaded_files = $uploaded_files[0];
+            }
             // attach media to model
             Media::attachMediaToModel($model, $business_id, $uploaded_files, $request);
         }
@@ -152,16 +156,28 @@ class Media extends Model
     public static function attachMediaToModel($model, $business_id, $uploaded_files, $request = null)
     {
         if (!empty($uploaded_files)) {
-            $media_obj = [];
-            foreach ($uploaded_files as $value) {
-                $media_obj[] = new \App\Media([
-                        'file_name' => $value,
+            if (is_array($uploaded_files)) {
+                $media_obj = [];
+                foreach ($uploaded_files as $value) {
+                    $media_obj[] = new \App\Media([
+                            'file_name' => $value,
+                            'business_id' => $business_id,
+                            'description' => !empty($request->description) ? $request->description : null,
+                            'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
+                }
+                
+                $model->media()->saveMany($media_obj);
+            } else {
+                //delete previous media if exists
+                $model->media()->delete();
+                
+                $media_obj = new \App\Media([
+                        'file_name' => $uploaded_files,
                         'business_id' => $business_id,
                         'description' => !empty($request->description) ? $request->description : null,
                         'uploaded_by' => !empty($request->uploaded_by) ? $request->uploaded_by : auth()->user()->id]);
+                $model->media()->save($media_obj);
             }
-            
-            $model->media()->saveMany($media_obj);
         }
     }
 }

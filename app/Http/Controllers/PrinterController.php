@@ -15,6 +15,10 @@ class PrinterController extends Controller
      */
     public function index()
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         if (request()->ajax()) {
             $business_id = request()->session()->get('user.business_id');
 
@@ -54,6 +58,10 @@ class PrinterController extends Controller
      */
     public function create()
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         $capability_profiles = Printer::capability_profiles();
         $connection_types = Printer::connection_types();
 
@@ -69,6 +77,10 @@ class PrinterController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         try {
             $business_id = $request->session()->get('user.business_id');
             $input = $request->only(['name', 'connection_type', 'capability_profile', 'ip_address', 'port', 'path', 'char_per_line']);
@@ -120,6 +132,10 @@ class PrinterController extends Controller
      */
     public function edit($id)
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         $business_id = request()->session()->get('user.business_id');
         $printer = Printer::where('business_id', $business_id)->find($id);
 
@@ -139,6 +155,10 @@ class PrinterController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+
         try {
             $input = $request->only(['name', 'connection_type', 'capability_profile', 'ip_address', 'port', 'path', 'char_per_line']);
             $business_id = $request->session()->get('user.business_id');
@@ -176,6 +196,10 @@ class PrinterController extends Controller
      */
     public function destroy($id)
     {
+        if (!auth()->user()->can('access_printers')) {
+             abort(403, 'Unauthorized action.');
+        }
+        
         if (request()->ajax()) {
             try {
                 $business_id = request()->user()->business_id;

@@ -3,10 +3,6 @@
 @section('title', __('essentials::lang.reminders'))
 
 @section('content')
-<!-- css -->
-<link rel="stylesheet" href="{{ asset('plugins/fullcalendar/fullcalendar.min.css?v='.$asset_v) }}">
-<link rel="stylesheet" href="{{ asset('plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css?v='.$asset_v) }}">
-
 <section class="content">
 	<div class="row">
 		<div class="col-md-12">
@@ -36,13 +32,12 @@
 @endsection
 
 @section('javascript')
-<script src="{{ asset('plugins/fullcalendar/fullcalendar.min.js?v=' . $asset_v) }}"></script>
-<script src="{{ asset('plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js?v=' . $asset_v) }}"></script>
 @php
     $fullcalendar_lang_file = session()->get('user.language', config('app.locale') ) . '.js';
 @endphp
+<!-- TODO -->
 @if(file_exists(public_path() . '/plugins/fullcalendar/locale/' . $fullcalendar_lang_file))
-    <script src="{{ asset('plugins/fullcalendar/locale/' . $fullcalendar_lang_file . '?v=' . $asset_v) }}"></script>
+    <!-- <script src="{{ asset('plugins/fullcalendar/locale/' . $fullcalendar_lang_file . '?v=' . $asset_v) }}"></script> -->
 @endif
 <script type="text/javascript">
 	$(document).ready(function(){

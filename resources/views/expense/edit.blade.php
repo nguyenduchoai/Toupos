@@ -45,12 +45,6 @@
         </div>
         <div class="col-sm-4">
           <div class="form-group">
-            {!! Form::label('final_total', __('sale.total_amount') . ':*') !!}
-            {!! Form::text('final_total', @num_format($expense->final_total), ['class' => 'form-control input_number', 'placeholder' => __('sale.total_amount'), 'required']); !!}
-          </div>
-        </div>
-        <div class="col-sm-4">
-          <div class="form-group">
             {!! Form::label('expense_for', __('expense.expense_for').':') !!} @show_tooltip(__('tooltip.expense_for'))
             {!! Form::select('expense_for', $users, $expense->expense_for, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select')]); !!}
           </div>
@@ -58,8 +52,9 @@
         <div class="col-sm-4">
             <div class="form-group">
                 {!! Form::label('document', __('purchase.attach_document') . ':') !!}
-                {!! Form::file('document', ['id' => 'upload_document']); !!}
-                <p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])</p>
+                {!! Form::file('document', ['id' => 'upload_document', 'accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]); !!}
+                <p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])
+                @includeIf('components.document_help_text')</p>
             </div>
         </div>
         <div class="col-sm-4">
@@ -68,6 +63,28 @@
                 {!! Form::textarea('additional_notes', $expense->additional_notes, ['class' => 'form-control', 'rows' => 3]); !!}
           </div>
         </div>
+        <div class="clearfix"></div>
+          <div class="col-md-4">
+            <div class="form-group">
+                {!! Form::label('tax_id', __('product.applicable_tax') . ':' ) !!}
+                <div class="input-group">
+                    <span class="input-group-addon">
+                        <i class="fa fa-info"></i>
+                    </span>
+                    {!! Form::select('tax_id', $taxes['tax_rates'], $expense->tax_id, ['class' => 'form-control'], $taxes['attributes']); !!}
+
+            <input type="hidden" name="tax_calculation_amount" id="tax_calculation_amount" 
+            value="0">
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('final_total', __('sale.total_amount') . ':*') !!}
+            {!! Form::text('final_total', @num_format($expense->final_total), ['class' => 'form-control input_number', 'placeholder' => __('sale.total_amount'), 'required']); !!}
+          </div>
+        </div>
+
         <div class="col-sm-12">
           <button type="submit" class="btn btn-primary pull-right">@lang('messages.update')</button>
         </div>

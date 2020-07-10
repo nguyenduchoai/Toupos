@@ -43,6 +43,12 @@
                         {!! Form::text('shortcuts[pos][recent_product_quantity]', !empty($shortcuts["pos"]["recent_product_quantity"]) ? $shortcuts["pos"]["recent_product_quantity"] : null, ['class' => 'form-control']); !!}
                     </td>
                 </tr>
+                <tr>
+                    <td>@lang('lang_v1.weighing_scale'):</td>
+                    <td>
+                        {!! Form::text('shortcuts[pos][weighing_scale]', !empty($shortcuts["pos"]["weighing_scale"]) ? $shortcuts["pos"]["weighing_scale"] : null, ['class' => 'form-control']); !!}
+                    </td>
+                </tr>
             </table>
         </div>
         <div class="col-sm-6">
@@ -243,6 +249,48 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                <br>
+                  <label>
+                    {!! Form::checkbox('pos_settings[show_credit_sale_button]', 1,  
+                    empty($pos_settings['show_credit_sale_button']) ? 0 : 1 , 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.show_credit_sale_button' ) }}
+                  </label>
+                  @show_tooltip(__('lang_v1.show_credit_sale_btn_help'))
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                <br>
+                  <label>
+                    {!! Form::checkbox('pos_settings[enable_weighing_scale]', 1,  
+                    empty($pos_settings['enable_weighing_scale']) ? 0 : 1 , 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.enable_weighing_scale' ) }}
+                  </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                <br>
+                  <label>
+                    {!! Form::checkbox('pos_settings[show_invoice_layout]', 1,  
+                        !empty($pos_settings['show_invoice_layout']) , 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.show_invoice_layout' ) }}
+                  </label>
+                </div>
+            </div>
+        </div>
 
     </div>
+
+    <hr>
+    @include('business.partials.settings_weighing_scale')
 </div>

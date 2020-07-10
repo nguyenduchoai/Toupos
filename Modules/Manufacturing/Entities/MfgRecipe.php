@@ -31,7 +31,7 @@ class MfgRecipe extends Model
         return $this->hasMany(\Modules\Manufacturing\Entities\MfgRecipeIngredient::class, 'mfg_recipe_id');
     }
 
-    public static function forDropdown($business_id)
+    public static function forDropdown($business_id, $variation_id = true)
     {
         $recipes = MfgRecipe::join('variations as v', 'mfg_recipes.variation_id', '=', 'v.id')
                         ->join('products as p', 'v.product_id', '=', 'p.id')
@@ -43,10 +43,15 @@ class MfgRecipe extends Model
                                         CONCAT(p.name, " - ", pv.name, " - ", v.name, " (", v.sub_sku, ")"), 
                                         CONCAT(p.name, " (", v.sub_sku, ")") 
                                         ) as recipe_name'),
-                            'mfg_recipes.variation_id'
+                            'mfg_recipes.variation_id',
+                            'mfg_recipes.id'
                         )->get();
-
-        return $recipes->pluck('recipe_name', 'variation_id');
+        if ($variation_id) {
+            return $recipes->pluck('recipe_name', 'variation_id');
+        } else {
+            return $recipes->pluck('recipe_name', 'id');
+        }
+        
     }
 
     /**

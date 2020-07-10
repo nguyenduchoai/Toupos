@@ -39,23 +39,34 @@
     </div>
     <br>
     <div class="row">
-        <div class="col-xs-6">
+        <div class="col-md-4 col-sm-12">
             @component('components.widget')
                 @slot('title')
                     {{ __('report.input_tax') }} @show_tooltip(__('tooltip.input_tax'))
                 @endslot
                 <div class="input_tax">
-                    <i class="fa fa-refresh fa-spin fa-fw"></i>
+                    <i class="fas fa-sync fa-spin fa-fw"></i>
                 </div>
             @endcomponent
         </div>
 
-        <div class="col-xs-6">
+        <div class="col-md-4 col-sm-12">
             @component('components.widget')
                 @slot('title')
                     {{ __('report.output_tax') }} @show_tooltip(__('tooltip.output_tax'))
                 @endslot
                 <div class="output_tax">
+                    <i class="fas fa-sync fa-spin fa-fw"></i>
+                </div>
+            @endcomponent
+        </div>
+
+        <div class="col-md-4 col-sm-12">
+            @component('components.widget')
+                @slot('title')
+                    {{ __('lang_v1.expense_tax') }} @show_tooltip(__('lang_v1.expense_tax_tooltip'))
+                @endslot
+                <div class="expense_tax">
                     <i class="fa fa-refresh fa-spin fa-fw"></i>
                 </div>
             @endcomponent
@@ -66,12 +77,12 @@
         <div class="col-xs-12">
             @component('components.widget')
                 @slot('title')
-                    {{ __('report.tax_overall') }} @show_tooltip(__('tooltip.tax_overall'))
+                    {{ __('lang_v1.tax_overall') }} @show_tooltip(__('tooltip.tax_overall'))
                 @endslot
                 <h3 class="text-muted">
                     {{ __('lang_v1.output_tax_minus_input_tax') }}: 
                     <span class="tax_diff">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                 </h3>
             @endcomponent

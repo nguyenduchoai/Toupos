@@ -2,24 +2,23 @@
 	<div class="col-sm-12">
 		<div class="panel panel-default">
 			<div class="panel-body bg-gray disabled" style="margin-bottom: 0px !important">
+				<div class="col-sm-3 col-sm-offset-6 col-xs-6 d-inline-table" style="margin-bottom: 10px;">
+					<b>@lang('sale.item'):</b>&nbsp;
+					<span class="total_quantity">0</span>
+				</div>
+				<div class="col-sm-3 col-xs-6 d-inline-table" style="margin-bottom: 10px;">
+					<b>@lang('sale.total'):</b> &nbsp;
+					<span class="price_total">0</span>
+				</div>
 				<table class="table table-condensed" 
 					style="margin-bottom: 0px !important">
 					<tbody>
+					@php
+						$col = in_array('types_of_service', $enabled_modules) ? 'col-sm-2' : 'col-sm-3';
+					@endphp
 					<tr>
 						<td>
-							<div class="col-sm-1 col-xs-3 d-inline-table">
-								<b>@lang('sale.item'):</b> 
-								<br/>
-								<span class="total_quantity">0</span>
-							</div>
-
-							<div class="col-sm-2 col-xs-3 d-inline-table">
-								<b>@lang('sale.total'):</b> 
-								<br/>
-								<span class="price_total">0</span>
-							</div>
-
-							<div class="col-sm-2 col-xs-6 d-inline-table">
+							<div class="{{$col}} col-xs-6 d-inline-table">
 								@php
 									$is_discount_enabled = $pos_settings['disable_discount'] != 1 ? true : false;
 									$is_rp_enabled = session('business.enable_rp') == 1 ? true : false;
@@ -36,7 +35,7 @@
 								@endif
 								(-):</b> 
 								<br/>
-								<i class="fa fa-pencil-square-o cursor-pointer" id="pos-edit-discount" title="@lang('sale.edit_discount')" aria-hidden="true" data-toggle="modal" data-target="#posEditDiscountModal"></i>
+								<i class="fas fa-pen cursor-pointer" id="pos-edit-discount" title="@lang('sale.edit_discount')" aria-hidden="true" data-toggle="modal" data-target="#posEditDiscountModal"></i>
 								<span id="total_discount">0</span>
 								<input type="hidden" name="discount_type" id="discount_type" value="@if(empty($edit)){{'percentage'}}@else{{$transaction->discount_type}}@endif" data-default="percentage">
 
@@ -49,13 +48,13 @@
 								</span>
 							</div>
 
-							<div class="col-sm-2 col-xs-6 d-inline-table">
+							<div class="{{$col}} col-xs-6 d-inline-table">
 
 								<span class="@if($pos_settings['disable_order_tax'] != 0) hide @endif">
 
 								<b>@lang('sale.order_tax')(+): @show_tooltip(__('tooltip.sale_tax'))</b>
 								<br/>
-								<i class="fa fa-pencil-square-o cursor-pointer" title="@lang('sale.edit_order_tax')" aria-hidden="true" data-toggle="modal" data-target="#posEditOrderTaxModal" id="pos-edit-tax" ></i> 
+								<i class="fas fa-pen cursor-pointer" title="@lang('sale.edit_order_tax')" aria-hidden="true" data-toggle="modal" data-target="#posEditOrderTaxModal" id="pos-edit-tax" ></i> 
 								<span id="order_tax">
 									@if(empty($edit))
 										0
@@ -76,13 +75,13 @@
 							</div>
 							
 							<!-- shipping -->
-							<div class="col-sm-2 col-xs-6 d-inline-table">
+							<div class="{{$col}} col-xs-6 d-inline-table">
 
 								<span class="@if($pos_settings['disable_discount'] != 0) hide @endif">
 
 								<b>@lang('sale.shipping')(+): @show_tooltip(__('tooltip.shipping'))</b> 
 								<br/>
-								<i class="fa fa-pencil-square-o cursor-pointer"  title="@lang('sale.shipping')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
+								<i class="fas fa-pen cursor-pointer"  title="@lang('sale.shipping')" aria-hidden="true" data-toggle="modal" data-target="#posShippingModal"></i>
 								<span id="shipping_charges_amount">0</span>
 								<input type="hidden" name="shipping_details" id="shipping_details" value="@if(empty($edit)){{""}}@else{{$transaction->shipping_details}}@endif" data-default="">
 
@@ -96,11 +95,22 @@
 
 								</span>
 							</div>
-
-							
+							@if(in_array('types_of_service', $enabled_modules))
+								<div class="col-sm-3 col-xs-6 d-inline-table">
+									<b>@lang('lang_v1.packing_charge')(+):</b>
+									<br/>
+									<i class="fas fa-pen cursor-pointer service_modal_btn"></i> 
+									<span id="packing_charge_text">
+										0
+									</span>
+								</div>
+							@endif
 							<div class="col-sm-3 col-xs-12 d-inline-table">
 								<b>@lang('sale.total_payable'):</b>
+								<small class="hide" id="round_off"><br>(@lang('lang_v1.round_off'): <span id="round_off_text"></span>)</small>
 								<br/>
+								<input type="hidden" name="round_off_amount" 
+									id="round_off_amount" value=0>
 								<input type="hidden" name="final_total" 
 									id="final_total_input" value=0>
 								<span id="total_payable" class="text-success lead text-bold">0</span>
@@ -126,15 +136,28 @@
 									id="pos-quotation">@lang('lang_v1.quotation')</button>
 							</div>
 							<div class="col-sm-3 col-xs-6 col-2px-padding">
-								<button type="button" 
-								class="btn bg-maroon btn-block btn-flat no-print @if(!empty($pos_settings['disable_suspend'])) pos-express-btn btn-lg @endif pos-express-finalize" 
-								data-pay_method="card"
-								title="@lang('lang_v1.tooltip_express_checkout_card')" >
-								<div class="text-center">
-									<i class="fa fa-check" aria-hidden="true"></i>
-    								<b>@lang('lang_v1.express_checkout_card')</b>
-    							</div>
-								</button>
+								@if(!empty($pos_settings['show_credit_sale_button']))
+									<input type="hidden" name="is_credit_sale" value="0" id="is_credit_sale">
+									<button type="button" 
+									class="btn bg-purple btn-block btn-flat no-print pos-express-finalize" 
+									data-pay_method="credit_sale"
+									title="@lang('lang_v1.tooltip_credit_sale')" >
+									<div class="text-center">
+										<i class="fa fa-check" aria-hidden="true"></i>
+	    								<b>@lang('lang_v1.credit_sale')</b>
+	    							</div>
+									</button>
+								@else
+									<button type="button" 
+									class="btn bg-maroon btn-block btn-flat no-print @if(!empty($pos_settings['disable_suspend'])) pos-express-btn btn-lg @endif pos-express-finalize @if(!array_key_exists('card', $payment_types)) hide @endif" 
+									data-pay_method="card"
+									title="@lang('lang_v1.tooltip_express_checkout_card')" >
+									<div class="text-center">
+										<i class="fa fa-check" aria-hidden="true"></i>
+	    								<b>@lang('lang_v1.express_checkout_card')</b>
+	    							</div>
+									</button>
+								@endif
 								@if(empty($pos_settings['disable_suspend']))
 									<button type="button" 
 									class="btn bg-red btn-block btn-flat no-print pos-express-finalize" 
@@ -156,7 +179,7 @@
 								</button>
 							</div>
 							<div class="col-sm-3 col-xs-12 col-2px-padding">
-								<button type="button" class="btn btn-success btn-block btn-flat btn-lg no-print @if($pos_settings['disable_express_checkout'] != 0) hide @endif pos-express-btn pos-express-finalize"
+								<button type="button" class="btn btn-success btn-block btn-flat btn-lg no-print @if($pos_settings['disable_express_checkout'] != 0 || !array_key_exists('cash', $payment_types)) hide @endif pos-express-btn pos-express-finalize"
 								data-pay_method="cash"
 								title="@lang('tooltip.express_checkout')">
 								<div class="text-center">

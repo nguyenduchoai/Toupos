@@ -41,6 +41,26 @@
 		
 					{!! Form::select("products[$row_count][tax_id]", $tax_dropdown['tax_rates'], $tax_id, ['placeholder' => 'Select', 'class' => 'form-control tax_id'], $tax_dropdown['attributes']); !!}
 				</div>
+				@php
+					$warranty_id = !empty($action) && $action == 'edit' && !empty($product->warranties->first())  ? $product->warranties->first()->id : $product->warranty_id;
+				@endphp
+				@if(!empty($warranties))
+					<div class="form-group col-xs-12">
+						<label>@lang('lang_v1.warranty')</label>
+						{!! Form::select("products[$row_count][warranty_id]", $warranties, $warranty_id, ['placeholder' => __('messages.please_select'), 'class' => 'form-control']); !!}
+					</div>
+				@endif
+				<div class="form-group col-xs-12">
+		      		<label>@lang('lang_v1.description')</label>
+		      		@php
+		      			$sell_line_note = '';
+		      			if(!empty($product->sell_line_note)){
+		      				$sell_line_note = $product->sell_line_note;
+		      			}
+		      		@endphp
+		      		<textarea class="form-control" name="products[{{$row_count}}][sell_line_note]" rows="3">{{$sell_line_note}}</textarea>
+		      		<p class="help-block">@lang('lang_v1.sell_line_description_help')</p>
+		      	</div>
 			</div>
 		</div>
 		<div class="modal-footer">

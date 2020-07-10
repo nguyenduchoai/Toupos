@@ -1,4 +1,4 @@
-@extends('layouts.auth', ['no_header' => 1])
+@extends('layouts.install', ['no_header' => 1])
 @section('title', 'Welcome - POS Installation')
 
 @section('content')
@@ -8,6 +8,7 @@
 
         <div class="col-md-8 col-md-offset-2">
           <h3 class="text-success">Great! <br/>Your application is succesfully installed.</h3>
+          <hr>
           <p>All the application details is saved in <b>.env</b> file. You can change them anytime there.</p>
 
           <p>Start by registering your business <a href="{{route('business.getRegister')}}">here</a>.</p>

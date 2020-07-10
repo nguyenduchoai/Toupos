@@ -4,6 +4,7 @@ namespace Modules\Essentials\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class NewMessageNotification extends Notification
 {
@@ -29,7 +30,12 @@ class NewMessageNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        $channels = $this->message->database_notification ? ['database'] : [];
+        if (isPusherEnabled()) {
+            $channels[] = 'broadcast';
+        }
+        
+        return $channels;
     }
 
     /**
@@ -54,5 +60,20 @@ class NewMessageNotification extends Notification
             'from' => $this->message->sender->user_full_name,
             'from_id' => $this->message->user_id,
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'title' => __('essentials::lang.new_message'),
+            'body' => strip_tags(__('essentials::lang.new_message_notification', ['sender' => $this->message->sender->user_full_name]) ),
+            'link' => action('\Modules\Essentials\Http\Controllers\EssentialsMessageController@index')
+        ]);
     }
 }

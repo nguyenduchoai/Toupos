@@ -94,8 +94,7 @@ class SalesCommissionAgentController extends Controller
             $input['cmmsn_percent'] = $this->commonUtil->num_uf($input['cmmsn_percent']);
             $business_id = $request->session()->get('user.business_id');
             $input['business_id'] = $business_id;
-            $input['username'] = uniqid();
-            $input['password'] = 'DUMMY';
+            $input['allow_login'] = 0;
             $input['is_cmmsn_agnt'] = 1;
 
             $user = User::create($input);

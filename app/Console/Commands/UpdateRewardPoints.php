@@ -94,9 +94,9 @@ class UpdateRewardPoints extends Command
             }
 
             DB::commit();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
 
             die($e->getMessage());
         }

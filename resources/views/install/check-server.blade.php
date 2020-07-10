@@ -1,4 +1,4 @@
-@extends('layouts.auth', ['no_header' => 1])
+@extends('layouts.install', ['no_header' => 1])
 @section('title', 'POS Installation - Check server')
 
 @section('content')

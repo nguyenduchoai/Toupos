@@ -119,7 +119,7 @@
                     <div class="col-sm-3">
                             <div>
                                 @if(!empty($business->logo))
-                                    <img class="img-responsive" src="{{ url( 'storage/business_logos/' . $business->logo ) }}" alt="Business Logo">
+                                    <img class="img-responsive" src="{{ url( 'uploads/business_logos/' . $business->logo ) }}" alt="Business Logo">
                                 @endif
                             </div>
                     </div> 
@@ -217,7 +217,90 @@
         </div>
     </div>
 
+    @component('components.widget', ['class' => 'box-default', 'title' => __( 'user.all_users' )])
+        @can('user.view')
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="users_table">
+                    <thead>
+                        <tr>
+                            <th>@lang( 'business.username' )</th>
+                            <th>@lang( 'user.name' )</th>
+                            <th>@lang( 'user.role' )</th>
+                            <th>@lang( 'business.email' )</th>
+                            <th>@lang( 'messages.action' )</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        @endcan
+    @endcomponent
+
+@include('superadmin::business.update_password_modal')
 </section>
 <!-- /.content -->
+@stop
+@section('javascript')
+<script type="text/javascript">
+    //Roles table
+    $(document).ready( function(){
+        var users_table = $('#users_table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: '/superadmin/users/' + "{{$business->id}}",
+            columnDefs: [ {
+                "targets": [4],
+                "orderable": false,
+                "searchable": false
+            } ],
+            "columns":[
+                {"data":"username"},
+                {"data":"full_name"},
+                {"data":"role"},
+                {"data":"email"},
+                {"data":"action"}
+            ]
+        });
         
+    });
+
+    $(document).on('click', '.update_user_password', function (e) {
+        e.preventDefault();
+        $('form#password_update_form, #user_id').val($(this).data('user_id'));
+        $('span#user_name').text($(this).data('user_name'));
+        $('#update_password_modal').modal('show');
+    });
+
+    password_update_form_validator = $('form#password_update_form').validate();
+
+    $('#update_password_modal').on('hidden.bs.modal', function() {
+        password_update_form_validator.resetForm();
+        $('form#password_update_form')[0].reset();
+    });
+
+    $(document).on('submit', 'form#password_update_form', function(e) {
+        e.preventDefault();
+        $(this)
+            .find('button[type="submit"]')
+            .attr('disabled', true);
+        var data = $(this).serialize();
+        $.ajax({
+            method: 'post',
+            url: $(this).attr('action'),
+            dataType: 'json',
+            data: data,
+            success: function(result) {
+                if (result.success == true) {
+                    $('#update_password_modal').modal('hide');
+                    toastr.success(result.msg);
+                } else {
+                    toastr.error(result.msg);
+                }
+                $('form#password_update_form')
+                .find('button[type="submit"]')
+                .attr('disabled', false);
+            },
+        });
+    });
+
+</script>      
 @endsection

@@ -47,7 +47,7 @@ class BarcodeController extends Controller
                 })
                 ->removeColumn('id')
                 ->removeColumn('is_default')
-                ->rawColumns([2])
+                ->rawColumns([0, 2])
                 ->make(false);
         }
 

@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use \Notification;
 
+use App\Contact;
 use App\Notifications\CustomerNotification;
 use App\Notifications\SupplierNotification;
 use App\NotificationTemplate;
-
 use App\Restaurant\Booking;
 
 use App\Transaction;
@@ -35,43 +35,54 @@ class NotificationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getTemplate($transaction_id, $template_for)
+    public function getTemplate($id, $template_for)
     {
-        // if (!auth()->user()->can('send_notification')) {
-        //     abort(403, 'Unauthorized action.');
-        // }
-
         $business_id = request()->session()->get('user.business_id');
 
         $notification_template = NotificationTemplate::getTemplate($business_id, $template_for);
 
-        $tags = NotificationTemplate::notificationTags();
-
+        $contact = null;
+        $transaction = null;
         if ($template_for == 'new_booking') {
             $transaction = Booking::where('business_id', $business_id)
                             ->with(['customer'])
-                            ->find($transaction_id);
+                            ->find($id);
 
-            $transaction->contact = $transaction->customer;
-            $tags = NotificationTemplate::bookingNotificationTags();
+            $contact = $transaction->customer;
+        } elseif ($template_for == 'send_ledger') {
+            $contact = Contact::find($id);
         } else {
             $transaction = Transaction::where('business_id', $business_id)
                             ->with(['contact'])
-                            ->find($transaction_id);
+                            ->find($id);
+
+            $contact = $transaction->contact;
         }
 
         $customer_notifications = NotificationTemplate::customerNotifications();
         $supplier_notifications = NotificationTemplate::supplierNotifications();
+        $general_notifications = NotificationTemplate::generalNotifications();
 
         $template_name = '';
+
+        $tags = [];
         if (array_key_exists($template_for, $customer_notifications)) {
             $template_name = $customer_notifications[$template_for]['name'];
+            $tags = $customer_notifications[$template_for]['extra_tags'];
         } elseif (array_key_exists($template_for, $supplier_notifications)) {
             $template_name = $supplier_notifications[$template_for]['name'];
+            $tags = $supplier_notifications[$template_for]['extra_tags'];
+        } elseif (array_key_exists($template_for, $general_notifications)) {
+            $template_name = $general_notifications[$template_for]['name'];
+            $tags = $general_notifications[$template_for]['extra_tags'];
         }
 
+        //for send_ledger notification template
+        $start_date = request()->input('start_date');
+        $end_date = request()->input('end_date');
+
         return view('notification.show_template')
-                ->with(compact('notification_template', 'transaction', 'tags', 'template_name'));
+                ->with(compact('notification_template', 'transaction', 'tags', 'template_name', 'contact', 'start_date', 'end_date'));
     }
 
     /**
@@ -94,7 +105,9 @@ class NotificationController extends Controller
             $customer_notifications = NotificationTemplate::customerNotifications();
             $supplier_notifications = NotificationTemplate::supplierNotifications();
 
-            $data = $request->only(['to_email', 'subject', 'email_body', 'mobile_number', 'sms_body', 'notification_type']);
+            $data = $request->only(['to_email', 'subject', 'email_body', 'mobile_number', 'sms_body', 'notification_type', 'cc', 'bcc']);
+
+            $emails_array = array_map('trim', explode(',', $data['to_email']));
 
             $transaction_id = $request->input('transaction_id');
             $business_id = request()->session()->get('business.id');
@@ -128,24 +141,24 @@ class NotificationController extends Controller
 
             if (array_key_exists($request->input('template_for'), $customer_notifications)) {
                 if ($notification_type == 'email_only') {
-                    Notification::route('mail', $data['to_email'])
+                    Notification::route('mail', $emails_array)
                                     ->notify(new CustomerNotification($data));
                 } elseif ($notification_type == 'sms_only') {
                     $this->notificationUtil->sendSms($data);
                 } elseif ($notification_type == 'both') {
-                    Notification::route('mail', $data['to_email'])
+                    Notification::route('mail', $emails_array)
                                 ->notify(new CustomerNotification($data));
 
                     $this->notificationUtil->sendSms($data);
                 }
             } elseif (array_key_exists($request->input('template_for'), $supplier_notifications)) {
                 if ($notification_type == 'email_only') {
-                    Notification::route('mail', $data['to_email'])
+                    Notification::route('mail', $emails_array)
                                     ->notify(new SupplierNotification($data));
                 } elseif ($notification_type == 'sms_only') {
                     $this->notificationUtil->sendSms($data);
                 } elseif ($notification_type == 'both') {
-                    Notification::route('mail', $data['to_email'])
+                    Notification::route('mail', $emails_array)
                                 ->notify(new SupplierNotification($data));
 
                     $this->notificationUtil->sendSms($data);

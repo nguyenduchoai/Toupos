@@ -407,7 +407,8 @@ class ProductUtil extends Util
                             'product_id' => $product_id,
                             'location_id' => $location_id,
                             'variation_id' => $variation_id,
-                            'product_variation_id' => $variation->product_variation_id
+                            'product_variation_id' => $variation->product_variation_id,
+                            'qty_available' => 0
                           ]);
             }
             
@@ -420,14 +421,15 @@ class ProductUtil extends Util
     /**
      * Decrease the product quantity of combo sub-products
      *
-     * @param $variation_id
+     * @param $combo_details
      * @param $location_id
-     * @param $decrease_qty (factor by which qty will be decreased)
      *
-     * @return boolean
+     * @return void
      */
     public function decreaseProductQuantityCombo($combo_details, $location_id)
     {
+        //product_id = child product id
+        //variation id is child product variation id
         foreach ($combo_details as $details) {
             $this->decreaseProductQuantity(
                 $details['product_id'],
@@ -488,6 +490,7 @@ class ProductUtil extends Util
             'p.enable_sr_no',
             'p.type as product_type',
             'p.name as product_actual_name',
+            'p.warranty_id',
             'pv.name as product_variation_name',
             'pv.is_dummy as is_dummy',
             'variations.name as variation_name',
@@ -699,6 +702,11 @@ class ProductUtil extends Util
         } else {
             $query->limit(5);
         }
+
+        if (!empty($filters['product_type'])) {
+            $query->where('p.type', $filters['product_type']);
+        }
+
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
             $query->whereBetween(DB::raw('date(transaction_date)'), [$filters['start_date'],
                 $filters['end_date']]);
@@ -718,7 +726,7 @@ class ProductUtil extends Util
             DB::raw("(SUM(tsl.quantity) - COALESCE(SUM(tsl.quantity_returned), 0)) as total_unit_sold"),
             'p.name as product',
             'u.short_name as unit'
-        )
+        )->whereNull('tsl.parent_sell_line_id')
                         ->groupBy('tsl.product_id')
                         ->orderBy('total_unit_sold', 'desc')
                         ->get();
@@ -1144,22 +1152,8 @@ class ProductUtil extends Util
                 $purchase_line = PurchaseLine::findOrFail($data['purchase_line_id']);
                 $updated_purchase_line_ids[] = $purchase_line->id;
                 $old_qty = $this->num_f($purchase_line->quantity);
-            
-                //Update quantity for existing products
-                if ($before_status == 'received' && $transaction->status == 'received') {
-                    //if status received update existing quantity
-                    $this->updateProductQuantity($transaction->location_id, $data['product_id'], $data['variation_id'], $new_quantity_f, $old_qty, $currency_details);
-                } elseif ($before_status == 'received' && $transaction->status != 'received') {
-                    //decrease quantity only if status changed from received to not received
-                    $this->decreaseProductQuantity(
-                        $data['product_id'],
-                        $data['variation_id'],
-                        $transaction->location_id,
-                        $purchase_line->quantity
-                    );
-                } elseif ($before_status != 'received' && $transaction->status == 'received') {
-                    $this->updateProductQuantity($transaction->location_id, $data['product_id'], $data['variation_id'], $new_quantity_f, 0, $currency_details);
-                }
+
+                $this->updateProductStock($before_status, $transaction, $data['product_id'], $data['variation_id'], $new_quantity, $purchase_line->quantity, $currency_details);
             } else {
                 //create newly added purchase lines
                 $purchase_line = new PurchaseLine();
@@ -1234,6 +1228,39 @@ class ProductUtil extends Util
         }
 
         return $delete_purchase_lines;
+    }
+
+    /**
+     * Updates product stock after adding or updating purchase
+     *
+     * @param string $status_before
+     * @param obj $transaction
+     * @param integer $product_id
+     * @param integer $variation_id
+     * @param decimal $new_quantity in database format
+     * @param decimal $old_quantity in database format
+     * @param array $currency_details
+     *
+     */
+    public function updateProductStock($status_before, $transaction, $product_id, $variation_id, $new_quantity, $old_quantity, $currency_details)
+    {
+        $new_quantity_f = $this->num_f($new_quantity);
+        $old_qty = $this->num_f($old_quantity);
+        //Update quantity for existing products
+        if ($status_before == 'received' && $transaction->status == 'received') {
+            //if status received update existing quantity
+            $this->updateProductQuantity($transaction->location_id, $product_id, $variation_id, $new_quantity_f, $old_qty, $currency_details);
+        } elseif ($status_before == 'received' && $transaction->status != 'received') {
+            //decrease quantity only if status changed from received to not received
+            $this->decreaseProductQuantity(
+                $product_id,
+                $variation_id,
+                $transaction->location_id,
+                $old_quantity
+            );
+        } elseif ($status_before != 'received' && $transaction->status == 'received') {
+            $this->updateProductQuantity($transaction->location_id, $product_id, $variation_id, $new_quantity_f, 0, $currency_details);
+        }
     }
 
     /**
@@ -1453,5 +1480,117 @@ class ProductUtil extends Util
         }
              
         return $discount;
+    }
+
+    /**
+     * Filters product as per the given inputs and return the details.
+     *
+     * @return object
+     */
+    public function filterProduct($business_id, $search_term, $location_id = null, $not_for_selling = null, $price_group_id = null, $product_types = [], $search_fields = [], $check_qty = false){
+
+        $query = Product::join('variations', 'products.id', '=', 'variations.product_id')
+                ->active()
+                ->whereNull('variations.deleted_at')
+                ->leftjoin('units as U', 'products.unit_id', '=', 'U.id')
+                ->leftjoin(
+                    'variation_location_details AS VLD',
+                    function ($join) use ($location_id) {
+                        $join->on('variations.id', '=', 'VLD.variation_id');
+
+                        //Include Location
+                        if (!empty($location_id)) {
+                            $join->where(function ($query) use ($location_id) {
+                                $query->where('VLD.location_id', '=', $location_id);
+                                //Check null to show products even if no quantity is available in a location.
+                                //TODO: Maybe add a settings to show product not available at a location or not.
+                                $query->orWhereNull('VLD.location_id');
+                            });
+                            ;
+                        }
+                    }
+                );
+
+        if (!is_null($not_for_selling)) {
+            $query->where('products.not_for_selling', $not_for_selling);
+        }
+
+        if (!empty($price_group_id)) {
+            $query->leftjoin(
+                'variation_group_prices AS VGP',
+                function ($join) use ($price_group_id) {
+                    $join->on('variations.id', '=', 'VGP.variation_id')
+                        ->where('VGP.price_group_id', '=', $price_group_id);
+                }
+            );
+        }
+
+        $query->where('products.business_id', $business_id)
+                ->where('products.type', '!=', 'modifier');
+
+        if (!empty($product_types)) {
+            $query->whereIn('products.type', $product_types);
+        }
+
+        if (in_array('lot', $search_fields)) {
+            $query->leftjoin('purchase_lines as pl', 'variations.id', '=', 'pl.variation_id');
+        }
+
+        //Include search
+        if (!empty($search_term)) {
+            $query->where(function ($query) use ($search_term, $search_fields) {
+
+                if (in_array('name', $search_fields)) {
+                    $query->where('products.name', 'like', '%' . $search_term .'%');
+                }
+                
+                if (in_array('sku', $search_fields)) {
+                    $query->orWhere('sku', 'like', '%' . $search_term .'%');
+                }
+
+                if (in_array('sub_sku', $search_fields)) {
+                    $query->orWhere('sub_sku', 'like', '%' . $search_term .'%');
+                }
+
+                if (in_array('lot', $search_fields)) {
+                    $query->orWhere('pl.lot_number', 'like', '%' . $search_term .'%');
+                }
+            });
+        }
+
+
+        //Include check for quantity
+        if ($check_qty) {
+            $query->where('VLD.qty_available', '>', 0);
+        }
+
+        if (!empty($location_id)) {
+            $query->ForLocation($location_id);
+        }
+
+        $query->select(
+                'products.id as product_id',
+                'products.name',
+                'products.type',
+                'products.enable_stock',
+                'variations.id as variation_id',
+                'variations.name as variation',
+                'VLD.qty_available',
+                'variations.sell_price_inc_tax as selling_price',
+                'variations.sub_sku',
+                'U.short_name as unit'
+            );
+
+        if (!empty($price_group_id)) {
+            $query->addSelect('VGP.price_inc_tax as variation_group_price');
+        }
+
+        if (in_array('lot', $search_fields)) {
+            $query->addSelect('pl.id as purchase_line_id', 'pl.lot_number');
+        }
+
+        $query->groupBy('variations.id');
+        return $query->orderBy('VLD.qty_available', 'desc')
+                        ->get();
     }
 }

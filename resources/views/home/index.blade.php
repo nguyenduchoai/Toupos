@@ -1,22 +1,24 @@
 @extends('layouts.app')
 @section('title', __('home.home'))
 
-@section('css')
-    {!! Charts::styles(['highcharts']) !!}
-@endsection
-
 @section('content')
 
 <!-- Content Header (Page header) -->
-<section class="content-header">
+<section class="content-header content-header-custom">
     <h1>{{ __('home.welcome_message', ['name' => Session::get('user.first_name')]) }}
     </h1>
 </section>
 @if(auth()->user()->can('dashboard.data'))
 <!-- Main content -->
-<section class="content no-print">
+<section class="content content-custom no-print">
+  <br>
 	<div class="row">
-		<div class="col-md-12 col-xs-12">
+    <div class="col-md-4 col-xs-12">
+      @if(count($all_locations) > 1)
+        {!! Form::select('dashboard_location', $all_locations, null, ['class' => 'form-control select2', 'placeholder' => __('lang_v1.select_location'), 'id' => 'dashboard_location']); !!}
+      @endif
+    </div>
+		<div class="col-md-8 col-xs-12">
 			<div class="btn-group pull-right" data-toggle="buttons">
 				<label class="btn btn-info active">
     				<input type="radio" name="date-filter"
@@ -46,35 +48,35 @@
 		</div>
 	</div>
 	<br>
-	<div class="row">
-    	<div class="col-md-3 col-sm-6 col-xs-12">
-	      <div class="info-box">
+	<div class="row row-custom">
+    	<div class="col-md-3 col-sm-6 col-xs-12 col-custom">
+	      <div class="info-box info-box-new-style">
 	        <span class="info-box-icon bg-aqua"><i class="ion ion-cash"></i></span>
 
 	        <div class="info-box-content">
 	          <span class="info-box-text">{{ __('home.total_purchase') }}</span>
-	          <span class="info-box-number total_purchase"><i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i></span>
+	          <span class="info-box-number total_purchase"><i class="fas fa-sync fa-spin fa-fw margin-bottom"></i></span>
 	        </div>
 	        <!-- /.info-box-content -->
 	      </div>
 	      <!-- /.info-box -->
 	    </div>
 	    <!-- /.col -->
-	    <div class="col-md-3 col-sm-6 col-xs-12">
-	      <div class="info-box">
+	    <div class="col-md-3 col-sm-6 col-xs-12 col-custom">
+	      <div class="info-box info-box-new-style">
 	        <span class="info-box-icon bg-aqua"><i class="ion ion-ios-cart-outline"></i></span>
 
 	        <div class="info-box-content">
 	          <span class="info-box-text">{{ __('home.total_sell') }}</span>
-	          <span class="info-box-number total_sell"><i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i></span>
+	          <span class="info-box-number total_sell"><i class="fas fa-sync fa-spin fa-fw margin-bottom"></i></span>
 	        </div>
 	        <!-- /.info-box-content -->
 	      </div>
 	      <!-- /.info-box -->
 	    </div>
 	    <!-- /.col -->
-	    <div class="col-md-3 col-sm-6 col-xs-12">
-	      <div class="info-box">
+	    <div class="col-md-3 col-sm-6 col-xs-12 col-custom">
+	      <div class="info-box info-box-new-style">
 	        <span class="info-box-icon bg-yellow">
 	        	<i class="fa fa-dollar"></i>
 				<i class="fa fa-exclamation"></i>
@@ -82,7 +84,7 @@
 
 	        <div class="info-box-content">
 	          <span class="info-box-text">{{ __('home.purchase_due') }}</span>
-	          <span class="info-box-number purchase_due"><i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i></span>
+	          <span class="info-box-number purchase_due"><i class="fas fa-sync fa-spin fa-fw margin-bottom"></i></span>
 	        </div>
 	        <!-- /.info-box-content -->
 	      </div>
@@ -92,8 +94,8 @@
 
 	    <!-- fix for small devices only -->
 	    <!-- <div class="clearfix visible-sm-block"></div> -->
-	    <div class="col-md-3 col-sm-6 col-xs-12">
-	      <div class="info-box">
+	    <div class="col-md-3 col-sm-6 col-xs-12 col-custom">
+	      <div class="info-box info-box-new-style">
 	        <span class="info-box-icon bg-yellow">
 	        	<i class="ion ion-ios-paper-outline"></i>
 	        	<i class="fa fa-exclamation"></i>
@@ -101,7 +103,7 @@
 
 	        <div class="info-box-content">
 	          <span class="info-box-text">{{ __('home.invoice_due') }}</span>
-	          <span class="info-box-number invoice_due"><i class="fa fa-refresh fa-spin fa-fw margin-bottom"></i></span>
+	          <span class="info-box-number invoice_due"><i class="fas fa-sync fa-spin fa-fw margin-bottom"></i></span>
 	        </div>
 	        <!-- /.info-box-content -->
 	      </div>
@@ -109,32 +111,54 @@
 	    </div>
 	    <!-- /.col -->
   	</div>
-  	<br>
+  	<div class="row row-custom">
+        <!-- expense -->
+        <div class="col-md-3 col-sm-6 col-xs-12 col-custom">
+          <div class="info-box info-box-new-style">
+            <span class="info-box-icon bg-red">
+              <i class="fas fa-minus-circle"></i>
+            </span>
+
+            <div class="info-box-content">
+              <span class="info-box-text">
+                {{ __('lang_v1.expense') }}
+              </span>
+              <span class="info-box-number total_expense"><i class="fas fa-sync fa-spin fa-fw margin-bottom"></i></span>
+            </div>
+            <!-- /.info-box-content -->
+          </div>
+          <!-- /.info-box -->
+        </div>
+    </div>
     @if(!empty($widgets['after_sale_purchase_totals']))
       @foreach($widgets['after_sale_purchase_totals'] as $widget)
         {!! $widget !!}
       @endforeach
     @endif
+    @if(!empty($all_locations))
   	<!-- sales chart start -->
   	<div class="row">
   		<div class="col-sm-12">
             @component('components.widget', ['class' => 'box-primary', 'title' => __('home.sells_last_30_days')])
-              {!! $sells_chart_1->html() !!}
+              {!! $sells_chart_1->container() !!}
             @endcomponent
   		</div>
   	</div>
+    @endif
     @if(!empty($widgets['after_sales_last_30_days']))
       @foreach($widgets['after_sales_last_30_days'] as $widget)
         {!! $widget !!}
       @endforeach
     @endif
+    @if(!empty($all_locations))
   	<div class="row">
   		<div class="col-sm-12">
             @component('components.widget', ['class' => 'box-primary', 'title' => __('home.sells_current_fy')])
-              {!! $sells_chart_2->html() !!}
+              {!! $sells_chart_2->container() !!}
             @endcomponent
   		</div>
   	</div>
+    @endif
   	<!-- sales chart end -->
     @if(!empty($widgets['after_sales_current_fy']))
       @foreach($widgets['after_sales_current_fy'] as $widget)
@@ -245,9 +269,10 @@
 @stop
 @section('javascript')
     <script src="{{ asset('js/home.js?v=' . $asset_v) }}"></script>
-    {!! Charts::assets(['highcharts']) !!}
-    {!! $sells_chart_1->script() !!}
-    {!! $sells_chart_2->script() !!}
+    @if(!empty($all_locations))
+      {!! $sells_chart_1->script() !!}
+      {!! $sells_chart_2->script() !!}
+    @endif
 @endif
 @endsection
 

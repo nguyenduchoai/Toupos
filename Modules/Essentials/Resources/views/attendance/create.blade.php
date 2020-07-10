@@ -1,43 +1,35 @@
-<div class="modal-dialog" role="document">
+<div class="modal-dialog modal-xl" role="document">
   <div class="modal-content">
 
     {!! Form::open(['url' => action('\Modules\Essentials\Http\Controllers\AttendanceController@store'), 'method' => 'post', 'id' => 'attendance_form' ]) !!}
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <h4 class="modal-title">@lang( 'essentials::lang.add_attendance' )</h4>
+      <h4 class="modal-title">@lang( 'essentials::lang.add_latest_attendance' )</h4>
     </div>
 
     <div class="modal-body">
     	<div class="row">
     		<div class="form-group col-md-12">
-		        {!! Form::label('employees', __('essentials::lang.employees') . ':') !!}
+		        {!! Form::label('employee', __('essentials::lang.select_employee') . ':') !!}
 		        <div class="form-group">
-		            {!! Form::select('employees[]', $employees, null, ['class' => 'form-control select2', 'multiple', 'style' => 'width: 100%;', 'id' => 'employees' ]); !!}
+		            {!! Form::select('employee', $employees, null, ['class' => 'form-control select2', 'style' => 'width: 100%;', 'id' => 'select_employee', 'placeholder' => __('essentials::lang.select_employee') ]); !!}
 		        </div>
     		</div>
-    		<div class="form-group col-md-6">
-	        	{!! Form::label('clock_in_time', __( 'essentials::lang.clock_in_time' ) . ':*') !!}
-	        	<div class="input-group date">
-	        		{!! Form::text('clock_in_time', null, ['class' => 'form-control', 'placeholder' => __( 'essentials::lang.clock_in_time' ), 'readonly', 'required' ]); !!}
-	        		<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-	        	</div>
-	      	</div>
-	      	<div class="form-group col-md-6">
-	        	{!! Form::label('clock_out_time', __( 'essentials::lang.clock_out_time' ) . ':') !!}
-	        	<div class="input-group date">
-	        		{!! Form::text('clock_out_time', null, ['class' => 'form-control', 'placeholder' => __( 'essentials::lang.clock_out_time' ), 'readonly' ]); !!}
-	        		<span class="input-group-addon"><i class="fa fa-clock-o"></i></span>
-	        	</div>
-	      	</div>
-	      	<div class="form-group col-md-6">
-	        	{!! Form::label('ip_address', __( 'essentials::lang.ip_address' ) . ':') !!}
-	        	{!! Form::text('ip_address', $ip_address, ['class' => 'form-control', 'placeholder' => __( 'essentials::lang.ip_address') ]); !!}
-	      	</div>
-	      	<div class="form-group col-md-12">
-	        	{!! Form::label('clock_in_note', __( 'brand.note' ) . ':') !!}
-	        	{!! Form::textarea('clock_in_note', null, ['class' => 'form-control', 'placeholder' => __( 'brand.note'), 'rows' => 3 ]); !!}
-	      	</div>
+    		<table class="table" id="employee_attendance_table">
+    			<thead>
+    				<th width="10%">@lang('essentials::lang.employee')</th>
+    				<th width="15%">@lang('essentials::lang.clock_in_time')</th>
+    				<th width="15%">@lang('essentials::lang.clock_out_time')</th>
+    				<th width="15%">@lang('essentials::lang.shift')</th>
+    				<th width="12%">@lang('essentials::lang.ip_address')</th>
+    				<th width="15%">@lang('essentials::lang.clock_in_note')</th>
+    				<th width="15%">@lang('essentials::lang.clock_out_note')</th>
+    				<th width="3%">&nbsp;</th>
+    			</thead>
+    			<tbody>
+    			</tbody>
+    		</table>
     	</div>
     </div>
 

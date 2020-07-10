@@ -13,6 +13,8 @@ class SupplierNotification extends Notification
     use Queueable;
 
     protected $notificationInfo;
+    protected $cc;
+    protected $bcc;
 
     /**
      * Create a new notification instance.
@@ -25,6 +27,8 @@ class SupplierNotification extends Notification
 
         $notificationUtil = new NotificationUtil();
         $notificationUtil->configureEmail($notificationInfo);
+        $this->cc = !empty($notificationInfo['cc']) ? $notificationInfo['cc'] : null;
+        $this->bcc = !empty($notificationInfo['bcc']) ? $notificationInfo['bcc'] : null;
     }
 
     /**
@@ -47,12 +51,19 @@ class SupplierNotification extends Notification
     public function toMail($notifiable)
     {
         $data = $this->notificationInfo;
-        return (new MailMessage)
+        $mail = (new MailMessage)
                     ->subject($data['subject'])
                     ->view(
                         'emails.plain_html',
                         ['content' => $data['email_body']]
                     );
+        if (!empty($this->cc)) {
+            $mail->cc($this->cc);
+        }
+        if (!empty($this->bcc)) {
+            $mail->bcc($this->bcc);
+        }
+        return $mail;
     }
 
     /**

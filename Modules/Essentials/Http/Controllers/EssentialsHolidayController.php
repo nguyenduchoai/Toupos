@@ -57,7 +57,10 @@ class EssentialsHolidayController extends Controller
 
             $permitted_locations = auth()->user()->permitted_locations();
             if ($permitted_locations != 'all') {
-                $holidays->whereIn('essentials_holidays.location_id', $permitted_locations);
+                $holidays->where(function ($query) use ($permitted_locations) {
+                    $query->whereIn('essentials_holidays.location_id', $permitted_locations)
+                        ->orWhereNull('essentials_holidays.location_id');
+                });
             }
 
             if (!empty(request()->input('location_id'))) {

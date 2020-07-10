@@ -29,6 +29,7 @@ class ManufacturingServiceProvider extends ServiceProvider
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
 
+        //TODO:Remove
         View::composer('manufacturing::layouts.partials.sidebar', function ($view) {
             if (auth()->user()->can('superadmin')) {
                 $__is_mfg_enabled = true;

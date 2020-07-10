@@ -22,10 +22,10 @@ class CreateEssentialsPayrollsTable extends Migration
             $table->smallInteger('year');
             $table->decimal('duration', 8, 2);
             $table->string('duration_unit', 20);
-            $table->decimal('amount_per_unit_duration', 20, 2);
+            $table->decimal('amount_per_unit_duration', 22, 4)->default(0);
             $table->text('allowances')->nullable();
             $table->text('deductions')->nullable();
-            $table->decimal('gross_amount', 20, 2);
+            $table->decimal('gross_amount', 22, 4)->default(0);
             $table->integer('created_by')->index();
 
             $table->timestamps();

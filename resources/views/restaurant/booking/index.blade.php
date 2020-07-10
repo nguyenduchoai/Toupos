@@ -2,8 +2,6 @@
 @section('title', __('restaurant.bookings'))
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('plugins/fullcalendar/fullcalendar.min.css?v='.$asset_v) }}">
-
 
 <!-- Content Header (Page header) -->
 <section class="content-header">
@@ -59,8 +57,8 @@
             <div class="box">
                 <div class="box-body">
                     <div class="row">
-                        <div class="col-sm-12">
-                            <button type="button" class="btn btn-primary pull-right" id="add_new_booking_btn"><i class="fa fa-plus"></i> @lang('restaurant.add_booking')</button>
+                        <div class="col-sm-12 text-right">
+                            <button type="button" class="btn btn-primary" id="add_new_booking_btn"><i class="fa fa-plus"></i> @lang('restaurant.add_booking')</button>
                         </div>
                     </div>
                     <div class="row">
@@ -97,22 +95,18 @@
         </div>
     </div>
 
-    @include('restaurant.booking.create')
-
 </section>
 <!-- /.content -->
+
+@include('restaurant.booking.create')
+
+<div class="modal fade contact_modal" tabindex="-1" role="dialog" aria-labelledby="gridSystemModalLabel">
+    @include('contact.create', ['quick_add' => true])
+</div>
 
 @endsection
 
 @section('javascript')
-    <script src="{{ asset('plugins/fullcalendar/fullcalendar.min.js?v=' . $asset_v) }}"></script>
-
-@php
-    $fullcalendar_lang_file = session()->get('user.language', config('app.locale') ) . '.js';
-@endphp
-@if(file_exists(public_path() . '/plugins/fullcalendar/locale/' . $fullcalendar_lang_file))
-    <script src="{{ asset('plugins/fullcalendar/locale/' . $fullcalendar_lang_file . '?v=' . $asset_v) }}"></script>
-@endif
     
     <script type="text/javascript">
         $(document).ready(function(){
@@ -313,7 +307,7 @@
 
         function reset_booking_form(){
             $('select#booking_location_id').val('').change();
-            $('select#booking_customer_id').val('').change();
+            // $('select#booking_customer_id').val('').change();
             $('select#correspondent').val('').change();
             $('#booking_note, #start_time, #end_time').val('');
         }
@@ -325,16 +319,88 @@
             }
 
             var events_source = {
-                    url: '/bookings',
-                    type: 'get',
-                    data: {
-                        'location_id': location_id
-                    }
+                url: '/bookings',
+                type: 'get',
+                data: {
+                    'location_id': location_id
                 }
-                $('#calendar').fullCalendar( 'removeEventSource', events_source);
-                $('#calendar').fullCalendar( 'addEventSource', events_source);         
-                $('#calendar').fullCalendar( 'refetchEvents' );
+            }
+            $('#calendar').fullCalendar( 'removeEventSource', events_source);
+            $('#calendar').fullCalendar( 'addEventSource', events_source);         
+            $('#calendar').fullCalendar( 'refetchEvents' );
         }
+
+        $(document).on('click', '.add_new_customer', function() {
+            $('.contact_modal')
+                .find('select#contact_type')
+                .val('customer')
+                .closest('div.contact_type_div')
+                .addClass('hide');
+            $('.contact_modal').modal('show');
+        });
+        $('form#quick_add_contact')
+            .submit(function(e) {
+                e.preventDefault();
+            })
+            .validate({
+                rules: {
+                    contact_id: {
+                        remote: {
+                            url: '/contacts/check-contact-id',
+                            type: 'post',
+                            data: {
+                                contact_id: function() {
+                                    return $('#contact_id').val();
+                                },
+                                hidden_id: function() {
+                                    if ($('#hidden_id').length) {
+                                        return $('#hidden_id').val();
+                                    } else {
+                                        return '';
+                                    }
+                                },
+                            },
+                        },
+                    },
+                },
+                messages: {
+                    contact_id: {
+                        remote: LANG.contact_id_already_exists,
+                    },
+                },
+                submitHandler: function(form) {
+                    $(form)
+                        .find('button[type="submit"]')
+                        .attr('disabled', true);
+                    var data = $(form).serialize();
+                    $.ajax({
+                        method: 'POST',
+                        url: $(form).attr('action'),
+                        dataType: 'json',
+                        data: data,
+                        success: function(result) {
+                            if (result.success == true) {
+                                $('select#booking_customer_id').append(
+                                    $('<option>', { value: result.data.id, text: result.data.name })
+                                );
+                                $('select#booking_customer_id')
+                                    .val(result.data.id)
+                                    .trigger('change');
+                                    $('div.contact_modal').modal('hide');
+                                toastr.success(result.msg);
+                            } else {
+                                toastr.error(result.msg);
+                            }
+                        },
+                    });
+                },
+            });
+        $('.contact_modal').on('hidden.bs.modal', function() {
+            $('form#quick_add_contact')
+                .find('button[type="submit"]')
+                .removeAttr('disabled');
+            $('form#quick_add_contact')[0].reset();
+        });
 
     </script>
 @endsection

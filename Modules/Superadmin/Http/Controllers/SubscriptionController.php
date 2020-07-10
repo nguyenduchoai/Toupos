@@ -48,7 +48,7 @@ class SubscriptionController extends BaseController
      */
     public function index()
     {
-        if (!auth()->user()->can('subscribe')) {
+        if (!auth()->user()->can('superadmin.access_package_subscriptions')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -83,7 +83,7 @@ class SubscriptionController extends BaseController
      */
     public function pay($package_id, $form_register = null)
     {
-        if (!auth()->user()->can('subscribe')) {
+        if (!auth()->user()->can('superadmin.access_package_subscriptions')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -153,8 +153,10 @@ class SubscriptionController extends BaseController
 
             $user = request()->session()->get('user');
 
+            $offline_payment_details = System::getProperty('offline_payment_details');
+
             return view('superadmin::subscription.pay')
-                ->with(compact('package', 'gateways', 'system_currency', 'layout', 'user'));
+                ->with(compact('package', 'gateways', 'system_currency', 'layout', 'user', 'offline_payment_details'));
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -183,7 +185,7 @@ class SubscriptionController extends BaseController
      */
     public function confirm($package_id, Request $request)
     {
-        if (!auth()->user()->can('subscribe')) {
+        if (!auth()->user()->can('superadmin.access_package_subscriptions')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -456,7 +458,7 @@ class SubscriptionController extends BaseController
     */
     public function show($id)
     {
-        if (!auth()->user()->can('subscribe')) {
+        if (!auth()->user()->can('superadmin.access_package_subscriptions')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -491,7 +493,7 @@ class SubscriptionController extends BaseController
      */
     public function allSubscriptions()
     {
-        if (!auth()->user()->can('subscribe')) {
+        if (!auth()->user()->can('superadmin.access_package_subscriptions')) {
             abort(403, 'Unauthorized action.');
         }
 

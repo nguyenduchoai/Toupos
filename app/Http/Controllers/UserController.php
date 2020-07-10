@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Media;
 use App\User;
-
 use App\Utils\ModuleUtil;
-
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -46,8 +44,7 @@ class UserController extends Controller
     public function getProfile()
     {
         $user_id = request()->session()->get('user.id');
-        $user = User::where('id', $user_id)->first();
-
+        $user = User::where('id', $user_id)->with(['media'])->first();
         $config_languages = config('constants.langs');
         $languages = [];
         foreach ($config_languages as $key => $value) {
@@ -64,12 +61,10 @@ class UserController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        //Redirect back if demo application
-        if (config('app.env') == 'demo') {
-            $output = ['success' => 0,
-                            'msg' => 'This feature is disabled in demo'
-                        ];
-            return redirect('user/profile')->with('status', $output);
+        //Disable in demo
+        $notAllowed = $this->moduleUtil->notAllowedInDemo();
+        if (!empty($notAllowed)) {
+            return $notAllowed;
         }
 
         try {
@@ -78,7 +73,7 @@ class UserController extends Controller
                 'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
                 'social_media_2', 'permanent_address', 'current_address',
                 'guardian_name', 'custom_field_1', 'custom_field_2',
-                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number']);
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'gender']);
 
             if (!empty($request->input('dob'))) {
                 $input['dob'] = $this->moduleUtil->uf_date($request->input('dob'));
@@ -90,6 +85,8 @@ class UserController extends Controller
             $user = User::find($user_id);
             $user->update($input);
 
+            Media::uploadMedia($user->business_id, $user, request(), 'profile_photo', true);
+
             //update session
             $input['id'] = $user_id;
             $business_id = request()->session()->get('user.business_id');
@@ -97,14 +94,14 @@ class UserController extends Controller
             session()->put('user', $input);
 
             $output = ['success' => 1,
-                                'msg' => 'Profile updated successfully'
-                            ];
+                        'msg' => __('lang_v1.profile_updated_successfully')
+                    ];
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
             $output = ['success' => 0,
-                            'msg' => 'Something went wrong, please try again'
-                        ];
+                        'msg' => __('messages.something_went_wrong')
+                    ];
         }
         return redirect('user/profile')->with('status', $output);
     }
@@ -116,12 +113,10 @@ class UserController extends Controller
      */
     public function updatePassword(Request $request)
     {
-        //Redirect back if demo application
-        if (config('app.env') == 'demo') {
-            $output = ['success' => 0,
-                            'msg' => 'This feature is disabled in demo'
-                        ];
-            return redirect('user/profile')->with('status', $output);
+        //Disable in demo
+        $notAllowed = $this->moduleUtil->notAllowedInDemo();
+        if (!empty($notAllowed)) {
+            return $notAllowed;
         }
 
         try {
@@ -132,18 +127,18 @@ class UserController extends Controller
                 $user->password = Hash::make($request->input('new_password'));
                 $user->save();
                 $output = ['success' => 1,
-                                'msg' => 'Password updated successfully'
-                            ];
+                            'msg' => __('lang_v1.password_updated_successfully')
+                        ];
             } else {
                 $output = ['success' => 0,
-                                'msg' => 'You have entered wrong password'
-                            ];
+                            'msg' => __('lang_v1.u_have_entered_wrong_password')
+                        ];
             }
         } catch (\Exception $e) {
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
             $output = ['success' => 0,
-                            'msg' => 'Something went wrong, please try again'
+                            'msg' => __('messages.something_went_wrong')
                         ];
         }
         return redirect('user/profile')->with('status', $output);

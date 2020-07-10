@@ -1,4 +1,4 @@
-<!-- Static navbar -->
+<!-- Static navbar
 <nav class="navbar navbar-default navbar-static-top">
   <div class="container">
     <div class="navbar-header">
@@ -24,18 +24,24 @@
         @if(Route::has('pricing') && config('app.env') != 'demo')
         <li><a href="{{ action('\Modules\Superadmin\Http\Controllers\PricingController@index') }}">@lang('superadmin::lang.pricing')</a></li>
         @endif
-        
+        @if(Route::has('repair-status') && config('app.env') != 'demo')
+        <li>
+          <a href="{{ action('\Modules\Repair\Http\Controllers\CustomerRepairStatusController@index') }}">
+            @lang('repair::lang.repair_status')
+          </a>
+        </li>
+        @endif
       </ul>
       <ul class="nav navbar-nav navbar-right">
         @if (Route::has('login'))
             @if(!Auth::check())
                 <li><a href="{{ route('login') }}">@lang('lang_v1.login')</a></li>
-                @if(env('ALLOW_REGISTRATION', true))
+                @if(config('constants.allow_registration'))
                     <li><a href="{{ route('business.getRegister') }}">@lang('lang_v1.register')</a></li>
                 @endif
             @endif
         @endif
       </ul>
-    </div><!-- nav-collapse -->
+    </div>
   </div>
-</nav>
+</nav>  -->

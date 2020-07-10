@@ -1,14 +1,15 @@
 @if(!empty($notifications_data))
   @foreach($notifications_data as $notification_data)
-    <li class="@if(empty($notification_data['read_at'])) bg-aqua-lite @endif">
+    <li class="@if(empty($notification_data['read_at'])) unread @endif notification-li">
       <a href="{{$notification_data['link'] ?? '#'}}">
-        <i class="{{$notification_data['icon_class'] ?? ''}}"></i> {!! $notification_data['msg'] ?? '' !!} <br>
-        <small>{{$notification_data['created_at']}}</small>
+        <i class="notif-icon {{$notification_data['icon_class'] ?? ''}}"></i> 
+        <span class="notif-info">{!! $notification_data['msg'] ?? '' !!}</span>
+        <span class="time">{{$notification_data['created_at']}}</span>
       </a>
     </li>
   @endforeach
 @else
-  <li class="text-center no-notification">
+  <li class="text-center no-notification notification-li">
     @lang('lang_v1.no_notifications_found')
   </li>
 @endif

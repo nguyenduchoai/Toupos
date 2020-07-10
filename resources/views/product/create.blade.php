@@ -92,6 +92,19 @@
           </div>
         </div>
 
+        @php
+          $default_location = null;
+          if(count($business_locations) == 1){
+            $default_location = array_key_first($business_locations->toArray());
+          }
+        @endphp
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('product_locations', __('business.business_locations') . ':') !!} @show_tooltip(__('lang_v1.product_location_help'))
+              {!! Form::select('product_locations[]', $business_locations, $default_location, ['class' => 'form-control select2', 'multiple', 'id' => 'product_locations']); !!}
+          </div>
+        </div>
+
         
         <div class="clearfix"></div>
         
@@ -105,11 +118,27 @@
         </div>
         <div class="col-sm-4 @if(!empty($duplicate_product) && $duplicate_product->enable_stock == 0) hide @endif" id="alert_quantity_div">
           <div class="form-group">
-            {!! Form::label('alert_quantity',  __('product.alert_quantity') . ':*') !!} @show_tooltip(__('tooltip.alert_quantity'))
-            {!! Form::number('alert_quantity', !empty($duplicate_product->alert_quantity) ? $duplicate_product->alert_quantity : null , ['class' => 'form-control', 'required',
+            {!! Form::label('alert_quantity',  __('product.alert_quantity') . ':') !!} @show_tooltip(__('tooltip.alert_quantity'))
+            {!! Form::number('alert_quantity', !empty($duplicate_product->alert_quantity) ? $duplicate_product->alert_quantity : null , ['class' => 'form-control',
             'placeholder' => __('product.alert_quantity'), 'min' => '0']); !!}
           </div>
         </div>
+        @if(!empty($common_settings['enable_product_warranty']))
+        <div class="col-sm-4">
+          <div class="form-group">
+            {!! Form::label('warranty_id', __('lang_v1.warranty') . ':') !!}
+            {!! Form::select('warranty_id', $warranties, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select')]); !!}
+          </div>
+        </div>
+        @endif
+        <!-- include module fields -->
+        @if(!empty($pos_module_data))
+            @foreach($pos_module_data as $key => $value)
+                @if(!empty($value['view_path']))
+                    @includeIf($value['view_path'], ['view_data' => $value['view_data']])
+                @endif
+            @endforeach
+        @endif
         <div class="clearfix"></div>
         <div class="col-sm-8">
           <div class="form-group">
@@ -209,33 +238,40 @@
             {!! Form::text('weight', !empty($duplicate_product->weight) ? $duplicate_product->weight : null, ['class' => 'form-control', 'placeholder' => __('lang_v1.weight')]); !!}
           </div>
         </div>
+        @php
+          $custom_labels = json_decode(session('business.custom_labels'), true);
+          $product_custom_field1 = !empty($custom_labels['product']['custom_field_1']) ? $custom_labels['product']['custom_field_1'] : __('lang_v1.product_custom_field1');
+          $product_custom_field2 = !empty($custom_labels['product']['custom_field_2']) ? $custom_labels['product']['custom_field_2'] : __('lang_v1.product_custom_field2');
+          $product_custom_field3 = !empty($custom_labels['product']['custom_field_3']) ? $custom_labels['product']['custom_field_3'] : __('lang_v1.product_custom_field3');
+          $product_custom_field4 = !empty($custom_labels['product']['custom_field_4']) ? $custom_labels['product']['custom_field_4'] : __('lang_v1.product_custom_field4');
+        @endphp
         <!--custom fields-->
         <div class="clearfix"></div>
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field1',  __('lang_v1.product_custom_field1') . ':') !!}
-            {!! Form::text('product_custom_field1', !empty($duplicate_product->product_custom_field1) ? $duplicate_product->product_custom_field1 : null, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field1')]); !!}
+            {!! Form::label('product_custom_field1',  $product_custom_field1 . ':') !!}
+            {!! Form::text('product_custom_field1', !empty($duplicate_product->product_custom_field1) ? $duplicate_product->product_custom_field1 : null, ['class' => 'form-control', 'placeholder' => $product_custom_field1]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field2',  __('lang_v1.product_custom_field2') . ':') !!}
-            {!! Form::text('product_custom_field2', !empty($duplicate_product->product_custom_field2) ? $duplicate_product->product_custom_field2 : null, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field2')]); !!}
+            {!! Form::label('product_custom_field2',  $product_custom_field2 . ':') !!}
+            {!! Form::text('product_custom_field2', !empty($duplicate_product->product_custom_field2) ? $duplicate_product->product_custom_field2 : null, ['class' => 'form-control', 'placeholder' => $product_custom_field2]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field3',  __('lang_v1.product_custom_field3') . ':') !!}
-            {!! Form::text('product_custom_field3', !empty($duplicate_product->product_custom_field3) ? $duplicate_product->product_custom_field3 : null, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field3')]); !!}
+            {!! Form::label('product_custom_field3',  $product_custom_field3 . ':') !!}
+            {!! Form::text('product_custom_field3', !empty($duplicate_product->product_custom_field3) ? $duplicate_product->product_custom_field3 : null, ['class' => 'form-control', 'placeholder' => $product_custom_field3]); !!}
           </div>
         </div>
 
         <div class="col-sm-3">
           <div class="form-group">
-            {!! Form::label('product_custom_field4',  __('lang_v1.product_custom_field4') . ':') !!}
-            {!! Form::text('product_custom_field4', !empty($duplicate_product->product_custom_field4) ? $duplicate_product->product_custom_field4 : null, ['class' => 'form-control', 'placeholder' => __('lang_v1.product_custom_field4')]); !!}
+            {!! Form::label('product_custom_field4',  $product_custom_field4 . ':') !!}
+            {!! Form::text('product_custom_field4', !empty($duplicate_product->product_custom_field4) ? $duplicate_product->product_custom_field4 : null, ['class' => 'form-control', 'placeholder' => $product_custom_field4]); !!}
           </div>
         </div>
         <!--custom fields-->
@@ -291,7 +327,9 @@
           <button type="submit" value="submit_n_add_selling_prices" class="btn btn-warning submit_product_form">@lang('lang_v1.save_n_add_selling_price_group_prices')</button>
         @endif
 
+        @can('product.opening_stock')
         <button id="opening_stock_button" @if(!empty($duplicate_product) && $duplicate_product->enable_stock == 0) disabled @endif type="submit" value="submit_n_add_opening_stock" class="btn bg-purple submit_product_form">@lang('lang_v1.save_n_add_opening_stock')</button>
+        @endcan
 
         <button type="submit" value="save_n_add_another" class="btn bg-maroon submit_product_form">@lang('lang_v1.save_n_add_another')</button>
 
@@ -311,4 +349,24 @@
 @section('javascript')
   @php $asset_v = env('APP_VERSION'); @endphp
   <script src="{{ asset('js/product.js?v=' . $asset_v) }}"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            onScan.attachTo(document, {
+                suffixKeyCodes: [13], // enter-key expected at the end of a scan
+                reactToPaste: true, // Compatibility to built-in scanners in paste-mode (as opposed to keyboard-mode)
+                onScan: function(sCode, iQty) {
+                    $('input#sku').val(sCode);
+                },
+                onScanError: function(oDebug) {
+                    console.log(oDebug); 
+                },
+                minLength: 2,
+                ignoreIfFocusOn: ['input', '.form-control']
+                // onKeyDetect: function(iKeyCode){ // output all potentially relevant key events - great for debugging!
+                //     console.log('Pressed: ' + iKeyCode);
+                // }
+            });
+        });
+    </script>
 @endsection

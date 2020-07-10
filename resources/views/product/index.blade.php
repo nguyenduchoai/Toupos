@@ -50,11 +50,35 @@
                 {!! Form::select('brand_id', $brands, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'product_list_filter_brand_id', 'placeholder' => __('lang_v1.all')]); !!}
             </div>
         </div>
-        <div class="col-md-3 hide" id="location_filter">
+        <div class="col-md-3" id="location_filter">
             <div class="form-group">
                 {!! Form::label('location_id',  __('purchase.business_location') . ':') !!}
-                {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%']); !!}
+                {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
             </div>
+        </div>
+        <div class="col-md-3">
+            <br>
+            <div class="form-group">
+                {!! Form::select('active_state', ['active' => __('business.is_active'), 'inactive' => __('lang_v1.inactive')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'active_state', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+
+        <!-- include module filter -->
+        @if(!empty($pos_module_data))
+            @foreach($pos_module_data as $key => $value)
+                @if(!empty($value['view_path']))
+                    @includeIf($value['view_path'], ['view_data' => $value['view_data']])
+                @endif
+            @endforeach
+        @endif
+
+        <div class="col-md-3">
+          <div class="form-group">
+            <br>
+            <label>
+              {!! Form::checkbox('not_for_selling', 1, false, ['class' => 'input-icheck', 'id' => 'not_for_selling']); !!} <strong>@lang('lang_v1.not_for_selling')</strong>
+            </label>
+          </div>
         </div>
     @endcomponent
     </div>
@@ -106,6 +130,8 @@
     aria-labelledby="gridSystemModalLabel">
 </div>
 
+@include('product.partials.edit_product_location_modal')
+
 </section>
 <!-- /.content -->
 
@@ -119,6 +145,7 @@
             product_table = $('#product_table').DataTable({
                 processing: true,
                 serverSide: true,
+                aaSorting: [[3, 'asc']],
                 "ajax": {
                     "url": "/products",
                     "data": function ( d ) {
@@ -127,28 +154,43 @@
                         d.brand_id = $('#product_list_filter_brand_id').val();
                         d.unit_id = $('#product_list_filter_unit_id').val();
                         d.tax_id = $('#product_list_filter_tax_id').val();
+                        d.active_state = $('#active_state').val();
+                        d.not_for_selling = $('#not_for_selling').is(':checked');
+                        d.location_id = $('#location_id').val();
+                        if ($('#repair_model_id').length == 1) {
+                            d.repair_model_id = $('#repair_model_id').val();
+                        }
+                        d = __datatable_ajax_callback(d);
                     }
                 },
                 columnDefs: [ {
-                    "targets": [0, 1, 12],
+                    "targets": [0, 1, 2],
                     "orderable": false,
                     "searchable": false
                 } ],
-                aaSorting: [2, 'asc'],
                 columns: [
                         { data: 'mass_delete'  },
                         { data: 'image', name: 'products.image'  },
+                        { data: 'action', name: 'action'},
                         { data: 'product', name: 'products.name'  },
-                        { data: 'purchase_price', name: 'max_purchase_price', searchable: false},
-                        { data: 'selling_price', name: 'max_price', searchable: false},
+                        { data: 'product_locations', name: 'product_locations'  },
+                        @can('view_purchase_price')
+                            { data: 'purchase_price', name: 'max_purchase_price', searchable: false},
+                        @endcan
+                        @can('access_default_selling_price')
+                            { data: 'selling_price', name: 'max_price', searchable: false},
+                        @endcan
                         { data: 'current_stock', searchable: false},
                         { data: 'type', name: 'products.type'},
                         { data: 'category', name: 'c1.name'},
-                        { data: 'sub_category', name: 'c2.name'},
                         { data: 'brand', name: 'brands.name'},
                         { data: 'tax', name: 'tax_rates.name', searchable: false},
                         { data: 'sku', name: 'products.sku'},
-                        { data: 'action', name: 'action'}
+                        { data: 'product_custom_field1', name: 'products.product_custom_field1'  },
+                        { data: 'product_custom_field2', name: 'products.product_custom_field2'  },
+                        { data: 'product_custom_field3', name: 'products.product_custom_field3'  },
+                        { data: 'product_custom_field4', name: 'products.product_custom_field4'  }
+                        
                     ],
                     createdRow: function( row, data, dataIndex ) {
                         if($('input#is_rack_enabled').val() == 1){
@@ -256,7 +298,26 @@
                         dangerMode: true,
                     }).then((willDelete) => {
                         if (willDelete) {
-                            $('form#mass_deactivate_form').submit();
+                            var form = $('form#mass_deactivate_form')
+
+                            var data = form.serialize();
+                                $.ajax({
+                                    method: form.attr('method'),
+                                    url: form.attr('action'),
+                                    dataType: 'json',
+                                    data: data,
+                                    success: function(result) {
+                                        if (result.success == true) {
+                                            toastr.success(result.msg);
+                                            product_table.ajax.reload();
+                                            form
+                                            .find('#selected_products')
+                                            .val('');
+                                        } else {
+                                            toastr.error(result.msg);
+                                        }
+                                    },
+                                });
                         }
                     });
                 } else{
@@ -296,7 +357,7 @@
                 });
             });
 
-            $(document).on('change', '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id, #location_id', 
+            $(document).on('change', '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id, #location_id, #active_state, #repair_model_id', 
                 function() {
                     if ($("#product_list_tab").hasClass('active')) {
                         product_table.ajax.reload();
@@ -306,15 +367,38 @@
                         stock_report_table.ajax.reload();
                     }
             });
+
+            $(document).on('ifChanged', '#not_for_selling', function(){
+                if ($("#product_list_tab").hasClass('active')) {
+                    product_table.ajax.reload();
+                }
+
+                if ($("#product_stock_report").hasClass('active')) {
+                    stock_report_table.ajax.reload();
+                }
+            });
+
+            $('#product_location').select2({dropdownParent: $('#product_location').closest('.modal')});
         });
 
-        $(document).on('shown.bs.modal', 'div.view_product_modal, div.view_modal', function(){
+        $(document).on('shown.bs.modal', 'div.view_product_modal, div.view_modal', 
+            function(){
+                var div = $(this).find('#view_product_stock_details');
+            if (div.length) {
+                $.ajax({
+                    url: "{{action('ReportController@getStockReport')}}"  + '?for=view_product&product_id=' + div.data('product_id'),
+                    dataType: 'html',
+                    success: function(result) {
+                        div.html(result);
+                        __currency_convert_recursively(div);
+                    },
+                });
+            }
             __currency_convert_recursively($(this));
         });
         var data_table_initailized = false;
         $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
             if ($(e.target).attr('href') == '#product_stock_report') {
-                $('#location_filter').removeClass('hide');
                 if (!data_table_initailized) {
                     //Stock report table
                     var stock_report_cols = [
@@ -323,6 +407,8 @@
                         { data: 'unit_price', name: 'variations.sell_price_inc_tax' },
                         { data: 'stock', name: 'stock', searchable: false },
                         { data: 'stock_price', name: 'stock_price', searchable: false },
+                        { data: 'stock_value_by_sale_price', name: 'stock_value_by_sale_price', searchable: false, orderable: false },
+                        { data: 'potential_profit', name: 'potential_profit', searchable: false, orderable: false },
                         { data: 'total_sold', name: 'total_sold', searchable: false },
                         { data: 'total_transfered', name: 'total_transfered', searchable: false },
                         { data: 'total_adjusted', name: 'total_adjusted', searchable: false }
@@ -341,6 +427,11 @@
                                 d.brand_id = $('#product_list_filter_brand_id').val();
                                 d.unit_id = $('#product_list_filter_unit_id').val();
                                 d.type = $('#product_list_filter_type').val();
+                                d.active_state = $('#active_state').val();
+                                d.not_for_selling = $('#not_for_selling').is(':checked');
+                                if ($('#repair_model_id').length == 1) {
+                                    d.repair_model_id = $('#repair_model_id').val();
+                                }
                             }
                         },
                         columns: stock_report_cols,
@@ -354,6 +445,12 @@
                                 __sum_stock($('#stock_report_table'), 'total_adjusted')
                             );
                             var total_stock_price = sum_table_col($('#stock_report_table'), 'total_stock_price');
+                            var total_stock_value_by_sale_price = sum_table_col($('#stock_report_table'), 'stock_value_by_sale_price');
+                            $('#footer_stock_value_by_sale_price').text(total_stock_value_by_sale_price);
+
+                            var total_potential_profit = sum_table_col($('#stock_report_table'), 'potential_profit');
+                            $('#footer_potential_profit').text(total_potential_profit);
+
                             $('#footer_total_stock_price').text(total_stock_price);
                             __currency_convert_recursively($('#stock_report_table'));
                         },
@@ -363,7 +460,6 @@
                     stock_report_table.ajax.reload();
                 }
             } else {
-                $('#location_filter').addClass('hide');
                 product_table.ajax.reload();
             }
         });
@@ -377,5 +473,59 @@
 
             return selected_rows; 
         }
+
+        $(document).on('click', '.update_product_location', function(e){
+            e.preventDefault();
+            var selected_rows = getSelectedRows();
+            
+            if(selected_rows.length > 0){
+                $('input#selected_products').val(selected_rows);
+                var type = $(this).data('type');
+                var modal = $('#edit_product_location_modal');
+                if(type == 'add') {
+                    modal.find('.remove_from_location_title').addClass('hide');
+                    modal.find('.add_to_location_title').removeClass('hide');
+                } else if(type == 'remove') {
+                    modal.find('.add_to_location_title').addClass('hide');
+                    modal.find('.remove_from_location_title').removeClass('hide');
+                }
+
+                modal.modal('show');
+                modal.find('#product_location').select2({ dropdownParent: modal });
+                modal.find('#product_location').val('').change();
+                modal.find('#update_type').val(type);
+                modal.find('#products_to_update_location').val(selected_rows);
+            } else{
+                $('input#selected_products').val('');
+                swal('@lang("lang_v1.no_row_selected")');
+            }    
+        });
+
+    $(document).on('submit', 'form#edit_product_location_form', function(e) {
+        e.preventDefault();
+        $(this)
+            .find('button[type="submit"]')
+            .attr('disabled', true);
+        var data = $(this).serialize();
+
+        $.ajax({
+            method: $(this).attr('method'),
+            url: $(this).attr('action'),
+            dataType: 'json',
+            data: data,
+            success: function(result) {
+                if (result.success == true) {
+                    $('div#edit_product_location_modal').modal('hide');
+                    toastr.success(result.msg);
+                    product_table.ajax.reload();
+                    $('form#edit_product_location_form')
+                    .find('button[type="submit"]')
+                    .attr('disabled', false);
+                } else {
+                    toastr.error(result.msg);
+                }
+            },
+        });
+    });
     </script>
 @endsection

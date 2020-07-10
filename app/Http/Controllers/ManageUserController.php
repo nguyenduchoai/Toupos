@@ -5,13 +5,10 @@ namespace App\Http\Controllers;
 use App\BusinessLocation;
 use App\Contact;
 use App\System;
-
 use App\User;
 use App\Utils\ModuleUtil;
 use DB;
-
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
@@ -45,12 +42,13 @@ class ManageUserController extends Controller
             $user_id = request()->session()->get('user.id');
 
             $users = User::where('business_id', $business_id)
-                        ->where('id', '!=', $user_id)
+                        ->user()
                         ->where('is_cmmsn_agnt', 0)
                         ->select(['id', 'username',
-                            DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"), 'email']);
+                            DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"), 'email', 'allow_login']);
 
             return Datatables::of($users)
+                ->editColumn('username', '{{$username}} @if(empty($allow_login)) <span class="label bg-gray">@lang("lang_v1.login_not_allowed")</span>@endif')
                 ->addColumn(
                     'role',
                     function ($row) {
@@ -76,7 +74,7 @@ class ManageUserController extends Controller
                     $query->whereRaw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) like ?", ["%{$keyword}%"]);
                 })
                 ->removeColumn('id')
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'username'])
                 ->make(true);
         }
 
@@ -110,8 +108,11 @@ class ManageUserController extends Controller
                                     ->Active()
                                     ->get();
 
+        //Get user form part from modules
+        $form_partials = $this->moduleUtil->getModuleData('moduleViewPartials', ['view' => 'manage_user.create']);
+
         return view('manage_user.create')
-                ->with(compact('roles', 'username_ext', 'contacts', 'locations'));
+                ->with(compact('roles', 'username_ext', 'contacts', 'locations', 'form_partials'));
     }
 
     /**
@@ -131,9 +132,19 @@ class ManageUserController extends Controller
                 'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
                 'social_media_2', 'permanent_address', 'current_address',
                 'guardian_name', 'custom_field_1', 'custom_field_2',
-                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent']);
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent', 'gender', 'max_sales_discount_percent']);
             
             $user_details['status'] = !empty($request->input('is_active')) ? 'active' : 'inactive';
+
+            $user_details['user_type'] = 'user';
+
+            if (empty($request->input('allow_login'))) {
+                unset($user_details['username']);
+                unset($user_details['password']);
+                $user_details['allow_login'] = 0;
+            } else {
+                $user_details['allow_login'] = 1;
+            }
             
             if (!isset($user_details['selected_contacts'])) {
                 $user_details['selected_contacts'] = false;
@@ -149,16 +160,18 @@ class ManageUserController extends Controller
 
             $business_id = $request->session()->get('user.business_id');
             $user_details['business_id'] = $business_id;
-            $user_details['password'] = Hash::make($user_details['password']);
+            $user_details['password'] = $user_details['allow_login'] ? Hash::make($user_details['password']) : null;
 
-            $ref_count = $this->moduleUtil->setAndGetReferenceCount('username');
-            if (blank($user_details['username'])) {
-                $user_details['username'] = $this->moduleUtil->generateReferenceNumber('username', $ref_count);
-            }
+            if ($user_details['allow_login']) {
+                $ref_count = $this->moduleUtil->setAndGetReferenceCount('username');
+                if (blank($user_details['username'])) {
+                    $user_details['username'] = $this->moduleUtil->generateReferenceNumber('username', $ref_count);
+                }
 
-            $username_ext = $this->getUsernameExtension();
-            if (!empty($username_ext)) {
-                $user_details['username'] .= $username_ext;
+                $username_ext = $this->getUsernameExtension();
+                if (!empty($username_ext)) {
+                    $user_details['username'] .= $username_ext;
+                }
             }
 
             //Check if subscribed or not, then check for users quota
@@ -171,6 +184,8 @@ class ManageUserController extends Controller
             //Sales commission percentage
             $user_details['cmmsn_percent'] = !empty($user_details['cmmsn_percent']) ? $this->moduleUtil->num_uf($user_details['cmmsn_percent']) : 0;
 
+            $user_details['max_sales_discount_percent'] = !is_null($user_details['max_sales_discount_percent']) ? $this->moduleUtil->num_uf($user_details['max_sales_discount_percent']) : null;
+
             //Create the user
             $user = User::create($user_details);
 
@@ -178,14 +193,17 @@ class ManageUserController extends Controller
             $role = Role::findOrFail($role_id);
             $user->assignRole($role->name);
 
+            //Grant Location permissions
+            $this->giveLocationPermissions($user, $request);
+
             //Assign selected contacts
             if ($user_details['selected_contacts'] == 1) {
                 $contact_ids = $request->get('selected_contact_ids');
                 $user->contactAccess()->sync($contact_ids);
             }
 
-            //Grant Location permissions
-            $this->giveLocationPermissions($user, $request);
+            //Save module fields for user
+            $this->moduleUtil->getModuleData('afterModelSaved', ['event' => 'user_saved', 'model_instance' => $user]);
 
             $output = ['success' => 1,
                         'msg' => __("user.user_added")
@@ -219,7 +237,12 @@ class ManageUserController extends Controller
                     ->with(['contactAccess'])
                     ->find($id);
 
-        return view('manage_user.show')->with(compact('user'));
+        //Get user view part from modules
+        $view_partials = $this->moduleUtil->getModuleData('moduleViewPartials', ['view' => 'manage_user.show', 'user' => $user]);
+
+        $users = User::forDropdown($business_id, false);
+
+        return view('manage_user.show')->with(compact('user', 'view_partials', 'users'));
     }
 
     /**
@@ -254,9 +277,13 @@ class ManageUserController extends Controller
                                     ->get();
 
         $permitted_locations = $user->permitted_locations();
+        $username_ext = $this->getUsernameExtension();
+
+        //Get user form part from modules
+        $form_partials = $this->moduleUtil->getModuleData('moduleViewPartials', ['view' => 'manage_user.edit', 'user' => $user]);
         
         return view('manage_user.edit')
-                ->with(compact('roles', 'user', 'contact_access', 'contacts', 'is_checked_checkbox', 'locations', 'permitted_locations'));
+                ->with(compact('roles', 'user', 'contact_access', 'contacts', 'is_checked_checkbox', 'locations', 'permitted_locations', 'form_partials', 'username_ext'));
     }
 
     /**
@@ -277,7 +304,7 @@ class ManageUserController extends Controller
                 'blood_group', 'contact_number', 'fb_link', 'twitter_link', 'social_media_1',
                 'social_media_2', 'permanent_address', 'current_address',
                 'guardian_name', 'custom_field_1', 'custom_field_2',
-                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent']);
+                'custom_field_3', 'custom_field_4', 'id_proof_name', 'id_proof_number', 'cmmsn_percent', 'gender', 'max_sales_discount_percent']);
 
             $user_data['status'] = !empty($request->input('is_active')) ? 'active' : 'inactive';
             $business_id = request()->session()->get('user.business_id');
@@ -286,12 +313,22 @@ class ManageUserController extends Controller
                 $user_data['selected_contacts'] = 0;
             }
 
+            if (empty($request->input('allow_login'))) {
+                $user_data['username'] = null;
+                $user_data['password'] = null;
+                $user_data['allow_login'] = 0;
+            } else {
+                $user_data['allow_login'] = 1;
+            }
+
             if (!empty($request->input('password'))) {
-                $user_data['password'] = Hash::make($request->input('password'));
+                $user_data['password'] = $user_data['allow_login'] == 1 ? Hash::make($request->input('password')) : null;
             }
 
             //Sales commission percentage
             $user_data['cmmsn_percent'] = !empty($user_data['cmmsn_percent']) ? $this->moduleUtil->num_uf($user_data['cmmsn_percent']) : 0;
+
+            $user_data['max_sales_discount_percent'] = !is_null($user_data['max_sales_discount_percent']) ? $this->moduleUtil->num_uf($user_data['max_sales_discount_percent']) : null;
 
             if (!empty($request->input('dob'))) {
                 $user_data['dob'] = $this->moduleUtil->uf_date($request->input('dob'));
@@ -301,20 +338,37 @@ class ManageUserController extends Controller
                 $user_data['bank_details'] = json_encode($request->input('bank_details'));
             }
 
+            if ($user_data['allow_login'] && $request->has('username')) {
+                $user_data['username'] = $request->input('username');
+                $ref_count = $this->moduleUtil->setAndGetReferenceCount('username');
+                if (blank($user_data['username'])) {
+                    $user_data['username'] = $this->moduleUtil->generateReferenceNumber('username', $ref_count);
+                }
+
+                $username_ext = $this->getUsernameExtension();
+                if (!empty($username_ext)) {
+                    $user_data['username'] .= $username_ext;
+                }
+            }
+
             $user = User::where('business_id', $business_id)
                           ->findOrFail($id);
 
             $user->update($user_data);
-
             $role_id = $request->input('role');
             $user_role = $user->roles->first();
-
-            if ($user_role->id != $role_id) {
-                $user->removeRole($user_role->name);
-
+            $previous_role = !empty($user_role->id) ? $user_role->id : 0;
+            if ($previous_role != $role_id) {
+                if (!empty($previous_role)) {
+                    $user->removeRole($user_role->name);
+                }
+                
                 $role = Role::findOrFail($role_id);
                 $user->assignRole($role->name);
             }
+
+            //Grant Location permissions
+            $this->giveLocationPermissions($user, $request);
 
             //Assign selected contacts
             if ($user_data['selected_contacts'] == 1) {
@@ -324,8 +378,8 @@ class ManageUserController extends Controller
             }
             $user->contactAccess()->sync($contact_ids);
 
-            //Grant Location permissions
-            $this->giveLocationPermissions($user, $request);
+            //Update module fields for user
+            $this->moduleUtil->getModuleData('afterModelSaved', ['event' => 'user_saved', 'model_instance' => $user]);
 
             $output = ['success' => 1,
                         'msg' => __("user.user_update_success")
@@ -334,7 +388,7 @@ class ManageUserController extends Controller
             \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
             
             $output = ['success' => 0,
-                            'msg' => __("messages.something_went_wrong")
+                            'msg' => __('messages.something_went_wrong')
                         ];
         }
 
@@ -437,8 +491,19 @@ class ManageUserController extends Controller
         if (!empty($revoked_permissions)) {
             $user->revokePermissionTo($revoked_permissions);
         }
+
         if (!empty($permissions)) {
             $user->givePermissionTo($permissions);
+        } else {
+            //if no location permission given revoke previous permissions
+            if (!empty($permitted_locations)) {
+                $revoked_permissions = [];
+                foreach ($permitted_locations as $key => $value) {
+                    $revoke_permissions[] = 'location.' . $value;
+                }
+
+                $user->revokePermissionTo($revoke_permissions);
+            }
         }
     }
 }

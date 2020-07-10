@@ -54,6 +54,10 @@ $(document).ready(function() {
                 );
             },
         },
+    }).on('select2:select', function (e) {
+        var data = e.params.data;
+        $('#pay_term_number').val(data.pay_term_number);
+        $('#pay_term_type').val(data.pay_term_type);
     });
 
     //Quick add supplier
@@ -139,7 +143,13 @@ $(document).ready(function() {
     if ($('#search_product').length > 0) {
         $('#search_product')
             .autocomplete({
-                source: '/purchases/get_products',
+                source: function(request, response) {
+                    $.getJSON(
+                        '/purchases/get_products',
+                        { location_id: $('#location_id').val(), term: request.term },
+                        response
+                    );
+                },
                 minLength: 2,
                 response: function(event, ui) {
                     if (ui.content.length == 1) {
@@ -486,7 +496,6 @@ $(document).ready(function() {
     purchase_table = $('#purchase_table').DataTable({
         processing: true,
         serverSide: true,
-        aaSorting: [[0, 'desc']],
         ajax: {
             url: '/purchases',
             data: function(d) {
@@ -515,16 +524,13 @@ $(document).ready(function() {
                 }
                 d.start_date = start;
                 d.end_date = end;
+
+                d = __datatable_ajax_callback(d);
             },
         },
-        columnDefs: [
-            {
-                targets: [7, 8],
-                orderable: false,
-                searchable: false,
-            },
-        ],
+        aaSorting: [[1, 'desc']],
         columns: [
+            { data: 'action', name: 'action', orderable: false, searchable: false },
             { data: 'transaction_date', name: 'transaction_date' },
             { data: 'ref_no', name: 'ref_no' },
             { data: 'location_name', name: 'BS.name' },
@@ -532,8 +538,8 @@ $(document).ready(function() {
             { data: 'status', name: 'status' },
             { data: 'payment_status', name: 'payment_status' },
             { data: 'final_total', name: 'final_total' },
-            { data: 'payment_due', name: 'payment_due' },
-            { data: 'action', name: 'action' },
+            { data: 'payment_due', name: 'payment_due', orderable: false, searchable: false },
+            { data: 'added_by', name: 'u.first_name' },
         ],
         fnDrawCallback: function(oSettings) {
             var total_purchase = sum_table_col($('#purchase_table'), 'final_total');
@@ -686,16 +692,23 @@ $(document).ready(function() {
         __write_number(cp_element, unit_cost);
         cp_element.change();
     });
+    toggle_search();
 });
 
 function get_purchase_entry_row(product_id, variation_id) {
     if (product_id) {
         var row_count = $('#row_count').val();
+        var location_id = $('#location_id').val();
         $.ajax({
             method: 'POST',
             url: '/purchases/get_purchase_entry_row',
             dataType: 'html',
-            data: { product_id: product_id, row_count: row_count, variation_id: variation_id },
+            data: { 
+                product_id: product_id, 
+                row_count: row_count, 
+                variation_id: variation_id,
+                location_id: location_id
+            },
             success: function(result) {
                 $(result)
                     .find('.purchase_quantity')
@@ -868,7 +881,7 @@ function update_table_total() {
             total_subtotal += __read_number($(this).find('.row_subtotal_after_tax_hidden'), true);
         });
 
-    $('#total_quantity').text(__number_f(total_quantity, true));
+    $('#total_quantity').text(__number_f(total_quantity, false));
     $('#total_st_before_tax').text(__currency_trans_from_en(total_st_before_tax, true, true));
     __write_number($('input#st_before_tax_input'), total_st_before_tax, true);
 
@@ -971,5 +984,29 @@ $(document).on('click', 'button#submit_purchase_form', function(e) {
 
     if ($('form#add_purchase_form').valid()) {
         $('form#add_purchase_form').submit();
+    }
+});
+
+function toggle_search() {
+    if ($('#location_id').val()) {
+        $('#search_product').removeAttr('disabled');
+        $('#search_product').focus();
+    } else {
+        $('#search_product').attr('disabled', true);
+    }
+}
+
+$(document).on('change', '#location_id', function() {
+    toggle_search();
+    $('#purchase_entry_table tbody').html('');
+    update_table_total();
+    update_grand_total();
+    update_table_sr_number();
+});
+
+$(document).on('shown.bs.modal', '.quick_add_product_modal', function(){
+    var selected_location = $('#location_id').val();
+    if (selected_location) {
+        $('.quick_add_product_modal').find('#product_locations').val([selected_location]).trigger("change");
     }
 });

@@ -43,7 +43,9 @@
     </div>
 
     <div class="modal-footer">
-      <button type="submit" class="btn btn-primary">@lang( 'messages.save' )</button>
+      <button type="submit" class="btn btn-primary ladda-button add-leave-btn" data-style="expand-right">
+      	<span class="ladda-label">@lang( 'messages.save' )</span>
+      </button>
       <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>
     </div>
 

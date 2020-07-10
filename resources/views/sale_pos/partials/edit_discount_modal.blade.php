@@ -29,6 +29,12 @@
 				            </div>
 				        </div>
 				    </div>
+				    @php
+				    	$max_discount = !is_null(auth()->user()->max_sales_discount_percent) ? auth()->user()->max_sales_discount_percent : '';
+
+				    	//if sale discount is more than user max discount change it to max discount
+				    	if($discount_type == 'percentage' && $max_discount != '' && $sales_discount > $max_discount) $sales_discount = $max_discount;
+				    @endphp
 				    <div class="col-md-6">
 				        <div class="form-group">
 				            {!! Form::label('discount_amount_modal', __('sale.discount_amount') . ':*' ) !!}
@@ -36,7 +42,7 @@
 				                <span class="input-group-addon">
 				                    <i class="fa fa-info"></i>
 				                </span>
-				                {!! Form::text('discount_amount_modal', @num_format($sales_discount), ['class' => 'form-control input_number']); !!}
+				                {!! Form::text('discount_amount_modal', @num_format($sales_discount), ['class' => 'form-control input_number', 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
 				            </div>
 				        </div>
 				    </div>

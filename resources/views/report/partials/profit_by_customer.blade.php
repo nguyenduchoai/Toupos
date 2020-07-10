@@ -2,7 +2,7 @@
     <table class="table table-bordered table-striped table-text-center" id="profit_by_customer_table">
         <thead>
             <tr>
-                <th>@lang('product.customer')</th>
+                <th>@lang('contact.customer')</th>
                 <th>@lang('lang_v1.gross_profit')</th>
             </tr>
         </thead>

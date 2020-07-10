@@ -37,6 +37,12 @@
                 @if(!empty($sell_line->sell_line_note))
                 <br> {{$sell_line->sell_line_note}}
                 @endif
+                @if($is_warranty_enabled && !empty($sell_line->warranties->first()) )
+                    <br><small>{{$sell_line->warranties->first()->display_name ?? ''}} - {{ @format_date($sell_line->warranties->first()->getEndDate($sell->transaction_date))}}</small>
+                    @if(!empty($sell_line->warranties->first()->description))
+                    <br><small>{{$sell_line->warranties->first()->description ?? ''}}</small>
+                    @endif
+                @endif
             </td>
             @if( session()->get('business.enable_lot_number') == 1)
                 <td>{{ $sell_line->lot_details->lot_number ?? '--' }}

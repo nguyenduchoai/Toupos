@@ -29,7 +29,7 @@
                  {!! Form::label('app_currency_id', __('business.currency') . ':') !!}
                 <div class="input-group">
                 <span class="input-group-addon">
-                    <i class="fa fa-money"></i>
+                    <i class="fas fa-money-bill-alt"></i>
                 </span>
                 {!! Form::select('app_currency_id', $currencies, $settings["app_currency_id"], ['class' => 'form-control select2','placeholder' => __('business.currency_placeholder'), 'required']); !!}
             </div>
@@ -111,13 +111,10 @@
 
         <div class="col-xs-4">
             <div class="form-group">
-                <div class="checkbox">
-                
                 <label>
                     {!! Form::checkbox('enable_business_based_username', 1, (int)$settings["enable_business_based_username"] , 
                     [ 'class' => 'input-icheck']); !!} {{ __( 'superadmin::lang.enable_business_based_username' ) }}
                 </label>
-                </div>
                 <p class="help-block">@lang('superadmin::lang.business_based_username_help')</p>
             </div>
         </div>

@@ -4,16 +4,14 @@ namespace App\Http\Controllers;
 
 use App\BusinessLocation;
 
+use App\Charts\CommonChart;
 use App\Currency;
 use App\Transaction;
 use App\Utils\BusinessUtil;
-use App\Utils\ModuleUtil;
 
+use App\Utils\ModuleUtil;
 use App\Utils\TransactionUtil;
 use App\VariationLocationDetails;
-
-use Charts;
-
 use Datatables;
 use DB;
 use Illuminate\Http\Request;
@@ -77,14 +75,14 @@ class HomeController extends Controller
             $labels[] = date('j M Y', strtotime($date));
 
             if (!empty($sells_last_30_days[$date])) {
-                $all_sell_values[] = $sells_last_30_days[$date];
+                $all_sell_values[] = (float) $sells_last_30_days[$date];
             } else {
                 $all_sell_values[] = 0;
             }
         }
 
         //Get sell for indivisual locations
-        $all_locations = BusinessLocation::forDropdown($business_id);
+        $all_locations = BusinessLocation::forDropdown($business_id)->toArray();
         $location_sells = [];
         $sells_by_location = $this->transactionUtil->getSellsLast30Days($business_id, true);
         foreach ($all_locations as $loc_id => $loc_name) {
@@ -96,7 +94,7 @@ class HomeController extends Controller
                 });
                 
                 if (!empty($sell)) {
-                    $values[] = $sell->total_sells;
+                    $values[] = (float) $sell->total_sells;
                 } else {
                     $values[] = 0;
                 }
@@ -105,20 +103,22 @@ class HomeController extends Controller
             $location_sells[$loc_id]['values'] = $values;
         }
 
-        $sells_chart_1 = Charts::multi('line', 'highcharts')
-                            ->title(' ')
-                            ->template('material')
-                            ->labels($labels)
-                            ->elementLabel(__('home.total_sells', ['currency' => $currency->code]));
+        $sells_chart_1 = new CommonChart;
+
+        $sells_chart_1->labels($labels)
+                        ->options($this->__chartOptions(__(
+                            'home.total_sells',
+                            ['currency' => $currency->code]
+                            )));
 
         if (!empty($location_sells)) {
             foreach ($location_sells as $location_sell) {
-                $sells_chart_1->dataset($location_sell['loc_label'], $location_sell['values']);
+                $sells_chart_1->dataset($location_sell['loc_label'], 'line', $location_sell['values']);
             }
         }
 
         if (count($all_locations) > 1) {
-            $sells_chart_1->dataset(__('report.all_locations'), $all_sell_values);
+            $sells_chart_1->dataset(__('report.all_locations'), 'line', $all_sell_values);
         }
 
         //Chart for sells this financial year
@@ -143,7 +143,7 @@ class HomeController extends Controller
             $date = strtotime('+1 month', $date);
 
             if (!empty($sells_this_fy[$month_year])) {
-                $values[] = $sells_this_fy[$month_year];
+                $values[] = (float) $sells_this_fy[$month_year];
             } else {
                 $values[] = 0;
             }
@@ -161,7 +161,7 @@ class HomeController extends Controller
                 });
                 
                 if (!empty($sell)) {
-                    $values_data[] = $sell->total_sells;
+                    $values_data[] = (float) $sell->total_sells;
                 } else {
                     $values_data[] = 0;
                 }
@@ -170,21 +170,19 @@ class HomeController extends Controller
             $fy_sells_by_location_data[$loc_id]['values'] = $values_data;
         }
 
-        $sells_chart_2 = Charts::multi('line', 'highcharts')
-                            ->title(__(' '))
-                            ->labels($labels)
-                            ->template('material')
-                            ->elementLabel(__(
-                                'home.total_sells',
-                                ['currency' => $currency->code]
-                            ));
+        $sells_chart_2 = new CommonChart;
+        $sells_chart_2->labels($labels)
+                    ->options($this->__chartOptions(__(
+                        'home.total_sells',
+                        ['currency' => $currency->code]
+                            )));
         if (!empty($fy_sells_by_location_data)) {
             foreach ($fy_sells_by_location_data as $location_sell) {
-                $sells_chart_2->dataset($location_sell['loc_label'], $location_sell['values']);
+                $sells_chart_2->dataset($location_sell['loc_label'], 'line', $location_sell['values']);
             }
         }
         if (count($all_locations) > 1) {
-            $sells_chart_2->dataset(__('report.all_locations'), $values);
+            $sells_chart_2->dataset(__('report.all_locations'), 'line', $values);
         }
 
         //Get Dashboard widgets from module
@@ -198,7 +196,7 @@ class HomeController extends Controller
             }
         }
 
-        return view('home.index', compact('date_filters', 'sells_chart_1', 'sells_chart_2', 'widgets'));
+        return view('home.index', compact('date_filters', 'sells_chart_1', 'sells_chart_2', 'widgets', 'all_locations'));
     }
 
     /**
@@ -211,14 +209,15 @@ class HomeController extends Controller
         if (request()->ajax()) {
             $start = request()->start;
             $end = request()->end;
+            $location_id = request()->location_id;
             $business_id = request()->session()->get('user.business_id');
 
-            $purchase_details = $this->transactionUtil->getPurchaseTotals($business_id, $start, $end);
+            $purchase_details = $this->transactionUtil->getPurchaseTotals($business_id, $start, $end, $location_id);
 
-            $sell_details = $this->transactionUtil->getSellTotals($business_id, $start, $end);
+            $sell_details = $this->transactionUtil->getSellTotals($business_id, $start, $end, $location_id);
 
             $transaction_types = [
-                'purchase_return', 'stock_adjustment', 'sell_return'
+                'purchase_return', 'sell_return', 'expense'
             ];
 
             $transaction_totals = $this->transactionUtil->getTransactionTotals(
@@ -230,9 +229,8 @@ class HomeController extends Controller
 
             $total_purchase_inc_tax = !empty($purchase_details['total_purchase_inc_tax']) ? $purchase_details['total_purchase_inc_tax'] : 0;
             $total_purchase_return_inc_tax = $transaction_totals['total_purchase_return_inc_tax'];
-            $total_adjustment = $transaction_totals['total_adjustment'];
 
-            $total_purchase = $total_purchase_inc_tax - $total_purchase_return_inc_tax - $total_adjustment;
+            $total_purchase = $total_purchase_inc_tax - $total_purchase_return_inc_tax;
             $output = $purchase_details;
             $output['total_purchase'] = $total_purchase;
 
@@ -242,7 +240,8 @@ class HomeController extends Controller
             $output['total_sell'] = $total_sell_inc_tax - $total_sell_return_inc_tax;
 
             $output['invoice_due'] = $sell_details['invoice_due'];
-
+            $output['total_expense'] = $transaction_totals['total_expense'];
+            
             return $output;
         }
     }
@@ -484,7 +483,7 @@ class HomeController extends Controller
                             'lang_v1.recurring_invoice_message',
                             ['invoice_no' => !empty($data['invoice_no']) ? $data['invoice_no'] : '', 'subscription_no' => !empty($data['subscription_no']) ? $data['subscription_no'] : '']
                         );
-                    $icon_class = !empty($data['invoice_status']) && $data['invoice_status'] == 'draft' ? "fa fa-exclamation-triangle text-warning" : "fa fa-recycle text-green";
+                    $icon_class = !empty($data['invoice_status']) && $data['invoice_status'] == 'draft' ? "fas fa-exclamation-triangle bg-yellow" : "fas fa-recycle bg-green";
                     $link = action('SellPosController@listSubscriptions');
                 }
 
@@ -508,5 +507,36 @@ class HomeController extends Controller
         }
 
         return view('layouts.partials.notification_list', compact('notifications_data'));
+    }
+
+    /**
+     * Function to count total number of unread notifications
+     *
+     * @return json
+     */
+    public function getTotalUnreadNotifications()
+    {
+        $total_unread = auth()->user()->unreadNotifications->count();
+
+        return [
+            'total_unread' => $total_unread
+        ];
+    }
+
+    private function __chartOptions($title)
+    {
+        return [
+            'yAxis' => [
+                    'title' => [
+                        'text' => $title
+                    ]
+                ],
+            'legend' => [
+                'align' => 'right',
+                'verticalAlign' => 'top',
+                'floating' => true,
+                'layout' => 'vertical'
+            ],
+        ];
     }
 }

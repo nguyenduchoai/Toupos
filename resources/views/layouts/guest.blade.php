@@ -12,14 +12,7 @@
 
     <title>@yield('title')</title> 
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ asset('plugins/font-awesome/css/font-awesome.min.css?v='.$asset_v) }}">
-
-    <!-- Bootstrap 3.3.6 -->
-    <link rel="stylesheet" href="{{ asset('bootstrap/css/bootstrap.min.css?v='.$asset_v) }}">
-
-    <!-- Theme style -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/css/AdminLTE.min.css?v='.$asset_v) }}">
+    <link rel="stylesheet" href="{{ asset('css/vendor.css?v='.$asset_v) }}">
 
     <!-- app css -->
     <link rel="stylesheet" href="{{ asset('css/app.css?v='.$asset_v) }}">
@@ -40,10 +33,9 @@
     <![endif]-->
 
     <!-- jQuery 2.2.3 -->
-    <script src="{{ asset('AdminLTE/plugins/jQuery/jquery-2.2.3.min.js?v=' . $asset_v) }}"></script>
-    <script src="{{ asset('plugins/printThis.js?v=' . $asset_v) }}"></script>
-    <!-- Bootstrap 3.3.6 -->
-    <script src="{{ asset('bootstrap/js/bootstrap.min.js?v=' . $asset_v) }}"></script>
+    <script src="{{ asset('js/vendor.js?v=' . $asset_v) }}"></script>
+
+    @yield('javascript')
 </body>
 
 </html>

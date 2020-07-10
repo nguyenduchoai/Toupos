@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class SendSubscriptionExpiryAlert extends Notification
 {
@@ -33,7 +34,12 @@ class SendSubscriptionExpiryAlert extends Notification
      */
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        $channels = ['mail', 'database'];
+        if (isPusherEnabled()) {
+            $channels[] = 'broadcast';
+        }
+        
+        return $channels;
     }
 
     /**
@@ -67,5 +73,20 @@ class SendSubscriptionExpiryAlert extends Notification
         return [
             'days_left' => $this->days_left
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'title' => '',
+            'body' => strip_tags( __('superadmin::lang.subscription_expiry_alert', ['days_left' => $this->days_left, 'app_name' => config('app.name')]) ),
+            'link' => action('\Modules\Superadmin\Http\Controllers\SubscriptionController@index')
+        ]);
     }
 }

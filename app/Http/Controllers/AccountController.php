@@ -11,6 +11,7 @@ use DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Yajra\DataTables\Facades\DataTables;
+use App\Media;
 
 class AccountController extends Controller
 {
@@ -55,12 +56,18 @@ class AccountController extends Controller
                 '=',
                 'pat.id'
             )
+            ->leftJoin('users AS u', 'accounts.created_by', '=', 'u.id')
                                 ->where('accounts.business_id', $business_id)
                                 ->select(['accounts.name', 'accounts.account_number', 'accounts.note', 'accounts.id', 'accounts.account_type_id',
                                     'ats.name as account_type_name',
                                     'pat.name as parent_account_type_name',
-                                    'is_closed', DB::raw("SUM( IF(AT.type='credit', amount, -1*amount) ) as balance")])
+                                    'is_closed', DB::raw("SUM( IF(AT.type='credit', amount, -1*amount) ) as balance"),
+                                    DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
+                                    ])
                                 ->groupBy('accounts.id');
+
+            $is_closed = request()->input('account_status') == 'closed' ? 1 : 0;
+            $accounts->where('is_closed', $is_closed);
 
             return DataTables::of($accounts)
                             ->addColumn(
@@ -70,9 +77,11 @@ class AccountController extends Controller
                                 @if($is_closed == 0)
                                 <button data-href="{{action(\'AccountController@getFundTransfer\',[$id])}}" class="btn btn-xs btn-info btn-modal" data-container=".view_modal"><i class="fa fa-exchange"></i> @lang("account.fund_transfer")</button>
 
-                                <button data-href="{{action(\'AccountController@getDeposit\',[$id])}}" class="btn btn-xs btn-success btn-modal" data-container=".view_modal"><i class="fa fa-money"></i> @lang("account.deposit")</button>
+                                <button data-href="{{action(\'AccountController@getDeposit\',[$id])}}" class="btn btn-xs btn-success btn-modal" data-container=".view_modal"><i class="fas fa-money-bill-alt"></i> @lang("account.deposit")</button>
 
-                                <button data-url="{{action(\'AccountController@close\',[$id])}}" class="btn btn-xs btn-danger close_account"><i class="fa fa-close"></i> @lang("messages.close")</button>
+                                <button data-url="{{action(\'AccountController@close\',[$id])}}" class="btn btn-xs btn-danger close_account"><i class="fa fa-power-off"></i> @lang("messages.close")</button>
+                                @elseif($is_closed == 1)
+                                    <button data-url="{{action(\'AccountController@activate\',[$id])}}" class="btn btn-xs btn-success activate_account"><i class="fa fa-power-off"></i> @lang("messages.activate")</button>
                                 @endif'
                             )
                             ->editColumn('name', function ($row) {
@@ -225,18 +234,20 @@ class AccountController extends Controller
                 '=',
                 'A.id'
             )
+            ->leftJoin('users AS u', 'account_transactions.created_by', '=', 'u.id')
                             ->where('A.business_id', $business_id)
                             ->where('A.id', $id)
-                            ->with(['transaction', 'transaction.contact', 'transfer_transaction'])
+                            ->with(['transaction', 'transaction.contact', 'transfer_transaction', 'media', 'transfer_transaction.media'])
                             ->select(['type', 'amount', 'operation_date',
                                 'sub_type', 'transfer_transaction_id',
                                 DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.account_id  =account_transactions.account_id AND AT.deleted_at IS NULL AND AT.id <= account_transactions.id) as balance'),
                                 'transaction_id',
-                                'account_transactions.id'
+                                'account_transactions.id',
+                                DB::raw("CONCAT(COALESCE(u.surname, ''),' ',COALESCE(u.first_name, ''),' ',COALESCE(u.last_name,'')) as added_by")
                                 ])
                              ->groupBy('account_transactions.id')
-                             ->orderBy('account_transactions.id', 'desc')
-                             ->orderBy('account_transactions.operation_date', 'desc');
+                             ->orderBy('account_transactions.id', 'asc')
+                             ->orderBy('account_transactions.operation_date', 'asc');
             if (!empty(request()->input('type'))) {
                 $accounts->where('type', request()->input('type'));
             }
@@ -268,34 +279,20 @@ class AccountController extends Controller
                                 return $this->commonUtil->format_date($row->operation_date, true);
                             })
                             ->editColumn('sub_type', function ($row) {
-                                $details = '';
-                                if (!empty($row->sub_type)) {
-                                    $details = __('account.' . $row->sub_type);
-                                    if (in_array($row->sub_type, ['fund_transfer', 'deposit']) && !empty($row->transfer_transaction)) {
-                                        if ($row->type == 'credit') {
-                                            $details .= ' ( ' . __('account.from') .': ' . $row->transfer_transaction->account->name . ')';
-                                        } else {
-                                            $details .= ' ( ' . __('account.to') .': ' . $row->transfer_transaction->account->name . ')';
-                                        }
-                                    }
-                                } else {
-                                    if (!empty($row->transaction->type)) {
-                                        if ($row->transaction->type == 'purchase') {
-                                            $details = '<b>' . __('purchase.supplier') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                            __('purchase.ref_no') . ':</b> ' . $row->transaction->ref_no;
-                                        } elseif ($row->transaction->type == 'sell') {
-                                            $details = '<b>' . __('contact.customer') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                            __('sale.invoice_no') . ':</b> ' . $row->transaction->invoice_no;
-                                        }
-                                    }
-                                }
-
-                                return $details;
+                                return $this->__getPaymentDetails($row);
                             })
                             ->editColumn('action', function ($row) {
                                 $action = '';
                                 if ($row->sub_type == 'fund_transfer' || $row->sub_type == 'deposit') {
                                     $action = '<button type="button" class="btn btn-danger btn-xs delete_account_transaction" data-href="' . action('AccountController@destroyAccountTransaction', [$row->id]) . '"><i class="fa fa-trash"></i> ' . __('messages.delete') . '</button>';
+                                }
+
+                                if (!empty($row->media->first()) || (!empty($row->transfer_transaction && !empty($row->transfer_transaction->media->first()) ))) {
+                                    $display_url = !empty($row->media->first()) ? $row->media->first()->display_url : $row->transfer_transaction->media->first()->display_url;
+
+                                    $display_name = !empty($row->media->first()) ? $row->media->first()->display_name : $row->transfer_transaction->media->first()->display_name;
+
+                                    $action .= '&nbsp; <a class="btn btn-success btn-xs" href="' . $display_url . '" download="' . $display_name . '"><i class="fa fa-download"></i> ' . __('purchase.download_document') . '</a>';
                                 }
                                 return $action;
                             })
@@ -306,7 +303,7 @@ class AccountController extends Controller
         }
         $account = Account::where('business_id', $business_id)
                         ->with(['account_type', 'account_type.parent_account'])
-                        ->find($id);
+                        ->findOrFail($id);
 
         return view('account.show')
                 ->with(compact('account'));
@@ -488,62 +485,63 @@ class AccountController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        if (request()->ajax()) {
-            try {
-                $business_id = session()->get('user.business_id');
+        try {
+            $business_id = session()->get('user.business_id');
 
-                $amount = $this->commonUtil->num_uf($request->input('amount'));
-                $from = $request->input('from_account');
-                $to = $request->input('to_account');
-                $note = $request->input('note');
-                if (!empty($amount)) {
-                    $debit_data = [
+            $amount = $this->commonUtil->num_uf($request->input('amount'));
+            $from = $request->input('from_account');
+            $to = $request->input('to_account');
+            $note = $request->input('note');
+            if (!empty($amount)) {
+                $debit_data = [
+                    'amount' => $amount,
+                    'account_id' => $from,
+                    'type' => 'debit',
+                    'sub_type' => 'fund_transfer',
+                    'created_by' => session()->get('user.id'),
+                    'note' => $note,
+                    'transfer_account_id' => $to,
+                    'operation_date' => $this->commonUtil->uf_date($request->input('operation_date'), true),
+                ];
+
+                DB::beginTransaction();
+                $debit = AccountTransaction::createAccountTransaction($debit_data);
+
+                $credit_data = [
                         'amount' => $amount,
-                        'account_id' => $from,
-                        'type' => 'debit',
+                        'account_id' => $to,
+                        'type' => 'credit',
                         'sub_type' => 'fund_transfer',
                         'created_by' => session()->get('user.id'),
                         'note' => $note,
-                        'transfer_account_id' => $to,
+                        'transfer_account_id' => $from,
+                        'transfer_transaction_id' => $debit->id,
                         'operation_date' => $this->commonUtil->uf_date($request->input('operation_date'), true),
                     ];
 
-                    DB::beginTransaction();
-                    $debit = AccountTransaction::createAccountTransaction($debit_data);
+                $credit = AccountTransaction::createAccountTransaction($credit_data);
 
-                    $credit_data = [
-                            'amount' => $amount,
-                            'account_id' => $to,
-                            'type' => 'credit',
-                            'sub_type' => 'fund_transfer',
-                            'created_by' => session()->get('user.id'),
-                            'note' => $note,
-                            'transfer_account_id' => $from,
-                            'transfer_transaction_id' => $debit->id,
-                            'operation_date' => $this->commonUtil->uf_date($request->input('operation_date'), true),
-                        ];
+                $debit->transfer_transaction_id = $credit->id;
+                $debit->save();
 
-                    $credit = AccountTransaction::createAccountTransaction($credit_data);
+                Media::uploadMedia($business_id, $debit, $request, 'document');
 
-                    $debit->transfer_transaction_id = $credit->id;
-                    $debit->save();
-                    DB::commit();
-                }
-                
-                $output = ['success' => true,
-                                    'msg' => __("account.fund_transfered_success")
-                                    ];
-            } catch (\Exception $e) {
-                DB::rollBack();
-                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            
-                $output = ['success' => false,
-                            'msg' => __("messages.something_went_wrong")
-                        ];
+                DB::commit();
             }
-
-            return $output;
+            
+            $output = ['success' => true,
+                                'msg' => __("account.fund_transfered_success")
+                                ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+        
+            $output = ['success' => false,
+                        'msg' => __("messages.something_went_wrong")
+                    ];
         }
+
+        return redirect()->action('AccountController@index')->with('status', $output);
     }
 
     /**
@@ -694,7 +692,7 @@ class AccountController extends Controller
                 ->with(['transaction', 'transaction.contact', 'transfer_transaction'])
                 ->select(['type', 'account_transactions.amount', 'operation_date',
                     'sub_type', 'transfer_transaction_id',
-                    DB::raw('(SELECT SUM(IF(AT.type="credit", AT.amount, -1 * AT.amount)) from account_transactions as AT WHERE AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance'),
+                    DB::raw("(SELECT SUM(IF(AT.type='credit', AT.amount, -1 * AT.amount)) from account_transactions as AT JOIN accounts as ac ON ac.id=AT.account_id WHERE ac.business_id= $business_id AND AT.operation_date <= account_transactions.operation_date AND AT.deleted_at IS NULL) as balance"),
                     'account_transactions.transaction_id',
                     'account_transactions.id',
                     'A.name as account_name',
@@ -737,47 +735,87 @@ class AccountController extends Controller
                     return $this->commonUtil->format_date($row->operation_date, true);
                 })
                 ->editColumn('sub_type', function ($row) {
-                    $details = '';
-                    if (!empty($row->sub_type)) {
-                        $details = __('account.' . $row->sub_type);
-                        if (in_array($row->sub_type, ['fund_transfer', 'deposit']) && !empty($row->transfer_transaction)) {
-                            if ($row->type == 'credit') {
-                                $details .= ' ( ' . __('account.from') .': ' . $row->transfer_transaction->account->name . ')';
-                            } else {
-                                $details .= ' ( ' . __('account.to') .': ' . $row->transfer_transaction->account->name . ')';
-                            }
-                        }
-                    } else {
-                        if (!empty($row->transaction->type)) {
-                            if ($row->transaction->type == 'purchase') {
-                                $details = '<b>' . __('purchase.supplier') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                __('purchase.ref_no') . ':</b> ' . $row->transaction->ref_no;
-                            } elseif ($row->transaction->type == 'sell') {
-                                $details = '<b>' . __('contact.customer') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
-                                __('sale.invoice_no') . ':</b> ' . $row->transaction->invoice_no;
-                            }
-                        }
-                    }
-
-                    if (!empty($row->payment_ref_no)) {
-                        if (!empty($details)) {
-                            $details .= '<br/>';
-                        }
-
-                        $details .= '<b>' . __('lang_v1.pay_reference_no') . ':</b> ' . $row->payment_ref_no;
-                    }
-
-                    return $details;
+                    return $this->__getPaymentDetails($row);
                 })
                 ->removeColumn('id')
                 ->rawColumns(['credit', 'debit', 'balance', 'sub_type'])
                 ->make(true);
         }
         $accounts = Account::forDropdown($business_id, false);
-
-        $accounts->prepend(__('messages.all'), '');
                             
         return view('account.cash_flow')
                  ->with(compact('accounts'));
+    }
+
+    public function __getPaymentDetails($row)
+    {
+        $details = '';
+        if (!empty($row->sub_type)) {
+            $details = __('account.' . $row->sub_type);
+            if (in_array($row->sub_type, ['fund_transfer', 'deposit']) && !empty($row->transfer_transaction)) {
+                if ($row->type == 'credit') {
+                    $details .= ' ( ' . __('account.from') .': ' . $row->transfer_transaction->account->name . ')';
+                } else {
+                    $details .= ' ( ' . __('account.to') .': ' . $row->transfer_transaction->account->name . ')';
+                }
+            }
+        } else {
+            if (!empty($row->transaction->type)) {
+                if ($row->transaction->type == 'purchase') {
+                    $details = __('lang_v1.purchase') . '<br><b>' . __('purchase.supplier') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
+                    __('purchase.ref_no') . ':</b> <a href="#" data-href="' . action("PurchaseController@show", [$row->transaction->id]) . '" class="btn-modal" data-container=".view_modal">' . $row->transaction->ref_no . '</a>';
+                }elseif ($row->transaction->type == 'expense') {
+                    $details = __('lang_v1.expense') . '<br><b>' . __('purchase.ref_no') . ':</b>' . $row->transaction->ref_no;
+                } elseif ($row->transaction->type == 'sell') {
+                    $details = __('sale.sale') . '<br><b>' . __('contact.customer') . ':</b> ' . $row->transaction->contact->name . '<br><b>'.
+                    __('sale.invoice_no') . ':</b> <a href="#" data-href="' . action("SellController@show", [$row->transaction->id]) . '" class="btn-modal" data-container=".view_modal">' . $row->transaction->invoice_no . '</a>';
+                }
+            }
+        }
+
+        if (!empty($row->payment_ref_no)) {
+            if (!empty($details)) {
+                $details .= '<br/>';
+            }
+
+            $details .= '<b>' . __('lang_v1.pay_reference_no') . ':</b> ' . $row->payment_ref_no;
+        }
+
+        return $details;
+    }
+
+    /**
+     * activate the specified account.
+     * @return Response
+     */
+    public function activate($id)
+    {
+        if (!auth()->user()->can('account.access')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        if (request()->ajax()) {
+            try {
+                $business_id = session()->get('user.business_id');
+            
+                $account = Account::where('business_id', $business_id)
+                                ->findOrFail($id);
+
+                $account->is_closed = 0;
+                $account->save();
+
+                $output = ['success' => true,
+                        'msg' => __("lang_v1.success")
+                        ];
+            } catch (\Exception $e) {
+                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+                $output = ['success' => false,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
+            }
+            
+            return $output;
+        }
     }
 }

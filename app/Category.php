@@ -14,7 +14,7 @@ class Category extends Model
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    
 
     /**
      * The attributes that aren't mass assignable.
@@ -31,23 +31,26 @@ class Category extends Model
      */
     public static function catAndSubCategories($business_id)
     {
-        $categories = Category::where('business_id', $business_id)
-                        ->where('parent_id', 0)
+        $all_categories = Category::where('business_id', $business_id)
                         ->orderBy('name', 'asc')
                         ->get()
                         ->toArray();
-
-        if (empty($categories)) {
+                        
+        if (empty($all_categories)) {
             return [];
         }
+        $categories = [];
+        $sub_categories = [];
 
-        $sub_categories = Category::where('business_id', $business_id)
-                            ->where('parent_id', '!=', 0)
-                            ->orderBy('name', 'asc')
-                            ->get()
-                            ->toArray();
+        foreach ($all_categories as $category) {
+            if ($category['parent_id'] == 0) {
+                $categories[] = $category;
+            } else {
+                $sub_categories[] = $category;
+            }
+        }
+
         $sub_cat_by_parent = [];
-
         if (!empty($sub_categories)) {
             foreach ($sub_categories as $sub_category) {
                 if (empty($sub_cat_by_parent[$sub_category['parent_id']])) {
@@ -67,10 +70,18 @@ class Category extends Model
         return $categories;
     }
 
-    public static function forDropdown($business_id)
+    /**
+     * Category Dropdown
+     *
+     * @param int $business_id
+     * @param string $type category type
+     * @return array
+     */
+    public static function forDropdown($business_id, $type)
     {
         $categories = Category::where('business_id', $business_id)
                             ->where('parent_id', 0)
+                            ->where('category_type', $type)
                             ->select(DB::raw('IF(short_code IS NOT NULL, CONCAT(name, "-", short_code), name) as name'), 'id')
                             ->get();
 

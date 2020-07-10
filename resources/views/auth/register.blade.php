@@ -47,7 +47,7 @@
                         {!! Form::label('currency','Currency:') !!}
                         <div class="input-group">
                             <span class="input-group-addon">
-                                <i class="fa fa-money"></i>
+                                <i class="fas fa-money-bill-alt"></i>
                             </span>
                             {!! Form::select('currency', $currencies, '', ['class' => 'form-control','placeholder' => 'Select Currency']); !!}
                         </div>

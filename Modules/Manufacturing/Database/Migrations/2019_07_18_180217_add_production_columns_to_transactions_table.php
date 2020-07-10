@@ -15,8 +15,8 @@ class AddProductionColumnsToTransactionsTable extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->integer('mfg_parent_production_purchase_id')->nullable()->after('created_by');
-            $table->decimal('mfg_wasted_units', 20, 4)->nullable()->after('mfg_parent_production_purchase_id');
-            $table->decimal('mfg_production_cost', 20, 4)->default(0)->after('mfg_wasted_units');
+            $table->decimal('mfg_wasted_units', 22, 4)->nullable()->after('mfg_parent_production_purchase_id');
+            $table->decimal('mfg_production_cost', 22, 4)->default(0)->after('mfg_wasted_units');
             $table->boolean('mfg_is_final')->default(0)->after('mfg_production_cost');
         });
     }

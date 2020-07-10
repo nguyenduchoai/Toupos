@@ -14,7 +14,7 @@ class ChangeDesignColumnTypeInInvoiceLayoutsTable extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE invoice_layouts MODIFY COLUMN design VARCHAR(256) DEFAULT 'classic'");
+        DB::statement("ALTER TABLE invoice_layouts MODIFY COLUMN design VARCHAR(190) DEFAULT 'classic'");
     }
 
     /**

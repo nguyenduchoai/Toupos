@@ -10,6 +10,34 @@
 
 <!-- Main content -->
 <section class="content no-print">
+    @component('components.filters', ['title' => __('report.filters')])
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_location_id',  __('purchase.business_location') . ':') !!}
+
+                {!! Form::select('sell_list_filter_location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all') ]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_customer_id',  __('contact.customer') . ':') !!}
+                {!! Form::select('sell_list_filter_customer_id', $customers, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_date_range', __('report.date_range') . ':') !!}
+                {!! Form::text('sell_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('created_by',  __('report.user') . ':') !!}
+                {!! Form::select('created_by', $sales_representative, null, ['class' => 'form-control select2', 'style' => 'width:100%']); !!}
+            </div>
+        </div>
+    @endcomponent
     @component('components.widget', ['class' => 'box-primary'])
         @slot('tool')
             <div class="box-tools">
@@ -17,16 +45,6 @@
                 <i class="fa fa-plus"></i> @lang('messages.add')</a>
             </div>
         @endslot
-        <div class="form-group">
-            <div class="input-group">
-              <button type="button" class="btn btn-primary" id="daterange-btn">
-                <span>
-                  <i class="fa fa-calendar"></i> Filter By Date
-                </span>
-                <i class="fa fa-caret-down"></i>
-              </button>
-            </div>
-        </div>
         <div class="table-responsive">
             <table class="table table-bordered table-striped ajax_view" id="sell_table">
                 <thead>
@@ -47,11 +65,41 @@
 @section('javascript')
 <script type="text/javascript">
 $(document).ready( function(){
+    $('#sell_list_filter_date_range').daterangepicker(
+        dateRangeSettings,
+        function (start, end) {
+            $('#sell_list_filter_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+            sell_table.ajax.reload();
+        }
+    );
+    $('#sell_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
+        $('#sell_list_filter_date_range').val('');
+        sell_table.ajax.reload();
+    });
     sell_table = $('#sell_table').DataTable({
         processing: true,
         serverSide: true,
         aaSorting: [[0, 'desc']],
-        ajax: '/sells/draft-dt?is_quotation=0',
+        "ajax": {
+            "url": '/sells/draft-dt?is_quotation=0',
+            "data": function ( d ) {
+                if($('#sell_list_filter_date_range').val()) {
+                    var start = $('#sell_list_filter_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
+                    var end = $('#sell_list_filter_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
+                    d.start_date = start;
+                    d.end_date = end;
+                }
+
+                if($('#sell_list_filter_location_id').length) {
+                    d.location_id = $('#sell_list_filter_location_id').val();
+                }
+                d.customer_id = $('#sell_list_filter_customer_id').val();
+
+                if($('#created_by').length) {
+                    d.created_by = $('#created_by').val();
+                }
+            }
+        },
         columnDefs: [ {
             "targets": 4,
             "orderable": false,
@@ -68,18 +116,8 @@ $(document).ready( function(){
             __currency_convert_recursively($('#purchase_table'));
         }
     });
-    //Date range as a button
-    $('#daterange-btn').daterangepicker(
-        dateRangeSettings,
-        function (start, end) {
-            $('#daterange-btn span').html(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
-            sell_table.ajax.url( '/sells/draft-dt?is_quotation=0&start_date=' + start.format('YYYY-MM-DD') +
-                '&end_date=' + end.format('YYYY-MM-DD') ).load();
-        }
-    );
-    $('#daterange-btn').on('cancel.daterangepicker', function(ev, picker) {
-        sell_table.ajax.url( '/sells/draft-dt?is_quotation=0').load();
-        $('#daterange-btn span').html('<i class="fa fa-calendar"></i> Filter By Date');
+    $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #created_by',  function() {
+        sell_table.ajax.reload();
     });
 });
 </script>

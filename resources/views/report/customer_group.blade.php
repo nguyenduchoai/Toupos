@@ -32,7 +32,7 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         {!! Form::label('cg_date_range', __('report.date_range') . ':') !!}
-                        {!! Form::text('date_range', @format_date('first day of this month') . ' ~ ' . @format_date('last day of this month'), ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'cg_date_range', 'readonly']); !!}
+                        {!! Form::text('date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'id' => 'cg_date_range', 'readonly']); !!}
                     </div>
                 </div>
 
@@ -66,17 +66,13 @@
     <script type="text/javascript">
         $(document).ready(function(){
             if($('#cg_date_range').length == 1){
-                $('#cg_date_range').daterangepicker({
-                    ranges: ranges,
-                    autoUpdateInput: false,
-                    locale: {
-                        format: moment_date_format
+                $('#cg_date_range').daterangepicker(
+                    dateRangeSettings,
+                    function (start, end) {
+                        $('#cg_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+                        cg_report_table.ajax.reload();
                     }
-                });
-                $('#cg_date_range').on('apply.daterangepicker', function(ev, picker) {
-                    $(this).val(picker.startDate.format(moment_date_format) + ' ~ ' + picker.endDate.format(moment_date_format));
-                    cg_report_table.ajax.reload();
-                });
+                );
 
                 $('#cg_date_range').on('cancel.daterangepicker', function(ev, picker) {
                     $(this).val('');

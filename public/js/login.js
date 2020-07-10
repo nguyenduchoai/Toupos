@@ -48,8 +48,8 @@ $(document).ready(function() {
         errorPlacement: function(error, element) {
             if (element.parent('.input-group').length) {
                 error.insertAfter(element.parent());
-            } else if (element.parent().hasClass('checkbox')) {
-                error.insertAfter(element.closest('.checkbox'));
+            } else if (element.hasClass('input-icheck') && element.parent().hasClass('icheckbox_square-blue')) {
+                error.insertAfter(element.parent().parent().parent());
             } else {
                 error.insertAfter(element);
             }

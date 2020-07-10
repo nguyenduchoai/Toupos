@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\InvoiceLayout;
-
 use App\Utils\Util;
 use Illuminate\Http\Request;
 use Validator;
@@ -17,11 +16,11 @@ class InvoiceLayoutController extends Controller
     {
         $this->commonUtil = $commonUtil;
         
-        $this->designs = ['classic' => 'Classic',
-                'elegant' => 'Elegant',
-                'detailed' => 'Detailed',
-                'columnize-taxes' => 'Columnize Taxes',
-                'slim' => 'Slim'
+        $this->designs = ['classic' => 'Classic (For normal printer)',
+                'elegant' => 'Elegant (For normal printer)',
+                'detailed' => 'Detailed (For normal printer)',
+                'columnize-taxes' => 'Columnize Taxes (For normal printer)',
+                'slim' => 'Slim (For thermal line receipt printer)'
             ];
     }
 
@@ -47,8 +46,10 @@ class InvoiceLayoutController extends Controller
         }
 
         $designs = $this->designs;
+        $common_settings = session()->get('business.common_settings');
+        $is_warranty_enabled = !empty($common_settings['enable_product_warranty']) ? true : false;
 
-        return view('invoice_layout.create')->with(compact('designs'));
+        return view('invoice_layout.create')->with(compact('designs', 'is_warranty_enabled'));
     }
 
     /**
@@ -72,7 +73,7 @@ class InvoiceLayoutController extends Controller
                 'invoice_no_prefix', 'invoice_heading', 'sub_total_label', 'discount_label', 'tax_label', 'total_label', 'highlight_color', 'footer_text', 'invoice_heading_not_paid', 'invoice_heading_paid', 'total_due_label', 'customer_label', 'paid_label', 'sub_heading_line1', 'sub_heading_line2',
                     'sub_heading_line3', 'sub_heading_line4', 'sub_heading_line5',
                     'table_product_label', 'table_qty_label', 'table_unit_price_label',
-                    'table_subtotal_label', 'client_id_label', 'date_label', 'quotation_heading', 'quotation_no_prefix', 'design', 'client_tax_label', 'cat_code_label', 'cn_heading', 'cn_no_label', 'cn_amount_label', 'sales_person_label', 'prev_bal_label', 'date_time_format']);
+                    'table_subtotal_label', 'client_id_label', 'date_label', 'quotation_heading', 'quotation_no_prefix', 'design', 'client_tax_label', 'cat_code_label', 'cn_heading', 'cn_no_label', 'cn_amount_label', 'sales_person_label', 'prev_bal_label', 'date_time_format', 'common_settings', 'change_return_label', 'round_off_label']);
 
             $business_id = $request->session()->get('user.business_id');
             $input['business_id'] = $business_id;
@@ -85,7 +86,7 @@ class InvoiceLayoutController extends Controller
             }
 
             //Upload Logo
-            $logo_name = $this->commonUtil->uploadFile($request, 'logo', 'invoice_logos');
+            $logo_name = $this->commonUtil->uploadFile($request, 'logo', 'invoice_logos', 'image');
             if (!empty($logo_name)) {
                 $input['logo'] = $logo_name;
             }
@@ -184,7 +185,7 @@ class InvoiceLayoutController extends Controller
                     'table_product_label', 'table_qty_label', 'table_unit_price_label',
                     'table_subtotal_label', 'client_id_label', 'date_label', 'quotation_heading', 'quotation_no_prefix', 'design',
                     'client_tax_label', 'cat_code_label', 'cn_heading', 'cn_no_label', 'cn_amount_label',
-                    'sales_person_label', 'prev_bal_label', 'date_time_format']);
+                    'sales_person_label', 'prev_bal_label', 'date_time_format', 'change_return_label', 'round_off_label']);
             $business_id = $request->session()->get('user.business_id');
 
             $checkboxes = ['show_business_name', 'show_location_name', 'show_landmark', 'show_city', 'show_state', 'show_country', 'show_zip_code', 'show_mobile_number', 'show_alternate_number', 'show_email', 'show_tax_1', 'show_tax_2', 'show_logo', 'show_barcode', 'show_payments', 'show_customer', 'show_client_id',
@@ -194,7 +195,7 @@ class InvoiceLayoutController extends Controller
             }
 
             //Upload Logo
-            $logo_name = $this->commonUtil->uploadFile($request, 'logo', 'invoice_logos');
+            $logo_name = $this->commonUtil->uploadFile($request, 'logo', 'invoice_logos', 'image');
             if (!empty($logo_name)) {
                 $input['logo'] = $logo_name;
             }
@@ -219,6 +220,7 @@ class InvoiceLayoutController extends Controller
             $input['product_custom_fields'] = !empty($request->input('product_custom_fields')) ? json_encode($request->input('product_custom_fields')) : null;
             $input['contact_custom_fields'] = !empty($request->input('contact_custom_fields')) ? json_encode($request->input('contact_custom_fields')) : null;
             $input['location_custom_fields'] = !empty($request->input('location_custom_fields')) ? json_encode($request->input('location_custom_fields')) : null;
+            $input['common_settings'] = !empty($request->input('common_settings')) ? json_encode($request->input('common_settings')) : null;
 
             InvoiceLayout::where('id', $id)
                         ->where('business_id', $business_id)

@@ -46,7 +46,7 @@
             {!! Form::label("amount" , __('sale.amount') . ':*') !!}
             <div class="input-group">
               <span class="input-group-addon">
-                <i class="fa fa-money"></i>
+                <i class="fas fa-money-bill-alt"></i>
               </span>
               {!! Form::text("amount", @num_format($payment_line->amount), ['class' => 'form-control input_number', 'required', 'placeholder' => 'Amount']); !!}
             </div>
@@ -59,7 +59,7 @@
               <span class="input-group-addon">
                 <i class="fa fa-calendar"></i>
               </span>
-              {!! Form::text('paid_on', @format_date($payment_line->paid_on), ['class' => 'form-control', 'readonly', 'required']); !!}
+              {!! Form::text('paid_on', @format_datetime($payment_line->paid_on), ['class' => 'form-control', 'readonly', 'required']); !!}
             </div>
           </div>
         </div>
@@ -68,7 +68,7 @@
             {!! Form::label("method" , __('purchase.payment_method') . ':*') !!}
             <div class="input-group">
               <span class="input-group-addon">
-                <i class="fa fa-money"></i>
+                <i class="fas fa-money-bill-alt"></i>
               </span>
               {!! Form::select("method", $payment_types, $payment_line->method, ['class' => 'form-control select2 payment_types_dropdown', 'required', 'style' => 'width:100%;']); !!}
             </div>
@@ -77,8 +77,9 @@
         <div class="col-md-4">
           <div class="form-group">
             {!! Form::label('document', __('purchase.attach_document') . ':') !!}
-            {!! Form::file('document'); !!}
-            <p class="help-block">@lang('lang_v1.previous_file_will_be_replaced')</p>
+            {!! Form::file('document', ['accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]); !!}
+            <p class="help-block">@lang('lang_v1.previous_file_will_be_replaced')
+            @includeIf('components.document_help_text')</p>
           </div>
         </div>
         @if(!empty($accounts))
@@ -87,7 +88,7 @@
               {!! Form::label("account_id" , __('lang_v1.payment_account') . ':') !!}
               <div class="input-group">
                 <span class="input-group-addon">
-                  <i class="fa fa-money"></i>
+                  <i class="fas fa-money-bill-alt"></i>
                 </span>
                 {!! Form::select("account_id", $accounts, !empty($payment_line->account_id) ? $payment_line->account_id : '' , ['class' => 'form-control select2', 'id' => "account_id", 'style' => 'width:100%;']); !!}
               </div>

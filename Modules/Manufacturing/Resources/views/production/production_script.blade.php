@@ -15,7 +15,10 @@
 	        ignoreReadonly: true,
 	    });
 
-	    $('#exp_date').datepicker();
+	    $('#exp_date').datepicker({
+            autoclose: true,
+            format: datepicker_date_format,
+        });
 
 	    production_form_validator = $('#production_form').validate();
 	});
@@ -112,31 +115,33 @@
         }
         var total_ingredients_cost = 0;
         $('#ingredients_for_unit_recipe_table tbody tr').each( function() {
-            var line_unit_price = parseFloat($(this).find('.ingredient_price').val());
-            var line_unit_quantity = parseFloat($(this).find('.unit_quantity').val());
-            var line_unit_total = line_unit_price * line_unit_quantity;
-            var line_total_quantity = __read_number($(this).find('.total_quantities'));
-            var line_multiplier = __getUnitMultiplier($(this));
-            var line_waste_percent = __read_number($(this).find('.mfg_waste_percent'));
+            if ($(this).find('.ingredient_price').length > 0) {
+                var line_unit_price = parseFloat($(this).find('.ingredient_price').val());
+                var line_unit_quantity = parseFloat($(this).find('.unit_quantity').val());
+                var line_unit_total = line_unit_price * line_unit_quantity;
+                var line_total_quantity = __read_number($(this).find('.total_quantities'));
+                var line_multiplier = __getUnitMultiplier($(this));
+                var line_waste_percent = __read_number($(this).find('.mfg_waste_percent'));
 
-            var line_final_quantity = __substract_percent(line_total_quantity, line_waste_percent);
+                var line_final_quantity = __substract_percent(line_total_quantity, line_waste_percent);
 
-            var line_total = line_unit_price * line_total_quantity * line_multiplier;
-            $(this).find('span.ingredient_total_price').text(__currency_trans_from_en(line_total, true));
-            $(this).find('span.row_final_quantity').text(__currency_trans_from_en(line_final_quantity, false));
+                var line_total = line_unit_price * line_total_quantity * line_multiplier;
+                $(this).find('span.ingredient_total_price').text(__currency_trans_from_en(line_total, true));
+                $(this).find('span.row_final_quantity').text(__currency_trans_from_en(line_final_quantity, false));
 
-            var line_unit_name = '';
+                var line_unit_name = '';
 
-            if ($(this).find('.sub_unit').length) {
-                line_unit_name = $(this).find('.sub_unit')
-                .find('option:selected')
-                .text();
-            } else {
-                line_unit_name = $(this).find('.line_unit_span').text();
+                if ($(this).find('.sub_unit').length) {
+                    line_unit_name = $(this).find('.sub_unit')
+                    .find('option:selected')
+                    .text();
+                } else {
+                    line_unit_name = $(this).find('.line_unit_span').text();
+                }
+                $(this).find('.row_unit_text').text(line_unit_name);
+
+                total_ingredients_cost += line_total;
             }
-            $(this).find('.row_unit_text').text(line_unit_name);
-
-            total_ingredients_cost += line_total;
         });
 
         $('#total_ingredient_price').text(__currency_trans_from_en(total_ingredients_cost, true));

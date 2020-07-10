@@ -21,10 +21,10 @@ class CreateMfgRecipesTable extends Migration
             $table->text('ingredients');
             $table->text('instructions')->nullable();
             $table->decimal('waste_percent', 10, 2)->default(0);
-            $table->decimal('ingredients_cost', 20, 4)->default(0);
-            $table->decimal('extra_cost', 20, 4)->default(0);
-            $table->decimal('total_quantity', 20, 4)->default(0);
-            $table->decimal('final_price', 20, 4);
+            $table->decimal('ingredients_cost', 22, 4)->default(0);
+            $table->decimal('extra_cost', 22, 4)->default(0);
+            $table->decimal('total_quantity', 22, 4)->default(0);
+            $table->decimal('final_price', 22, 4);
             $table->integer('sub_unit_id')->nullable();
 
             $table->timestamps();

@@ -44,7 +44,7 @@
                         <th>{{ __('report.total_normal') }}:</th>
                         <td>
                             <span class="total_normal">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -52,7 +52,7 @@
                         <th>{{ __('report.total_abnormal') }}:</th>
                         <td>
                              <span class="total_abnormal">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -60,7 +60,7 @@
                         <th>{{ __('report.total_stock_adjustment') }}:</th>
                         <td>
                             <span class="total_amount">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -75,7 +75,7 @@
                         <th>{{ __('report.total_recovered') }}:</th>
                         <td>
                              <span class="total_recovered">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -93,6 +93,7 @@
                     <table class="table table-bordered table-striped" id="stock_adjustment_table">
                         <thead>
                             <tr>
+                                <th>@lang('messages.action')</th>
                                 <th>@lang('messages.date')</th>
                                 <th>@lang('purchase.ref_no')</th>
                                 <th>@lang('business.location')</th>
@@ -100,7 +101,7 @@
                                 <th>@lang('stock_adjustment.total_amount')</th>
                                 <th>@lang('stock_adjustment.total_amount_recovered')</th>
                                 <th>@lang('stock_adjustment.reason_for_stock_adjustment')</th>
-                                <th>@lang('messages.action')</th>
+                                <th>@lang('lang_v1.added_by')</th>
                             </tr>
                         </thead>
                     </table>

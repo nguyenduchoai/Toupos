@@ -78,6 +78,26 @@
       @if(!empty($sell->delivered_to))
         <br><strong>@lang('lang_v1.delivered_to'): </strong> {{$sell->delivered_to}}
       @endif
+
+      @if(in_array('types_of_service' ,$enabled_modules))
+      @php
+        $custom_labels = json_decode(session('business.custom_labels'), true);
+      @endphp
+        @if(!empty($sell->types_of_service))
+          <strong>@lang('lang_v1.types_of_service'):</strong>
+          {{$sell->types_of_service->name}}<br>
+        @endif
+        @if(!empty($sell->types_of_service->enable_custom_fields))
+          <strong>{{ $custom_labels['types_of_service']['custom_field_1'] ?? __('lang_v1.service_custom_field_1' )}}:</strong>
+          {{$sell->service_custom_field_1}}<br>
+          <strong>{{ $custom_labels['types_of_service']['custom_field_2'] ?? __('lang_v1.service_custom_field_2' )}}:</strong>
+          {{$sell->service_custom_field_2}}<br>
+          <strong>{{ $custom_labels['types_of_service']['custom_field_3'] ?? __('lang_v1.service_custom_field_3' )}}:</strong>
+          {{$sell->service_custom_field_3}}<br>
+          <strong>{{ $custom_labels['types_of_service']['custom_field_4'] ?? __('lang_v1.service_custom_field_4' )}}:</strong>
+          {{$sell->service_custom_field_4}}
+        @endif
+      @endif
       </div>
     </div>
     <br>
@@ -153,8 +173,15 @@
             <tr>
               <th>{{ __('sale.discount') }}:</th>
               <td><b>(-)</b></td>
-              <td><span class="pull-right">{{ $sell->discount_amount }} @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></td>
+              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
             </tr>
+            @if(in_array('types_of_service' ,$enabled_modules) && !empty($sell->packing_charge))
+              <tr>
+                <th>{{ __('lang_v1.packing_charge') }}:</th>
+                <td><b>(+)</b></td>
+                <td><div class="pull-right"><span class="display_currency" @if( $sell->packing_charge_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->packing_charge }}</span> @if( $sell->packing_charge_type == 'percent') {{ '%'}} @endif </div></td>
+              </tr>
+            @endif
             @if(session('business.enable_rp') == 1 && !empty($sell->rp_redeemed) )
               <tr>
                 <th>{{session('business.rp_name')}}:</th>
@@ -181,6 +208,11 @@
               <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->shipping_charges }}</span></td>
             </tr>
             <tr>
+              <th>{{ __('lang_v1.round_off') }}: </th>
+              <td></td>
+              <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->round_off_amount }}</span></td>
+            </tr>
+            <tr>
               <th>{{ __('sale.total_payable') }}: </th>
               <td></td>
               <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->final_total }}</span></td>
@@ -193,7 +225,12 @@
             <tr>
               <th>{{ __('sale.total_remaining') }}:</th>
               <td></td>
-              <td><span class="display_currency pull-right" data-currency_symbol="true" >{{ $sell->final_total - $total_paid }}</span></td>
+              <td>
+                <!-- Converting total paid to string for floating point substraction issue -->
+                @php
+                  $total_paid = (string) $total_paid;
+                @endphp
+                <span class="display_currency pull-right" data-currency_symbol="true" >{{ $sell->final_total - $total_paid }}</span></td>
             </tr>
           </table>
         </div>

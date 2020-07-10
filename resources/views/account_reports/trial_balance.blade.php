@@ -45,7 +45,7 @@
                         <td>
                             <input type="hidden" id="hidden_supplier_due" class="debit">
                             <span class="remote-data" id="supplier_due">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -54,7 +54,7 @@
                         <td>
                             <input type="hidden" id="hidden_customer_due" class="credit">
                             <span class="remote-data" id="customer_due">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                         <td>&nbsp;</td>
@@ -82,12 +82,12 @@
                         <th>@lang('sale.total')</th>
                         <td>
                             <span class="remote-data" id="total_credit">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                         <td>
                             <span class="remote-data" id="total_debit">
-                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                <i class="fas fa-sync fa-spin fa-fw"></i>
                             </span>
                         </td>
                     </tr>
@@ -121,13 +121,13 @@
     });
 
     function update_trial_balance(){
-        var loader = '<i class="fa fa-refresh fa-spin fa-fw"></i>';
+        var loader = '<i class="fas fa-sync fa-spin fa-fw"></i>';
         $('span.remote-data').each( function() {
             $(this).html(loader);
         });
 
-        $('table#trial_balance_table tbody#capital_account_balances_details').html('<tr><td colspan="3"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>');
-        $('table#trial_balance_table tbody#account_balances_details').html('<tr><td colspan="3"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>');
+        $('table#trial_balance_table tbody#capital_account_balances_details').html('<tr><td colspan="3"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>');
+        $('table#trial_balance_table tbody#account_balances_details').html('<tr><td colspan="3"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>');
 
         var end_date = $('input#end_date').val();
         $.ajax({

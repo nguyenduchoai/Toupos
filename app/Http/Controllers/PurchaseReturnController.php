@@ -10,6 +10,7 @@ use App\Utils\TransactionUtil;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use App\BusinessLocation;
 
 class PurchaseReturnController extends Controller
 {
@@ -43,9 +44,9 @@ class PurchaseReturnController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
+        $business_id = request()->session()->get('user.business_id');
 
+        if (request()->ajax()) {
             $purchases_returns = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                     ->join(
                         'business_locations AS BS',
@@ -85,6 +86,10 @@ class PurchaseReturnController extends Controller
             $permitted_locations = auth()->user()->permitted_locations();
             if ($permitted_locations != 'all') {
                 $purchases_returns->whereIn('transactions.location_id', $permitted_locations);
+            }
+
+            if (!empty(request()->location_id)) {
+                $purchases_returns->where('transactions.location_id', request()->location_id);
             }
             
             if (!empty(request()->supplier_id)) {
@@ -153,7 +158,10 @@ class PurchaseReturnController extends Controller
                 ->rawColumns(['final_total', 'action', 'payment_status', 'parent_purchase', 'payment_due'])
                 ->make(true);
         }
-        return view('purchase_return.index');
+
+        $business_locations = BusinessLocation::forDropdown($business_id);
+
+        return view('purchase_return.index')->with(compact('business_locations'));
     }
 
     /**

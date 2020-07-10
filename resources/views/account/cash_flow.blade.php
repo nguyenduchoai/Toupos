@@ -10,7 +10,7 @@
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content no-print">
     <div class="row">
         <div class="col-sm-12">
             <div class="box box-solid">
@@ -21,7 +21,7 @@
                     <div class="col-sm-4">
                         <div class="form-group">
                             {!! Form::label('account_id', __('account.account') . ':') !!}
-                            {!! Form::select('account_id', $accounts, '', ['class' => 'form-control']) !!}
+                            {!! Form::select('account_id', $accounts, '', ['class' => 'form-control', 'placeholder' => __('messages.all')]) !!}
                         </div>
                     </div>
                     <div class="col-sm-4">
@@ -37,7 +37,7 @@
                         <div class="form-group">
                             {!! Form::label('transaction_type', __('account.transaction_type') . ':') !!}
                             <div class="input-group">
-                                <span class="input-group-addon"><i class="fa fa-exchange"></i></span>
+                                <span class="input-group-addon"><i class="fas fa-exchange-alt"></i></span>
                                 {!! Form::select('transaction_type', ['' => __('messages.all'),'debit' => __('account.debit'), 'credit' => __('account.credit')], '', ['class' => 'form-control']) !!}
                             </div>
                         </div>
@@ -85,17 +85,11 @@
 <script>
     $(document).ready(function(){
 
-        dateRangeSettings.autoUpdateInput = false
+        // dateRangeSettings.autoUpdateInput = false
         $('#transaction_date_range').daterangepicker(
             dateRangeSettings,
             function (start, end) {
                 $('#transaction_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
-                var start = '';
-                var end = '';
-                if($('#transaction_date_range').val()){
-                    start = $('input#transaction_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
-                    end = $('input#transaction_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
-                }
                 cash_flow_table.ajax.reload();
             }
         );

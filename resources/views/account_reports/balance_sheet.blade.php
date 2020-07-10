@@ -46,7 +46,7 @@
                                 <td>
                                     <input type="hidden" id="hidden_supplier_due" class="liability">
                                     <span class="remote-data" id="supplier_due">
-                                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                        <i class="fas fa-sync fa-spin fa-fw"></i>
                                     </span>
                                 </td>
                                 </tr>
@@ -60,7 +60,7 @@
                                         <td>
                                             <input type="hidden" id="hidden_customer_due" class="asset">
                                             <span class="remote-data" id="customer_due">
-                                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                                <i class="fas fa-sync fa-spin fa-fw"></i>
                                             </span>
                                         </td>
                                     </tr>
@@ -69,7 +69,7 @@
                                         <td>
                                             <input type="hidden" id="hidden_closing_stock" class="asset">
                                             <span class="remote-data" id="closing_stock">
-                                                <i class="fa fa-refresh fa-spin fa-fw"></i>
+                                                <i class="fas fa-sync fa-spin fa-fw"></i>
                                             </span>
                                         </td>
                                     </tr>
@@ -78,7 +78,7 @@
                                     </tr>
                                 </tbody>
                                 <tbody id="account_balances" class="pl-20-td">
-                                    <tr><td colspan="2"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>
+                                    <tr><td colspan="2"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>
                                 </tbody>
                                 {{--
                                 <tbody>
@@ -87,7 +87,7 @@
                                     </tr>
                                 </tbody>
                                 <tbody id="capital_account_balances" class="pl-20-td">
-                                    <tr><td colspan="2"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>
+                                    <tr><td colspan="2"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>
                                 </tbody>
                                 --}}
                             </table>
@@ -103,7 +103,7 @@
                                         @lang('account.total_liability'): 
                                     </th>
                                     <td>
-                                        <span id="total_liabilty"><i class="fa fa-refresh fa-spin fa-fw"></i></span>
+                                        <span id="total_liabilty"><i class="fas fa-sync fa-spin fa-fw"></i></span>
                                     </td>
                                 </tr>
                             </table>
@@ -115,7 +115,7 @@
                                         @lang('account.total_assets'): 
                                     </th>
                                     <td>
-                                        <span id="total_assets"><i class="fa fa-refresh fa-spin fa-fw"></i></span>
+                                        <span id="total_assets"><i class="fas fa-sync fa-spin fa-fw"></i></span>
                                     </td>
                                 </tr>
                             </table>
@@ -151,13 +151,13 @@
     });
 
     function update_balance_sheet(){
-        var loader = '<i class="fa fa-refresh fa-spin fa-fw"></i>';
+        var loader = '<i class="fas fa-sync fa-spin fa-fw"></i>';
         $('span.remote-data').each( function() {
             $(this).html(loader);
         });
 
-        $('table#assets_table tbody#account_balances').html('<tr><td colspan="2"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>');
-        $('table#assets_table tbody#capital_account_balances').html('<tr><td colspan="2"><i class="fa fa-refresh fa-spin fa-fw"></i></td></tr>');
+        $('table#assets_table tbody#account_balances').html('<tr><td colspan="2"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>');
+        $('table#assets_table tbody#capital_account_balances').html('<tr><td colspan="2"><i class="fas fa-sync fa-spin fa-fw"></i></td></tr>');
 
         var end_date = $('input#end_date').val();
         $.ajax({

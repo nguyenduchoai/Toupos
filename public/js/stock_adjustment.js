@@ -70,6 +70,7 @@ $(document).ready(function() {
         }
         $('table#stock_adjustment_product_table tbody').html('');
         $('#product_row_index').val(0);
+        update_table_total();
     });
 
     $(document).on('change', 'input.product_quantity', function() {
@@ -109,12 +110,14 @@ $(document).ready(function() {
         ajax: '/stock-adjustments',
         columnDefs: [
             {
-                targets: 6,
+                targets: 0,
                 orderable: false,
                 searchable: false,
             },
         ],
+        aaSorting: [[1, 'desc']],
         columns: [
+            { data: 'action', name: 'action' },
             { data: 'transaction_date', name: 'transaction_date' },
             { data: 'ref_no', name: 'ref_no' },
             { data: 'location_name', name: 'BL.name' },
@@ -122,10 +125,10 @@ $(document).ready(function() {
             { data: 'final_total', name: 'final_total' },
             { data: 'total_amount_recovered', name: 'total_amount_recovered' },
             { data: 'additional_notes', name: 'additional_notes' },
-            { data: 'action', name: 'action' },
+            { data: 'added_by', name: 'u.first_name' },
         ],
         fnDrawCallback: function(oSettings) {
-            __currency_convert_recursively($('#purchase_table'));
+            __currency_convert_recursively($('#stock_adjustment_table'));
         },
     });
     var detailRows = [];

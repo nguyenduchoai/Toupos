@@ -1,4 +1,4 @@
-<div class="modal-dialog" role="document">
+<div class="modal-dialog modal-lg" role="document">
   <div class="modal-content">
 
     {!! Form::open(['url' => action('BusinessLocationController@update', [$location->id]), 'method' => 'PUT', 'id' => 'business_location_add_form' ]) !!}
@@ -97,39 +97,89 @@
               'placeholder' => __('messages.please_select')]); !!}
           </div>
         </div>
-             <div class="clearfix"></div>
-      <div class="col-md-12">
-        <hr/>
-      </div>
-      <div class="col-sm-3">
+        <div class="col-sm-6">
+          <div class="form-group">
+            {!! Form::label('selling_price_group_id', __('lang_v1.default_selling_price_group') . ':') !!} @show_tooltip(__('lang_v1.location_price_group_help'))
+              {!! Form::select('selling_price_group_id', $price_groups, $location->selling_price_group_id, ['class' => 'form-control',
+              'placeholder' => __('messages.please_select')]); !!}
+          </div>
+        </div>
+        <div class="clearfix"></div>
+        @php
+          $custom_labels = json_decode(session('business.custom_labels'), true);
+          $location_custom_field1 = !empty($custom_labels['location']['custom_field_1']) ? $custom_labels['location']['custom_field_1'] : __('lang_v1.location_custom_field1');
+          $location_custom_field2 = !empty($custom_labels['location']['custom_field_2']) ? $custom_labels['location']['custom_field_2'] : __('lang_v1.location_custom_field2');
+          $location_custom_field3 = !empty($custom_labels['location']['custom_field_3']) ? $custom_labels['location']['custom_field_3'] : __('lang_v1.location_custom_field3');
+          $location_custom_field4 = !empty($custom_labels['location']['custom_field_4']) ? $custom_labels['location']['custom_field_4'] : __('lang_v1.location_custom_field4');
+        @endphp
+        <div class="col-sm-3">
         <div class="form-group">
-            {!! Form::label('custom_field1', __('lang_v1.custom_field', ['number' => 1]) . ':') !!}
+            {!! Form::label('custom_field1', $location_custom_field1 . ':') !!}
             {!! Form::text('custom_field1', $location->custom_field1, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 1])]); !!}
+                'placeholder' => $location_custom_field1]); !!}
         </div>
       </div>
       <div class="col-sm-3">
         <div class="form-group">
-            {!! Form::label('custom_field2', __('lang_v1.custom_field', ['number' => 2]) . ':') !!}
+            {!! Form::label('custom_field2', $location_custom_field2 . ':') !!}
             {!! Form::text('custom_field2', $location->custom_field2, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 2])]); !!}
+                'placeholder' => $location_custom_field2]); !!}
         </div>
       </div>
       <div class="col-sm-3">
         <div class="form-group">
-            {!! Form::label('custom_field3', __('lang_v1.custom_field', ['number' => 3]) . ':') !!}
+            {!! Form::label('custom_field3', $location_custom_field3 . ':') !!}
             {!! Form::text('custom_field3', $location->custom_field3, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 3])]); !!}
+                'placeholder' => $location_custom_field3]); !!}
         </div>
       </div>
       <div class="col-sm-3">
         <div class="form-group">
-            {!! Form::label('custom_field4', __('lang_v1.custom_field', ['number' => 4]) . ':') !!}
+            {!! Form::label('custom_field4', $location_custom_field4 . ':') !!}
             {!! Form::text('custom_field4', $location->custom_field4, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 4])]); !!}
+                'placeholder' => $location_custom_field4]); !!}
         </div>
       </div>
-
+      <div class="clearfix"></div>
+      <hr>
+      <div class="col-sm-12">
+        <div class="form-group">
+          {!! Form::label('featured_products', __('lang_v1.pos_screen_featured_products') . ':') !!} @show_tooltip(__('lang_v1.featured_products_help'))
+            {!! Form::select('featured_products[]', $featured_products, $location->featured_products, ['class' => 'form-control',
+            'id' => 'featured_products', 'multiple']); !!}
+        </div>
+      </div>
+      <div class="clearfix"></div>
+      <hr>
+          <div class="col-sm-12">
+            <strong>@lang('lang_v1.payment_options'): @show_tooltip(__('lang_v1.payment_option_help'))</strong>
+            <div class="form-group">
+            <table class="table table-condensed table-striped">
+              <thead>
+                <tr>
+                  <th class="text-center">@lang('lang_v1.payment_method')</th>
+                  <th class="text-center">@lang('lang_v1.enable')</th>
+                  <th class="text-center @if(empty($accounts)) hide @endif">@lang('lang_v1.default_accounts') @show_tooltip(__('lang_v1.default_account_help'))</th>
+                </tr>
+              </thead>
+              <tbody>
+                @php
+                  $default_payment_accounts = !empty($location->default_payment_accounts) ?
+                                      json_decode($location->default_payment_accounts, true) : [];
+                @endphp
+                @foreach($payment_types as $key => $value)
+                  <tr>
+                    <td class="text-center">{{$value}}</td>
+                    <td class="text-center">{!! Form::checkbox('default_payment_accounts[' . $key . '][is_enabled]', 1, !empty($default_payment_accounts[$key]['is_enabled'])); !!}</td>
+                    <td class="text-center @if(empty($accounts)) hide @endif">
+                      {!! Form::select('default_payment_accounts[' . $key . '][account]', $accounts, !empty($default_payment_accounts[$key]['account']) ? $default_payment_accounts[$key]['account'] : null, ['class' => 'form-control input-sm']); !!}
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+            </div>
+          </div>
       </div>
     </div>
 

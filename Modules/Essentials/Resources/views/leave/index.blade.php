@@ -149,13 +149,15 @@
                 e.preventDefault();
                 $(this).find('button[type="submit"]').attr('disabled', true);
                 var data = $(this).serialize();
-
+                var ladda = Ladda.create(document.querySelector('.add-leave-btn'));
+                ladda.start();
                 $.ajax({
                     method: $(this).attr('method'),
                     url: $(this).attr('action'),
                     dataType: 'json',
                     data: data,
                     success: function(result) {
+                        ladda.stop();
                         if (result.success == true) {
                             $('div#add_leave_modal').modal('hide');
                             toastr.success(result.msg);
@@ -186,13 +188,15 @@
         $(document).on('submit', 'form#change_status_form', function(e) {
             e.preventDefault();
             var data = $(this).serialize();
-
+            var ladda = Ladda.create(document.querySelector('.update-leave-status'));
+            ladda.start();
             $.ajax({
                 method: $(this).attr('method'),
                 url: $(this).attr('action'),
                 dataType: 'json',
                 data: data,
                 success: function(result) {
+                    ladda.stop();
                     if (result.success == true) {
                         $('div#change_status_modal').modal('hide');
                         toastr.success(result.msg);

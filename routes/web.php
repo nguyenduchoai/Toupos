@@ -1,5 +1,7 @@
 <?php
-
+//danhvtadd
+use Modules\Superadmin\Entities\Package;
+use App\Utils\ModuleUtil;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,11 +15,23 @@
 
 include_once('install_r.php');
 
-Route::middleware(['IsInstalled', 'bootstrap'])->group(function () {
+Route::middleware(['authh'])->group(function () {
     Route::get('/', function () {
-        return view('welcome');
-    });
+    	
+        $packages = Package::listPackages(true);
 
+        //Get all module permissions and convert them into name => label
+        $permissions = (new ModuleUtil)->getModuleData('superadmin_package');
+        $permission_formatted = [];
+        foreach ($permissions as $permission) {
+            foreach ($permission as $details) {
+                $permission_formatted[$details['name']] = $details['label'];
+            }
+        }
+        return view('welcome')
+            ->with(compact('packages', 'permission_formatted'));
+    });
+	//danhvtend
     Auth::routes();
 
     Route::get('/business/register', 'BusinessController@getRegister')->name('business.getRegister');
@@ -30,16 +44,12 @@ Route::middleware(['IsInstalled', 'bootstrap'])->group(function () {
 });
 
 //Routes for authenticated users only
-Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezone', 'bootstrap'])->group(function () {
-    Route::get('/logout', 'Auth\LoginController@logout')->name('logout');
-
+Route::middleware(['authh', 'auth', 'SetSessionData', 'language', 'timezone', 'AdminSidebarMenu', 'CheckUserLogin'])->group(function () {
     Route::get('/home', 'HomeController@index')->name('home');
     Route::get('/home/get-totals', 'HomeController@getTotals');
     Route::get('/home/product-stock-alert', 'HomeController@getProductStockAlert');
     Route::get('/home/purchase-payment-dues', 'HomeController@getPurchasePaymentDues');
     Route::get('/home/sales-payment-dues', 'HomeController@getSalesPaymentDues');
-
-    Route::get('/load-more-notifications', 'HomeController@loadMoreNotifications');
     
     Route::post('/test-email', 'BusinessController@testEmailConfiguration');
     Route::post('/test-sms', 'BusinessController@testSmsConfiguration');
@@ -57,14 +67,19 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
 
     Route::resource('units', 'UnitController');
 
+    Route::get('/contacts/map', 'ContactController@contactMap');
+    Route::get('/contacts/update-status/{id}', 'ContactController@updateStatus');
+    Route::get('/contacts/stock-report/{supplier_id}', 'ContactController@getSupplierStockReport');
     Route::get('/contacts/ledger', 'ContactController@getLedger');
+    Route::post('/contacts/send-ledger', 'ContactController@sendLedger');
     Route::get('/contacts/import', 'ContactController@getImportContacts')->name('contacts.import');
     Route::post('/contacts/import', 'ContactController@postImportContacts');
     Route::post('/contacts/check-contact-id', 'ContactController@checkContactId');
     Route::get('/contacts/customers', 'ContactController@getCustomers');
     Route::resource('contacts', 'ContactController');
 
-    Route::resource('categories', 'CategoryController');
+    Route::get('taxonomies-ajax-index-page', 'TaxonomyController@getTaxonomyIndexPage');
+    Route::resource('taxonomies', 'TaxonomyController');
 
     Route::resource('variation-templates', 'VariationTemplateController');
 
@@ -80,6 +95,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/products/list-no-variation', 'ProductController@getProductsWithoutVariations');
     Route::post('/products/bulk-edit', 'ProductController@bulkEdit');
     Route::post('/products/bulk-update', 'ProductController@bulkUpdate');
+    Route::post('/products/bulk-update-location', 'ProductController@updateProductLocation');
     Route::get('/products/get-product-to-edit/{product_id}', 'ProductController@getProductToEdit');
     
     Route::post('/products/get_sub_categories', 'ProductController@getSubCategories');
@@ -95,27 +111,31 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     
     Route::resource('products', 'ProductController');
 
+    Route::post('/purchases/update-status', 'PurchaseController@updateStatus');
     Route::get('/purchases/get_products', 'PurchaseController@getProducts');
     Route::get('/purchases/get_suppliers', 'PurchaseController@getSuppliers');
     Route::post('/purchases/get_purchase_entry_row', 'PurchaseController@getPurchaseEntryRow');
     Route::post('/purchases/check_ref_number', 'PurchaseController@checkRefNumber');
-    Route::get('/purchases/print/{id}', 'PurchaseController@printInvoice');
-    Route::resource('purchases', 'PurchaseController');
+    Route::resource('purchases', 'PurchaseController')->except(['show']);
 
     Route::get('/toggle-subscription/{id}', 'SellPosController@toggleRecurringInvoices');
+    Route::post('/sells/pos/get-types-of-service-details', 'SellPosController@getTypesOfServiceDetails');
     Route::get('/sells/subscriptions', 'SellPosController@listSubscriptions');
-    Route::get('/sells/invoice-url/{id}', 'SellPosController@showInvoiceUrl');
     Route::get('/sells/duplicate/{id}', 'SellController@duplicateSell');
     Route::get('/sells/drafts', 'SellController@getDrafts');
     Route::get('/sells/quotations', 'SellController@getQuotations');
     Route::get('/sells/draft-dt', 'SellController@getDraftDatables');
-    Route::resource('sells', 'SellController');
+    Route::resource('sells', 'SellController')->except(['show']);
+
+    Route::get('/import-sales', 'ImportSalesController@index');
+    Route::post('/import-sales/preview', 'ImportSalesController@preview');
+    Route::post('/import-sales', 'ImportSalesController@import');
+    Route::get('/revert-sale-import/{batch}', 'ImportSalesController@revertSaleImport');
 
     Route::get('/sells/pos/get_product_row/{variation_id}/{location_id}', 'SellPosController@getProductRow');
     Route::post('/sells/pos/get_payment_row', 'SellPosController@getPaymentRow');
     Route::post('/sells/pos/get-reward-details', 'SellPosController@getRewardDetails');
     Route::get('/sells/pos/get-recent-transactions', 'SellPosController@getRecentTransactions');
-    Route::get('/sells/{transaction_id}/print', 'SellPosController@printInvoice')->name('sell.printInvoice');
     Route::get('/sells/pos/get-product-suggestion', 'SellPosController@getProductSuggestion');
     Route::resource('pos', 'SellPosController');
 
@@ -138,6 +158,8 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/labels/preview', 'LabelsController@preview');
 
     //Reports...
+    Route::get('/reports/purchase-report', 'ReportController@purchaseReport');
+    Route::get('/reports/sale-report', 'ReportController@saleReport');
     Route::get('/reports/service-staff-report', 'ReportController@getServiceStaffReport');
     Route::get('/reports/service-staff-line-orders', 'ReportController@serviceStaffLineOrders');
     Route::get('/reports/table-report', 'ReportController@getTableReport');
@@ -162,6 +184,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/reports/customer-group', 'ReportController@getCustomerGroup');
     Route::get('/reports/product-purchase-report', 'ReportController@getproductPurchaseReport');
     Route::get('/reports/product-sell-report', 'ReportController@getproductSellReport');
+    Route::get('/reports/product-sell-report-with-purchase', 'ReportController@getproductSellReportWithPurchase');
     Route::get('/reports/product-sell-grouped-report', 'ReportController@getproductSellGroupedReport');
     Route::get('/reports/lot-report', 'ReportController@getLotReport');
     Route::get('/reports/purchase-payment-report', 'ReportController@purchasePaymentReport');
@@ -170,6 +193,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('/reports/adjust-product-stock', 'ReportController@adjustProductStock');
     Route::get('/reports/get-profit/{by?}', 'ReportController@getProfit');
     Route::get('/reports/items-report', 'ReportController@itemsReport');
+    Route::get('/reports/get-stock-value', 'ReportController@getStockValue');
     
     Route::get('business-location/activate-deactivate/{location_id}', 'BusinessLocationController@activateDeactivateLocation');
 
@@ -247,6 +271,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
         'index', 'create', 'store'
     ]]);
 
+    Route::get('selling-price-group/activate-deactivate/{id}', 'SellingPriceGroupController@activateDeactivate');
     Route::get('export-selling-price-group', 'SellingPriceGroupController@export');
     Route::post('import-selling-price-group', 'SellingPriceGroupController@import');
 
@@ -275,6 +300,7 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
         Route::get('/deposit/{id}', 'AccountController@getDeposit');
         Route::post('/deposit', 'AccountController@postDeposit');
         Route::get('/close/{id}', 'AccountController@close');
+        Route::get('/activate/{id}', 'AccountController@activate');
         Route::get('/delete-account-transaction/{id}', 'AccountController@destroyAccountTransaction');
         Route::get('/get-account-balance/{id}', 'AccountController@getAccountBalance');
         Route::get('/balance-sheet', 'AccountReportsController@balanceSheet');
@@ -313,10 +339,25 @@ Route::middleware(['IsInstalled', 'auth', 'SetSessionData', 'language', 'timezon
     Route::get('bookings/get-todays-bookings', 'Restaurant\BookingController@getTodaysBookings');
     Route::resource('bookings', 'Restaurant\BookingController');
 
+    Route::resource('types-of-service', 'TypesOfServiceController');
     Route::get('sells/edit-shipping/{id}', 'SellController@editShipping');
     Route::put('sells/update-shipping/{id}', 'SellController@updateShipping');
     Route::get('shipments', 'SellController@shipments');
+
+    Route::post('upload-module', 'Install\ModulesController@uploadModule');
+    Route::resource('manage-modules', 'Install\ModulesController')
+        ->only(['index', 'destroy', 'update']);
+    Route::resource('warranties', 'WarrantyController');
+
+    Route::resource('dashboard-configurator', 'DashboardConfiguratorController')
+    ->only(['edit', 'update']);
+
+    //common controller for document & note
+    Route::get('get-document-note-page', 'DocumentAndNoteController@getDocAndNoteIndexPage');
+    Route::post('post-document-upload', 'DocumentAndNoteController@postMedia');
+    Route::resource('note-documents', 'DocumentAndNoteController');
 });
+
 
 Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {
     Route::get('products/{id?}', 'ProductController@getProductsApi');
@@ -326,4 +367,19 @@ Route::middleware(['EcomApi'])->prefix('api/ecom')->group(function () {
     Route::get('settings', 'BusinessController@getEcomSettings');
     Route::get('variations', 'ProductController@getVariationsApi');
     Route::post('orders', 'SellPosController@placeOrdersApi');
+});
+
+//common route
+Route::middleware(['auth'])->group(function () {
+    Route::get('/logout', 'Auth\LoginController@logout')->name('logout');
+});
+
+Route::middleware(['authh', 'auth', 'SetSessionData', 'language', 'timezone'])->group(function () {
+    Route::get('/load-more-notifications', 'HomeController@loadMoreNotifications');
+    Route::get('/get-total-unread', 'HomeController@getTotalUnreadNotifications');
+    Route::get('/purchases/print/{id}', 'PurchaseController@printInvoice');
+    Route::get('/purchases/{id}', 'PurchaseController@show');
+    Route::get('/sells/{id}', 'SellController@show');
+    Route::get('/sells/{transaction_id}/print', 'SellPosController@printInvoice')->name('sell.printInvoice');
+    Route::get('/sells/invoice-url/{id}', 'SellPosController@showInvoiceUrl');
 });

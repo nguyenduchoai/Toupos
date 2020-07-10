@@ -7,17 +7,20 @@ use App\Product;
 use App\Transaction;
 use App\User;
 use App\Utils\BusinessUtil;
+use App\Utils\ModuleUtil;
 use App\VariationLocationDetails;
-
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Hash;
+use Modules\Superadmin\Notifications\PasswordUpdateNotification;
 use Spatie\Permission\Models\Permission;
+use Yajra\DataTables\Facades\DataTables;
 
 class BusinessController extends BaseController
 {
     protected $businessUtil;
+    protected $moduleUtil;
 
     /**
      * Constructor
@@ -25,9 +28,10 @@ class BusinessController extends BaseController
      * @param ProductUtils $product
      * @return void
      */
-    public function __construct(BusinessUtil $businessUtil)
+    public function __construct(BusinessUtil $businessUtil, ModuleUtil $moduleUtil)
     {
         $this->businessUtil = $businessUtil;
+        $this->moduleUtil = $moduleUtil;
     }
 
     /**
@@ -102,6 +106,8 @@ class BusinessController extends BaseController
 
             //Create owner.
             $owner_details = $request->only(['surname', 'first_name', 'last_name', 'username', 'email', 'password']);
+            $owner_details['language'] = env('APP_LOCALE');
+            
             $user = User::create_user($owner_details);
 
             $business_details = $request->only(['name', 'start_date', 'currency_id', 'tax_label_1', 'tax_number_1', 'tax_label_2', 'tax_number_2', 'time_zone', 'accounting_method', 'fy_start_month']);
@@ -115,11 +121,14 @@ class BusinessController extends BaseController
             }
                 
             //upload logo
-            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos');
+            $logo_name = $this->businessUtil->uploadFile($request, 'business_logo', 'business_logos', 'image');
             if (!empty($logo_name)) {
                 $business_details['logo'] = $logo_name;
             }
-                
+            
+            //default enabled modules
+            $business_details['enabled_modules'] = ['purchases','add_sale','pos_sale','stock_transfers','stock_adjustment','expenses'];
+            
             $business = $this->businessUtil->createNewBusiness($business_details);
 
             //Update user with business id
@@ -133,6 +142,11 @@ class BusinessController extends BaseController
             Permission::create(['name' => 'location.' . $new_location->id ]);
 
             DB::commit();
+
+            //Module function to be called after after business is created
+            if (config('app.env') != 'demo') {
+                $this->moduleUtil->getModuleData('after_business_created', ['business' => $business]);
+            }
 
             $output = ['success' => 1,
                             'msg' => __('business.business_created_succesfully')
@@ -266,5 +280,87 @@ class BusinessController extends BaseController
                     'msg' => __('lang_v1.success')
                 ];
         return back()->with('status', $output);
+    }
+
+    /**
+     * Shows user list for a particular business
+     * @return Response
+     */
+    public function usersList($business_id)
+    {
+        if (!auth()->user()->can('superadmin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (request()->ajax()) {
+            $user_id = request()->session()->get('user.id');
+
+            $users = User::where('business_id', $business_id)
+                        ->where('id', '!=', $user_id)
+                        ->where('is_cmmsn_agnt', 0)
+                        ->select(['id', 'username',
+                            DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as full_name"), 'email']);
+
+            return Datatables::of($users)
+                ->addColumn(
+                    'role',
+                    function ($row) {
+                        $role_name = $this->moduleUtil->getUserRoleName($row->id);
+                        return $role_name;
+                    }
+                )
+                ->addColumn(
+                    'action',
+                    '@can("user.update")
+                        <a href="#" class="btn btn-xs btn-primary update_user_password" data-user_id="{{$id}}" data-user_name="{{$full_name}}"><i class="glyphicon glyphicon-edit"></i> @lang("superadmin::lang.update_password")</a>
+                        &nbsp;
+                    @endcan'
+                )
+                ->filterColumn('full_name', function ($query, $keyword) {
+                    $query->whereRaw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) like ?", ["%{$keyword}%"]);
+                })
+                ->removeColumn('id')
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+    }
+
+    /**
+     * Updates user password from superadmin
+     * @return Response
+     */
+    public function updatePassword(Request $request)
+    {
+        if (!auth()->user()->can('superadmin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $notAllowed = $this->businessUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
+            }
+        
+            $user = User::findOrFail($request->input('user_id'));
+            $user->password = Hash::make($request->input('password'));
+            $user->save();
+
+            //Send password update notification
+            if ($this->moduleUtil->IsMailConfigured()) {
+                $user->notify(new PasswordUpdateNotification($request->input('password')));
+            }
+
+            $output = ['success' => 1,
+                        'msg' => __("superadmin::lang.password_updated_successfully")
+                    ];
+        } catch (\Exception $e) {
+            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+            
+            $output = ['success' => 0,
+                            'msg' => __("messages.something_went_wrong")
+                        ];
+        }
+
+        return $output;
     }
 }

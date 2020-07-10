@@ -14,11 +14,6 @@
 
     @include('layouts.partials.css')
 
-    <!-- Jquery Steps -->
-    <link rel="stylesheet" href="{{ asset('plugins/jquery.steps/jquery.steps.css?v=' . $asset_v) }}">
-    <!-- iCheck -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/plugins/iCheck/square/blue.css?v='.$asset_v) }}">
-
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -43,8 +38,8 @@
                     @endif 
                     </a>
                     <br/>
-                    @if(!empty(env('APP_TITLE')))
-                        <small>{{env('APP_TITLE')}}</small>
+                    @if(!empty(config('constants.app_title')))
+                        <small>{{config('constants.app_title')}}</small>
                     @endif
                     </div>
                 </div>
@@ -68,7 +63,7 @@
                 <div class="col-md-9 col-xs-8" style="text-align: right;padding-top: 10px;">
                     @if(!($request->segment(1) == 'business' && $request->segment(2) == 'register'))
                         <!-- Register Url -->
-                        @if(env('ALLOW_REGISTRATION', true))
+                        @if(config('constants.allow_registration'))
                             <a href="{{ route('business.getRegister') }}@if(!empty(request()->lang)){{'?lang=' . request()->lang}} @endif" class="btn bg-maroon btn-flat" ><b>{{ __('business.not_yet_registered')}}</b> {{ __('business.register_now') }}</a>
                             <!-- pricing url -->
                             @if(Route::has('pricing') && config('app.env') != 'demo' && $request->segment(1) != 'pricing')
@@ -77,7 +72,7 @@
                         @endif
                     @endif
                     @if($request->segment(1) != 'login')
-                        &nbsp; &nbsp;{{ __('business.already_registered')}} <a href="{{ action('Auth\LoginController@login') }}@if(!empty(request()->lang)){{'?lang=' . request()->lang}} @endif">{{ __('business.sign_in') }}</a>
+                        &nbsp; &nbsp;<span class="text-white">{{ __('business.already_registered')}} </span><a href="{{ action('Auth\LoginController@login') }}@if(!empty(request()->lang)){{'?lang=' . request()->lang}} @endif">{{ __('business.sign_in') }}</a>
                     @endif
                 </div>
                 
@@ -89,12 +84,10 @@
 
     
     @include('layouts.partials.javascripts')
-    <script src="{{ asset('plugins/jquery.steps/jquery.steps.min.js?v=' . $asset_v) }}"></script>
-
+    
     <!-- Scripts -->
     <script src="{{ asset('js/login.js?v=' . $asset_v) }}"></script>
-    <!-- iCheck -->
-    <script src="{{ asset('AdminLTE/plugins/iCheck/icheck.min.js?v=' . $asset_v) }}"></script>
+    
     @yield('javascript')
 
     <script type="text/javascript">

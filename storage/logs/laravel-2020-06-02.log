@@ -1,0 +1,3 @@
+[2020-06-02 17:06:05] live.EMERGENCY: File:/www/wwwroot/toupos.com/vendor/laravel/framework/src/Illuminate/Validation/Validator.phpLine:315Message:The given data was invalid.  
+[2020-06-02 17:06:17] live.EMERGENCY: File:/www/wwwroot/toupos.com/vendor/nesbot/carbon/src/Carbon/Traits/Creator.phpLine:623Message:A two digit month could not be found
+Data missing  

@@ -4,6 +4,7 @@ namespace Modules\Essentials\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class LeaveStatusNotification extends Notification
 {
@@ -29,7 +30,12 @@ class LeaveStatusNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        $channels = ['database'];
+        if (isPusherEnabled()) {
+            $channels[] = 'broadcast';
+        }
+        
+        return $channels;
     }
 
     /**
@@ -55,5 +61,20 @@ class LeaveStatusNotification extends Notification
             'status' => $this->leave->status,
             'changed_by' => $this->leave->changed_by
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'title' => __('essentials::lang.leave_status_changed'),
+            'body' => strip_tags( __('essentials::lang.status_change_notification', ['status' => $this->leave->status, 'ref_no' => $this->leave->ref_no, 'admin' => $this->leave->changed_by_user->user_full_name]) ),
+            'link' => action('\Modules\Essentials\Http\Controllers\EssentialsLeaveController@index')
+        ]);
     }
 }

@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class CreatePackagesTable extends Migration
 {
@@ -24,7 +24,7 @@ class CreatePackagesTable extends Migration
             $table->enum('interval', ['days', 'months', 'years']);
             $table->integer('interval_count');
             $table->integer('trial_days');
-            $table->decimal('price', 20, 4);
+            $table->decimal('price', 22, 4);
             $table->integer('created_by');
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active');

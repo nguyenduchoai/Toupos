@@ -27,7 +27,9 @@
 	    </div>
 
 	    <div class="modal-footer">
-	      <button type="submit" class="btn btn-primary">@lang( 'messages.update' )</button>
+	      <button type="submit" class="btn btn-primary ladda-button update-leave-status" data-style="expand-right">
+	      	<span class="ladda-label">@lang( 'messages.update' )</span>
+	      </button>
 	      <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>
 	    </div>
 

@@ -243,7 +243,7 @@ class InstallController extends Controller
                 //Show intermediate steps if not able to copy file.
                 $envContent = implode('', $env_lines);
                 return view('install.envText')
-                    ->with(compact('envContent'));
+                    ->with(compact('envContent', 'envPath'));
             }
         } catch (Exception $e) {
             $this->deleteEnv();

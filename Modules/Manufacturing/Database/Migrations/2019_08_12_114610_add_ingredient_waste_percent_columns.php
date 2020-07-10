@@ -14,11 +14,11 @@ class AddIngredientWastePercentColumns extends Migration
     public function up()
     {
         Schema::table('mfg_recipe_ingredients', function (Blueprint $table) {
-            $table->decimal('waste_percent', 20, 2)->default(0)->after('quantity');
+            $table->decimal('waste_percent', 22, 4)->default(0)->after('quantity');
         });
 
         Schema::table('transaction_sell_lines', function (Blueprint $table) {
-            $table->decimal('mfg_waste_percent', 20, 2)->default(0)->after('quantity');
+            $table->decimal('mfg_waste_percent', 22, 4)->default(0)->after('quantity');
         });
     }
 

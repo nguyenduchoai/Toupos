@@ -14,11 +14,51 @@
     @component('components.filters', ['title' => __('report.filters')])
         <div class="col-md-3">
             <div class="form-group">
+                {!! Form::label('sell_list_filter_location_id',  __('purchase.business_location') . ':') !!}
+
+                {!! Form::select('sell_list_filter_location_id', $business_locations, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all') ]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_customer_id',  __('contact.customer') . ':') !!}
+                {!! Form::select('sell_list_filter_customer_id', $customers, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_date_range', __('report.date_range') . ':') !!}
+                {!! Form::text('sell_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('created_by',  __('report.user') . ':') !!}
+                {!! Form::select('created_by', $sales_representative, null, ['class' => 'form-control select2', 'style' => 'width:100%']); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label('sell_list_filter_payment_status',  __('purchase.payment_status') . ':') !!}
+                {!! Form::select('sell_list_filter_payment_status', ['paid' => __('lang_v1.paid'), 'due' => __('lang_v1.due'), 'partial' => __('lang_v1.partial'), 'overdue' => __('lang_v1.overdue')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="form-group">
                 {!! Form::label('shipping_status',  __('lang_v1.shipping_status') . ':') !!}
 
                 {!! Form::select('shipping_status', $shipping_statuses, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all') ]); !!}
             </div>
         </div>
+        @if(!empty($service_staffs))
+            <div class="col-md-3">
+                <div class="form-group">
+                    {!! Form::label('service_staffs', __('restaurant.service_staff') . ':') !!}
+                    {!! Form::select('service_staffs', $service_staffs, null, ['class' => 'form-control select2', 'style' => 'width:100%', 'placeholder' => __('lang_v1.all')]); !!}
+                </div>
+            </div>
+        @endif
     @endcomponent
     @component('components.widget', ['class' => 'box-primary'])
         @if(auth()->user()->can('access_shipping'))
@@ -32,6 +72,7 @@
                             <th>@lang('sale.location')</th>
                             <th>@lang('lang_v1.shipping_status')</th>
                             <th>@lang('sale.payment_status')</th>
+                            <th>@lang('restaurant.service_staff')</th>
                             <th>@lang('messages.action')</th>
                         </tr>
                     </thead>
@@ -84,6 +125,20 @@ $(document).ready( function(){
                     d.start_date = start;
                     d.end_date = end;
                 }
+                if($('#sell_list_filter_location_id').length) {
+                    d.location_id = $('#sell_list_filter_location_id').val();
+                }
+                d.customer_id = $('#sell_list_filter_customer_id').val();
+
+                if($('#sell_list_filter_payment_status').length) {
+                    d.payment_status = $('#sell_list_filter_payment_status').val();
+                }
+                if($('#created_by').length) {
+                    d.created_by = $('#created_by').val();
+                }
+                if($('#service_staffs').length) {
+                    d.service_staffs = $('#service_staffs').val();
+                }
                 d.only_shipments = true;
                 d.shipping_status = $('#shipping_status').val();
             }
@@ -100,6 +155,7 @@ $(document).ready( function(){
             { data: 'business_location', name: 'bl.name'},
             { data: 'shipping_status', name: 'shipping_status'},
             { data: 'payment_status', name: 'payment_status'},
+            { data: 'waiter', name: 'ss.first_name', @if(empty($is_service_staff_enabled)) visible: false @endif },
             { data: 'action', name: 'action'}
         ],
         "fnDrawCallback": function (oSettings) {
@@ -110,7 +166,7 @@ $(document).ready( function(){
         }
     });
 
-    $(document).on('change', '#shipping_status',  function() {
+    $(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #shipping_status, #service_staffs',  function() {
         sell_table.ajax.reload();
     });
 });

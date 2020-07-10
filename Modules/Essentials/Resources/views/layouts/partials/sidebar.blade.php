@@ -1,7 +1,7 @@
 @if($__is_essentials_enabled)
-<li class="treeview {{ in_array($request->segment(1), ['essentials']) ? 'active active-sub' : '' }}">
+<li class="bg-navy treeview {{ in_array($request->segment(1), ['essentials']) ? 'active active-sub' : '' }}">
     <a href="#">
-        <i class="fa fa-check-circle-o"></i>
+        <i class="fas fa-check-circle"></i>
         <span class="title">@lang('essentials::lang.essentials')</span>
         <span class="pull-right-container">
             <i class="fa fa-angle-left pull-right"></i>
@@ -47,6 +47,14 @@
             </a>
         </li>
         @endif
+        @can('edit_essentials_settings')
+            <li class="{{ $request->segment(2) == 'settings' ? 'active active-sub' : '' }}">
+                <a href="{{action('\Modules\Essentials\Http\Controllers\EssentialsSettingsController@edit')}}">
+                    <i class="fa fa-cogs"></i>
+                    <span class="title">@lang('business.settings')</span>
+                </a>
+            </li>
+        @endcan
     </ul>
 </li>
 @endif

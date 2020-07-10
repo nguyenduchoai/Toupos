@@ -27,8 +27,8 @@
 
     </div>
     <div class="modal-footer">
-      <button type="submit" class="btn btn-primary pull-right">
-          @lang('messages.update')
+      <button type="submit" class="btn btn-primary pull-right ladda-button doc-share-btn" data-style="expand-right">
+          <span class="ladda-label">@lang('messages.update')</span>
       </button>
     </div>
   </div>

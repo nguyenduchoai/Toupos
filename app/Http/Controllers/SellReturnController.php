@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\BusinessLocation;
 use App\Transaction;
-
+use App\Contact;
+use App\User;
 use App\Utils\BusinessUtil;
 use App\Utils\ContactUtil;
 
@@ -54,9 +55,8 @@ class SellReturnController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $business_id = request()->session()->get('user.business_id');
         if (request()->ajax()) {
-            $business_id = request()->session()->get('user.business_id');
-
             $sells = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
                     
                     ->join(
@@ -139,7 +139,7 @@ class SellReturnController extends Controller
                     </button>
                     <ul class="dropdown-menu dropdown-menu-right" role="menu">
                     @if(auth()->user()->can("sell.view") || auth()->user()->can("direct_sell.access") )
-                        <li><a href="#" class="btn-modal" data-container=".view_modal" data-href="{{action(\'SellReturnController@show\', [$parent_sale_id])}}"><i class="fa fa-external-link" aria-hidden="true"></i> @lang("messages.view")</a></li>
+                        <li><a href="#" class="btn-modal" data-container=".view_modal" data-href="{{action(\'SellReturnController@show\', [$parent_sale_id])}}"><i class="fas fa-eye" aria-hidden="true"></i> @lang("messages.view")</a></li>
                         <li><a href="{{action(\'SellReturnController@add\', [$parent_sale_id])}}" ><i class="fa fa-edit" aria-hidden="true"></i> @lang("messages.edit")</a></li>
                     @endif
 
@@ -177,8 +177,12 @@ class SellReturnController extends Controller
                 ->rawColumns(['final_total', 'action', 'parent_sale', 'payment_status', 'payment_due'])
                 ->make(true);
         }
+        $business_locations = BusinessLocation::forDropdown($business_id, false);
+        $customers = Contact::customersDropdown($business_id, false);
+      
+        $sales_representative = User::forDropdown($business_id, false, false, true);
 
-        return view('sell_return.index');
+        return view('sell_return.index')->with(compact('business_locations', 'customers', 'sales_representative'));
     }
 
     /**

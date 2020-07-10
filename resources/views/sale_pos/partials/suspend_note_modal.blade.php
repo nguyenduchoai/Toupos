@@ -1,4 +1,3 @@
-<!-- Edit Shipping Modal -->
 <div class="modal fade" tabindex="-1" role="dialog" id="confirmSuspendModal">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">

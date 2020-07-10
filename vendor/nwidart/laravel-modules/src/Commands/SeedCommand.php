@@ -106,6 +106,14 @@ class SeedCommand extends Command
             $class = $this->getSeederName($name); //legacy support
             if (class_exists($class)) {
                 $seeders[] = $class;
+            } else {
+                //look at other namespaces
+                $classes = $this->getSeederNames($name);
+                foreach($classes as $class) {
+                    if (class_exists($class)) {
+                        $seeders[] = $class;
+                    } 
+                }
             }
         }
 
@@ -122,9 +130,11 @@ class SeedCommand extends Command
      */
     protected function dbSeed($className)
     {
-        $params = [
-            '--class' => $className,
-        ];
+        if ($option = $this->option('class')) {
+            $params['--class'] = Str::finish(substr($className, 0, strrpos($className, '\\')), '\\') . $option;
+        } else {
+            $params = ['--class' => $className];
+        }
 
         if ($option = $this->option('database')) {
             $params['--database'] = $option;
@@ -153,6 +163,29 @@ class SeedCommand extends Command
         $seederPath = str_replace('/', '\\', $seederPath->getPath());
 
         return $namespace . '\\' . $name . '\\' . $seederPath . '\\' . $name . 'DatabaseSeeder';
+    }
+    
+    /**
+     * Get master database seeder name for the specified module under a different namespace than Modules.
+     *
+     * @param string $name
+     *
+     * @return array $foundModules array containing namespace paths
+     */
+    public function getSeederNames($name)
+    {
+        $name = Str::studly($name);
+
+        $seederPath = GenerateConfigReader::read('seeder');
+        $seederPath = str_replace('/', '\\', $seederPath->getPath());
+
+        $foundModules = [];
+        foreach($this->laravel['modules']->config('scan.paths') as $path) {
+            $namespace = array_slice(explode('/', $path), -1)[0];
+            $foundModules[] = $namespace. '\\' . $name . '\\' . $seederPath . '\\' . $name . 'DatabaseSeeder';
+        }
+
+        return $foundModules;
     }
 
     /**

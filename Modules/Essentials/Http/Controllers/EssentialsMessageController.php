@@ -107,9 +107,8 @@ class EssentialsMessageController extends Controller
                     $message = EssentialsMessage::create($input);
 
                     //Check if min 10min passed from last message to the same user
-                    if (empty($last_message) || $last_message->created_at->diffInMinutes(\Carbon::now()) > 10) {
-                        $this->__notify($message);
-                    }
+                    $database_notification = empty($last_message) || $last_message->created_at->diffInMinutes(\Carbon::now()) > 10;
+                    $this->__notify($message, $database_notification);
 
                     $output['html'] = view('essentials::messages.message_div', compact('message'))->render();
                 }
@@ -169,9 +168,11 @@ class EssentialsMessageController extends Controller
      * Sends notification to the user.
      * @return void
      */
-    private function __notify($message)
+    private function __notify($message, $database_notification = true)
     {
-        $query = User::where('id', '!=', $message->user_id);
+        $business_id = request()->session()->get('user.business_id');
+        $query = User::where('id', '!=', $message->user_id)
+                    ->where('business_id', $business_id);
 
         $users = null;
         if (empty($message->location_id)) {
@@ -181,7 +182,46 @@ class EssentialsMessageController extends Controller
         }
 
         if (count($users)) {
+            $message->database_notification = $database_notification;
             \Notification::send($users, new NewMessageNotification($message));
         }
+    }
+
+    /**
+     * Function to get recent messages
+     * @return void
+     */
+    public function getNewMessages()
+    {
+        $last_chat_time = request()->input('last_chat_time');
+
+        $business_id = request()->session()->get('user.business_id');
+        if (!(auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'essentials_module'))) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if (!auth()->user()->can('essentials.view_message') && !auth()->user()->can('essentials.create_message')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $query = EssentialsMessage::where('business_id', $business_id)
+                        ->where('user_id', '!=', auth()->user()->id)
+                        ->with(['sender'])
+                        ->orderBy('created_at', 'ASC');
+
+        if (!empty($last_chat_time)) {
+            $query->where('created_at', '>', $last_chat_time);
+        }
+
+        $permitted_locations = auth()->user()->permitted_locations();
+        if ($permitted_locations != 'all') {
+            $query->where(function ($q) use ($permitted_locations) {
+                $q->whereIn('location_id', $permitted_locations)
+                    ->orWhereRaw('location_id IS NULL');
+            });
+        }
+        $messages = $query->get();
+
+        return view('essentials::messages.recent_messages')->with(compact('messages'));
     }
 }

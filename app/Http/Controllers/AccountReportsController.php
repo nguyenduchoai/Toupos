@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Account;
-use App\TransactionPayment;
-use App\AccountTransaction;
-use App\Utils\TransactionUtil;
 
-use Yajra\DataTables\Facades\DataTables;
+use App\AccountTransaction;
+use App\TransactionPayment;
+use App\Utils\TransactionUtil;
 use DB;
+
+use Illuminate\Http\Request;
+use Yajra\DataTables\Facades\DataTables;
 
 class AccountReportsController extends Controller
 {
@@ -206,7 +206,10 @@ class AccountReportsController extends Controller
             }
 
             $account_id = !empty(request()->input('account_id')) ? request()->input('account_id') : '';
-            if (!empty($account_id)) {
+
+            if ($account_id == 'none') {
+                $query->whereNull('account_id');
+            } elseif (!empty($account_id)) {
                 $query->where('account_id', $account_id);
             }
 
@@ -264,8 +267,8 @@ class AccountReportsController extends Controller
         }
 
         $accounts = Account::forDropdown($business_id, false);
-        $accounts->prepend(__('messages.all'), '');
-
+        $accounts = ['' => __('messages.all'), 'none' => __('lang_v1.none')] + $accounts;
+        
         return view('account_reports.payment_account_report')
                 ->with(compact('accounts'));
     }
@@ -307,7 +310,7 @@ class AccountReportsController extends Controller
                 $payment_id = $request->input('transaction_payment_id');
                 $account_id = $request->input('account_id');
 
-                $payment = TransactionPayment::where('business_id', $business_id)->findOrFail($payment_id);
+                $payment = TransactionPayment::with(['transaction'])->where('business_id', $business_id)->findOrFail($payment_id);
                 $payment->account_id = $account_id;
                 $payment->save();
 

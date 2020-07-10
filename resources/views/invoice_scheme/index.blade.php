@@ -66,7 +66,7 @@
                         <div class="col-md-3">
                             <div class="icon-link">
                                 <a href="{{action('InvoiceLayoutController@edit', [$layout->id])}}">
-                                    <i class="fa fa-file-text-o fa-4x"></i> 
+                                    <i class="fa fa-file-alt fa-4x"></i> 
                                     {{ $layout->name }}
                                 </a>
                                 @if( $layout->is_default )

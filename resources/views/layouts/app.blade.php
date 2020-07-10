@@ -28,8 +28,12 @@
         @yield('css')
     </head>
 
-    <body class="@if($pos_layout) hold-transition lockscreen @else hold-transition skin-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'blue'}}@endif sidebar-mini @endif">
-        <div class="wrapper">
+    <body class="@if($pos_layout) hold-transition lockscreen @else hold-transition skin-@if(!empty(session('business.theme_color'))){{session('business.theme_color')}}@else{{'blue-light'}}@endif sidebar-mini @endif">
+
+        <!-- empty div for vuejs -->
+        <div id="app"></div>
+        
+        <div class="wrapper thetop">
             <script type="text/javascript">
                 if(localStorage.getItem("upos_sidebar_collapse") == 'true'){
                     var body = document.getElementsByTagName("body")[0];
@@ -60,6 +64,11 @@
                     <input type="hidden" id="status_span" data-status="{{ session('status.success') }}" data-msg="{{ session('status.msg') }}">
                 @endif
                 @yield('content')
+
+                <div class='scrolltop no-print'>
+                    <div class='scroll icon'><i class="fas fa-angle-up"></i></div>
+                </div>
+
                 @if(config('constants.iraqi_selling_price_adjustment'))
                     <input type="hidden" id="iraqi_selling_price_adjustment">
                 @endif

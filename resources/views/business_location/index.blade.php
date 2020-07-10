@@ -36,6 +36,7 @@
                         <th>@lang( 'business.zip_code' )</th>
                         <th>@lang( 'business.state' )</th>
                         <th>@lang( 'business.country' )</th>
+                        <th>@lang( 'lang_v1.price_group' )</th>
                         <th>@lang( 'invoice.invoice_scheme' )</th>
                         <th>@lang( 'invoice.invoice_layout' )</th>
                         <th>@lang( 'messages.action' )</th>

@@ -2,8 +2,6 @@
 @section('title', __('lang_v1.payment_accounts'))
 
 @section('content')
-<link rel="stylesheet" href="{{ asset('plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.css?v='.$asset_v) }}">
-
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>@lang('lang_v1.payment_accounts')
@@ -54,27 +52,37 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="other_accounts">
                         <div class="row">
-                            <div class="col-sm-12">
-                                <button type="button" class="btn btn-primary btn-modal pull-right" 
-                                    data-container=".account_model"
-                                    data-href="{{action('AccountController@create')}}">
-                                    <i class="fa fa-plus"></i> @lang( 'messages.add' )</button>
+                            <div class="col-md-12">
+                                @component('components.widget')
+                                    <div class="col-md-4">
+                                        {!! Form::select('account_status', ['active' => __('business.is_active'), 'closed' => __('account.closed')], null, ['class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'account_status']); !!}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <button type="button" class="btn btn-primary btn-modal pull-right" 
+                                            data-container=".account_model"
+                                            data-href="{{action('AccountController@create')}}">
+                                            <i class="fa fa-plus"></i> @lang( 'messages.add' )</button>
+                                    </div>
+                                @endcomponent
                             </div>
                             <div class="col-sm-12">
                             <br>
-                                <table class="table table-bordered table-striped" id="other_account_table">
-                                    <thead>
-                                        <tr>
-                                            <th>@lang( 'lang_v1.name' )</th>
-                                            <th>@lang( 'lang_v1.account_type' )</th>
-                                            <th>@lang( 'lang_v1.account_sub_type' )</th>
-                                            <th>@lang('account.account_number')</th>
-                                            <th>@lang( 'brand.note' )</th>
-                                            <th>@lang('lang_v1.balance')</th>
-                                            <th>@lang( 'messages.action' )</th>
-                                        </tr>
-                                    </thead>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped" id="other_account_table">
+                                        <thead>
+                                            <tr>
+                                                <th>@lang( 'lang_v1.name' )</th>
+                                                <th>@lang( 'lang_v1.account_type' )</th>
+                                                <th>@lang( 'lang_v1.account_sub_type' )</th>
+                                                <th>@lang('account.account_number')</th>
+                                                <th>@lang( 'brand.note' )</th>
+                                                <th>@lang('lang_v1.balance')</th>
+                                                <th>@lang('lang_v1.added_by')</th>
+                                                <th>@lang( 'messages.action' )</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -171,7 +179,6 @@
 @endsection
 
 @section('javascript')
-<script src="{{ asset('plugins/bootstrap-datetimepicker/bootstrap-datetimepicker.min.js?v=' . $asset_v) }}"></script>
 <script>
     $(document).ready(function(){
 
@@ -271,9 +278,14 @@
         other_account_table = $('#other_account_table').DataTable({
                         processing: true,
                         serverSide: true,
-                        ajax: '/account/account?account_type=other',
+                        ajax: {
+                            url: '/account/account?account_type=other',
+                            data: function(d){
+                                d.account_status = $('#account_status').val();
+                            }
+                        },
                         columnDefs:[{
-                                "targets": 6,
+                                "targets": 7,
                                 "orderable": false,
                                 "searchable": false
                             }],
@@ -284,6 +296,7 @@
                             {data: 'account_number', name: 'accounts.account_number'},
                             {data: 'note', name: 'accounts.note'},
                             {data: 'balance', name: 'balance', searchable: false},
+                            {data: 'added_by', name: 'u.first_name'},
                             {data: 'action', name: 'action'}
                         ],
                         "fnDrawCallback": function (oSettings) {
@@ -293,27 +306,10 @@
 
     });
 
-    $(document).on('submit', 'form#fund_transfer_form', function(e){
-        e.preventDefault();
-        var data = $(this).serialize();
-
-        $.ajax({
-          method: "POST",
-          url: $(this).attr("action"),
-          dataType: "json",
-          data: data,
-          success: function(result){
-            if(result.success == true){
-              $('div.view_modal').modal('hide');
-              toastr.success(result.msg);
-              capital_account_table.ajax.reload();
-              other_account_table.ajax.reload();
-            } else {
-              toastr.error(result.msg);
-            }
-          }
-        });
+    $('#account_status').change( function(){
+        other_account_table.ajax.reload();
     });
+
     $(document).on('submit', 'form#deposit_form', function(e){
         e.preventDefault();
         var data = $(this).serialize();
@@ -353,5 +349,32 @@
         });
     })
 
+    $(document).on('click', 'button.activate_account', function(){
+        swal({
+            title: LANG.sure,
+            icon: "warning",
+            buttons: true,
+            dangerMode: true,
+        }).then((willActivate)=>{
+            if(willActivate){
+                 var url = $(this).data('url');
+                 $.ajax({
+                     method: "get",
+                     url: url,
+                     dataType: "json",
+                     success: function(result){
+                         if(result.success == true){
+                            toastr.success(result.msg);
+                            capital_account_table.ajax.reload();
+                            other_account_table.ajax.reload();
+                         }else{
+                            toastr.error(result.msg);
+                        }
+
+                    }
+                });
+            }
+        });
+    });
 </script>
 @endsection

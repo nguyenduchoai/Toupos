@@ -14,9 +14,7 @@ use App\Utils\ModuleUtil;
 use App\Utils\ProductUtil;
 use App\Variation;
 use App\VariationValueTemplate;
-
 use DB;
-
 use Excel;
 use Illuminate\Http\Request;
 
@@ -85,6 +83,11 @@ class ImportProductsController extends Controller
         }
 
         try {
+            $notAllowed = $this->productUtil->notAllowedInDemo();
+            if (!empty($notAllowed)) {
+                return $notAllowed;
+            }
+            
             //Set maximum php execution time
             ini_set('max_execution_time', 0);
             ini_set('memory_limit', -1);
@@ -115,11 +118,12 @@ class ImportProductsController extends Controller
                     return $this->moduleUtil->quotaExpiredResponse('products', $business_id, action('ImportProductsController@index'));
                 }
 
+                $business_locations = BusinessLocation::where('business_id', $business_id)->get();
                 DB::beginTransaction();
                 foreach ($imported_data as $key => $value) {
 
                     //Check if any column is missing
-                    if (count($value) < 35) {
+                    if (count($value) < 36) {
                         $is_valid =  false;
                         $error_msg = "Some of the columns are missing. Please, use latest CSV file template.";
                         break;
@@ -256,8 +260,10 @@ class ImportProductsController extends Controller
                     }
 
                     //Add alert quantity
-                    $product_array['alert_quantity'] = ($product_array['enable_stock'] == 1) ?
-                    trim($value[8]) : 0;
+                    if ($product_array['enable_stock'] == 1) {
+                        $product_array['alert_quantity'] = trim($value[8]);
+                    }
+                    
 
                     //Add brand
                     //Check if brand exists else create new
@@ -275,7 +281,7 @@ class ImportProductsController extends Controller
                     $category_name = trim($value[3]);
                     if (!empty($category_name)) {
                         $category = Category::firstOrCreate(
-                            ['business_id' => $business_id, 'name' => $category_name],
+                            ['business_id' => $business_id, 'name' => $category_name, 'category_type' => 'product'],
                             ['created_by' => $user_id, 'parent_id' => 0]
                         );
                         $product_array['category_id'] = $category->id;
@@ -285,7 +291,7 @@ class ImportProductsController extends Controller
                     $sub_category_name = trim($value[4]);
                     if (!empty($sub_category_name)) {
                         $sub_category = Category::firstOrCreate(
-                            ['business_id' => $business_id, 'name' => $sub_category_name],
+                            ['business_id' => $business_id, 'name' => $sub_category_name, 'category_type' => 'product'],
                             ['created_by' => $user_id, 'parent_id' => $category->id]
                         );
                         $product_array['sub_category_id'] = $sub_category->id;
@@ -609,6 +615,22 @@ class ImportProductsController extends Controller
                             $index+1
                         );
 
+                        //Product locations
+                        if (!empty($imported_data[$index][35])) {
+                            $locations_array = explode(',', $imported_data[$index][35]);
+                            $location_ids = [];
+                            foreach ($locations_array as $business_location) {
+                                foreach ($business_locations as $loc) {
+                                    if (strtolower($loc->name) == strtolower(trim($business_location))) {
+                                       $location_ids[] = $loc->id;
+                                    }
+                                }
+                            }
+                            if (!empty($location_ids)) {
+                                $product->product_locations()->sync($location_ids);
+                            }
+                        }
+
                         //Create single product variation
                         if ($product->type == 'single') {
                             $this->productUtil->createSingleProductVariation(
@@ -763,6 +785,21 @@ class ImportProductsController extends Controller
                     ]);
         //Update variation location details
         $this->productUtil->updateProductQuantity($opening_stock['location_id'], $product->id, $variation->id, $opening_stock['quantity']);
+
+        //Add product location
+        $this->__addProductLocation($product, $opening_stock['location_id']);
+        
+    }
+
+    private function __addProductLocation($product, $location_id)
+    {
+        $count = DB::table('product_locations')->where('product_id', $product->id)
+                                            ->where('location_id', $location_id)
+                                            ->count();
+        if ($count == 0) {
+            DB::table('product_locations')->insert(['product_id' => $product->id, 
+                                'location_id' => $location_id]);
+        }
     }
 
 
@@ -791,6 +828,9 @@ class ImportProductsController extends Controller
                                 'created_by' => $user_id
                             ]
             );
+
+            //Add product location
+            $this->__addProductLocation($product, $location_id);
 
             foreach ($variations['variations'] as $variation_os) {
                 if (!empty($variation_os['opening_stock'])) {

@@ -207,12 +207,18 @@ class CashRegisterUtil extends Util
             '=',
             'cash_registers.id'
         )
-                                ->join(
-                                    'users as u',
-                                    'u.id',
-                                    '=',
-                                    'cash_registers.user_id'
-                                );
+        ->join(
+            'users as u',
+            'u.id',
+            '=',
+            'cash_registers.user_id'
+        )
+        ->leftJoin(
+            'business_locations as bl',
+            'bl.id',
+            '=',
+            'cash_registers.location_id'
+        );
         if (empty($register_id)) {
             $user_id = auth()->user()->id;
             $query->where('user_id', $user_id)
@@ -223,8 +229,10 @@ class CashRegisterUtil extends Util
                               
         $register_details = $query->select(
             'cash_registers.created_at as open_time',
+            'cash_registers.closed_at as closed_at',
             'cash_registers.user_id',
             'cash_registers.closing_note',
+            'cash_registers.location_id',
             DB::raw("SUM(IF(transaction_type='initial', amount, 0)) as cash_in_hand"),
             DB::raw("SUM(IF(transaction_type='sell', amount, IF(transaction_type='refund', -1 * amount, 0))) as total_sale"),
             DB::raw("SUM(IF(pay_method='cash', IF(transaction_type='sell', amount, 0), 0)) as total_cash"),
@@ -247,7 +255,8 @@ class CashRegisterUtil extends Util
             DB::raw("SUM(IF(pay_method='cheque', 1, 0)) as total_cheques"),
             DB::raw("SUM(IF(pay_method='card', 1, 0)) as total_card_slips"),
             DB::raw("CONCAT(COALESCE(surname, ''), ' ', COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) as user_name"),
-            'email'
+            'u.email',
+            'bl.name as location_name'
         )->first();
         return $register_details;
     }
@@ -261,7 +270,7 @@ class CashRegisterUtil extends Util
      *
      * @return array
      */
-    public function getRegisterTransactionDetails($user_id, $open_time, $close_time)
+    public function getRegisterTransactionDetails($user_id, $open_time, $close_time, $is_types_of_service_enabled = false)
     {
         $product_details = Transaction::where('transactions.created_by', $user_id)
                 ->whereBetween('transaction_date', [$open_time, $close_time])
@@ -279,6 +288,23 @@ class CashRegisterUtil extends Util
                 ->orderByRaw('CASE WHEN brand_name IS NULL THEN 2 ELSE 1 END, brand_name')
                 ->get();
 
+        //If types of service
+        $types_of_service_details = null;
+        if ($is_types_of_service_enabled) {
+            $types_of_service_details = Transaction::where('transactions.created_by', $user_id)
+                ->whereBetween('transaction_date', [$open_time, $close_time])
+                ->where('transactions.type', 'sell')
+                ->where('transactions.status', 'final')
+                ->leftjoin('types_of_services AS tos', 'tos.id', '=', 'transactions.types_of_service_id')
+                ->groupBy('tos.id')
+                ->select(
+                    'tos.name as types_of_service_name',
+                    DB::raw('SUM(final_total) as total_sales')
+                )
+                ->orderBy('total_sales', 'desc')
+                ->get();
+        }
+
         $transaction_details = Transaction::where('transactions.created_by', $user_id)
                 ->whereBetween('transaction_date', [$open_time, $close_time])
                 ->where('transactions.type', 'sell')
@@ -291,7 +317,8 @@ class CashRegisterUtil extends Util
                 ->first();
 
         return ['product_details' => $product_details,
-                'transaction_details' => $transaction_details
+                'transaction_details' => $transaction_details,
+                'types_of_service_details' => $types_of_service_details
             ];
     }
 

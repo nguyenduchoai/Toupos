@@ -8,7 +8,8 @@
       <div class="modal-body">
         <input type="hidden" id="modal_today" value="{{\Carbon::now()->format('Y-m-d')}}">
         <div class="row">
-          @include('report.partials.profit_loss_details')
+          <div id="todays_profit">
+          </div>
         </div>
         
       </div>

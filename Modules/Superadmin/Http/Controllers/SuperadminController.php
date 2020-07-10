@@ -5,13 +5,13 @@ namespace Modules\Superadmin\Http\Controllers;
 use Modules\Superadmin\Entities\Subscription;
 use App\Business;
 use App\System;
-
 use \Carbon;
 use Charts;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
+use App\Charts\CommonChart;
 
 class SuperadminController extends BaseController
 {
@@ -41,12 +41,10 @@ class SuperadminController extends BaseController
             ->count();
 
         $subscriptions = $this->_monthly_sell_data();
-        $monthly_sells_chart = Charts::create('bar', 'highcharts')
-                    ->title(' ')
-                    ->template("material")
-                    ->values(array_values($subscriptions))
-                    ->labels(array_keys($subscriptions))
-                    ->elementLabel(__('superadmin::lang.total_subscriptions', ['currency' => $currency->currency]));
+
+        $monthly_sells_chart = new CommonChart;
+        $monthly_sells_chart->labels(array_keys($subscriptions))
+            ->dataset(__('superadmin::lang.total_subscriptions', ['currency' => $currency->currency]), 'column', array_values($subscriptions));
 
         return view('superadmin::superadmin.index')
             ->with(compact(
@@ -74,7 +72,7 @@ class SuperadminController extends BaseController
             if (!isset($subscription_formatted[$month_year])) {
                 $subscription_formatted[$month_year] = 0;
             }
-            $subscription_formatted[$month_year] += $value->package_price;
+            $subscription_formatted[$month_year] += (float) $value->package_price;
         }
 
         return $subscription_formatted;

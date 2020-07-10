@@ -6,11 +6,13 @@
                 <th>@lang('business.product')</th>
                 <th>@lang('sale.unit_price')</th>
                 <th>@lang('report.current_stock')</th>
-                <th>@lang('lang_v1.total_stock_price')</th>
+                <th>@lang('lang_v1.total_stock_price') <br><small>(@lang('lang_v1.by_purchase_price'))</small></th>
+                <th>@lang('lang_v1.total_stock_price') <br><small>(@lang('lang_v1.by_sale_price'))</small></th>
+                <th>@lang('lang_v1.potential_profit')</th>
                 <th>@lang('report.total_unit_sold')</th>
                 <th>@lang('lang_v1.total_unit_transfered')</th>
                 <th>@lang('lang_v1.total_unit_adjusted')</th>
-                @if(Module::has('Manufacturing'))
+                @if($show_manufacturing_data)
                     <th class="current_stock_mfg">@lang('manufacturing::lang.current_stock_mfg') @show_tooltip(__('manufacturing::lang.mfg_stock_tooltip'))</th>
                 @endif
             </tr>
@@ -20,10 +22,12 @@
                 <td colspan="3"><strong>@lang('sale.total'):</strong></td>
                 <td id="footer_total_stock"></td>
                 <td><span id="footer_total_stock_price" class="display_currency" data-currency_symbol="true"></span></td>
+                <td><span id="footer_stock_value_by_sale_price" class="display_currency" data-currency_symbol="true"></span></td>
+                <td><span id="footer_potential_profit" class="display_currency" data-currency_symbol="true"></span></td>
                 <td id="footer_total_sold"></td>
                 <td id="footer_total_transfered"></td>
                 <td id="footer_total_adjusted"></td>
-                @if(Module::has('Manufacturing'))
+                @if($show_manufacturing_data)
                     <td id="footer_total_mfg_stock"></td>
                 @endif
             </tr>

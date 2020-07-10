@@ -116,7 +116,7 @@
 	         			<h3 class="box-title">{{ __('superadmin::lang.monthly_sales_trend') }}</h3>
 	         		</div>
 		            <div class="box-body">
-		            	{!! $monthly_sells_chart->html() !!}
+		            	{!! $monthly_sells_chart->container() !!}
 		            </div>
 		            <!-- /.box-body -->
 	          	</div>
@@ -127,8 +127,6 @@
 @endsection
 
 @section('javascript')
-
-{!! Charts::assets(['highcharts']) !!}
 {!! $monthly_sells_chart->script() !!}
 
 <script type="text/javascript">

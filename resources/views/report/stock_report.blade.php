@@ -44,7 +44,7 @@
                         {!! Form::select('unit', $units, null, ['placeholder' => __('messages.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
                     </div>
                 </div>
-                @if(Module::has('Manufacturing'))
+                @if($show_manufacturing_data)
                     <div class="col-md-3">
                         <div class="form-group">
                             <br>
@@ -63,7 +63,27 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            @component('components.widget', ['class' => 'box-primary'])
+            @component('components.widget', ['class' => 'box-solid'])
+            <table class="table no-border">
+                <tr>
+                    <td>@lang('report.closing_stock') (@lang('lang_v1.by_purchase_price'))</td>
+                    <td>@lang('report.closing_stock') (@lang('lang_v1.by_sale_price'))</td>
+                    <td>@lang('lang_v1.potential_profit')</td>
+                    <td>@lang('lang_v1.profit_margin')</td>
+                </tr>
+                <tr>
+                    <td><h3 id="closing_stock_by_pp" class="mb-0 mt-0"></h3></td>
+                    <td><h3 id="closing_stock_by_sp" class="mb-0 mt-0"></h3></td>
+                    <td><h3 id="potential_profit" class="mb-0 mt-0"></h3></td>
+                    <td><h3 id="profit_margin" class="mb-0 mt-0"></h3></td>
+                </tr>
+            </table>
+            @endcomponent
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            @component('components.widget', ['class' => 'box-solid'])
                 @include('report.partials.stock_report_table')
             @endcomponent
         </div>

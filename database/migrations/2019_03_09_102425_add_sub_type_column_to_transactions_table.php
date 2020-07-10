@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 class AddSubTypeColumnToTransactionsTable extends Migration
 {
@@ -14,6 +14,8 @@ class AddSubTypeColumnToTransactionsTable extends Migration
     public function up()
     {
         Schema::table('transactions', function (Blueprint $table) {
+
+            //sub_type is like for example repair or project_invoice etc.
             $table->string('sub_type', 20)->nullable()->after('type');
             
             //Indexing

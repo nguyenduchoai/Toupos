@@ -21,7 +21,7 @@
                             <span class="input-group-addon">
                                 <i class="fa fa-user"></i>
                             </span>
-                            {!! Form::select('customer_id', $customers, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
+                            {!! Form::select('customer_id', $customers, null, ['class' => 'form-control select2', 'placeholder' => __('messages.all'), 'required']); !!}
                         </div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                             <span class="input-group-addon">
                                 <i class="fa fa-map-marker"></i>
                             </span>
-                            {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
+                            {!! Form::select('location_id', $business_locations, null, ['class' => 'form-control select2', 'placeholder' => __('messages.all'), 'required']); !!}
                         </div>
                     </div>
                 </div>
@@ -41,9 +41,20 @@
                         {!! Form::label('payment_types', __('lang_v1.payment_method').':') !!}
                         <div class="input-group">
                             <span class="input-group-addon">
-                                <i class="fa fa-money"></i>
+                                <i class="fas fa-money-bill-alt"></i>
                             </span>
-                            {!! Form::select('payment_types', $payment_types, null, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required']); !!}
+                            {!! Form::select('payment_types', $payment_types, null, ['class' => 'form-control select2', 'placeholder' => __('messages.all'), 'required']); !!}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        {!! Form::label('customer_group_filter', __('lang_v1.customer_group').':') !!}
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fa fa-users"></i>
+                            </span>
+                            {!! Form::select('customer_group_filter', $customer_groups, null, ['class' => 'form-control select2']); !!}
                         </div>
                     </div>
                 </div>
@@ -71,6 +82,7 @@
                                 <th>@lang('lang_v1.paid_on')</th>
                                 <th>@lang('sale.amount')</th>
                                 <th>@lang('contact.customer')</th>
+                                <th>@lang('lang_v1.customer_group')</th>
                                 <th>@lang('lang_v1.payment_method')</th>
                                 <th>@lang('sale.sale')</th>
                                 <th>@lang('messages.action')</th>
@@ -78,7 +90,7 @@
                         </thead>
                         <tfoot>
                             <tr class="bg-gray font-17 footer-total text-center">
-                                <td colspan="3"><strong>@lang('sale.total'):</strong></td>
+                                <td colspan="4"><strong>@lang('sale.total'):</strong></td>
                                 <td><span class="display_currency" id="footer_total_amount" data-currency_symbol ="true"></span></td>
                                 <td colspan="4"></td>
                             </tr>

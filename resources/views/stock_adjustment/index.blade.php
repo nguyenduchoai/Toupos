@@ -23,6 +23,7 @@
             <table class="table table-bordered table-striped" id="stock_adjustment_table">
                 <thead>
                     <tr>
+                        <th>@lang('messages.action')</th>
                         <th>@lang('messages.date')</th>
                         <th>@lang('purchase.ref_no')</th>
                         <th>@lang('business.location')</th>
@@ -30,7 +31,7 @@
                         <th>@lang('stock_adjustment.total_amount')</th>
                         <th>@lang('stock_adjustment.total_amount_recovered')</th>
                         <th>@lang('stock_adjustment.reason_for_stock_adjustment')</th>
-                        <th>@lang('messages.action')</th>
+                        <th>@lang('lang_v1.added_by')</th>
                     </tr>
                 </thead>
             </table>

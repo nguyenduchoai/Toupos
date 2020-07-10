@@ -1,7 +1,7 @@
 <div class="modal-dialog" role="document">
   <div class="modal-content">
 
-    {!! Form::open(['url' => action('AccountController@postFundTransfer'), 'method' => 'post', 'id' => 'fund_transfer_form' ]) !!}
+    {!! Form::open(['url' => action('AccountController@postFundTransfer'), 'method' => 'post', 'id' => 'fund_transfer_form', 'files' => true ]) !!}
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -38,6 +38,15 @@
             <div class="form-group">
                 {!! Form::label('note', __( 'brand.note' )) !!}
                 {!! Form::textarea('note', null, ['class' => 'form-control', 'placeholder' => __( 'brand.note' ), 'rows' => 4]); !!}
+            </div>
+
+            <div class="form-group">
+                {!! Form::label('document', __('purchase.attach_document') . ':') !!}
+                {!! Form::file('document', ['id' => 'upload_document', 'accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]); !!}
+                <p class="help-block">
+                  @lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])
+                  @includeIf('components.document_help_text')
+                </p>
             </div>
     </div>
 

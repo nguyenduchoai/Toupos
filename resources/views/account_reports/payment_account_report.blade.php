@@ -9,7 +9,7 @@
 </section>
 
 <!-- Main content -->
-<section class="content">
+<section class="content no-print">
     <div class="row">
         <div class="col-md-12">
             <div class="box box-primary" id="accordion">
@@ -71,17 +71,13 @@
     <script type="text/javascript">
         $(document).ready(function(){
             if($('#date_filter').length == 1){
-                $('#date_filter').daterangepicker({
-                    ranges: ranges,
-                    autoUpdateInput: false,
-                    locale: {
-                        format: moment_date_format
+                $('#date_filter').daterangepicker(
+                    dateRangeSettings,
+                    function (start, end) {
+                        $('#date_filter').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+                        payment_account_report.ajax.reload();
                     }
-                });
-                $('#date_filter').on('apply.daterangepicker', function(ev, picker) {
-                    $(this).val(picker.startDate.format(moment_date_format) + ' ~ ' + picker.endDate.format(moment_date_format));
-                    payment_account_report.ajax.reload();
-                });
+                );
 
                 $('#date_filter').on('cancel.daterangepicker', function(ev, picker) {
                     $(this).val('');

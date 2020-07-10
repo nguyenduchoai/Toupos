@@ -36,7 +36,7 @@
                   <br>@lang('contact.mobile'): {{$transaction->contact->mobile}}
                 @endif
                 @if(!empty($transaction->contact->email))
-                  <br>Email: {{$transaction->contact->email}}
+                  <br>@lang('business.email'): {{$transaction->contact->email}}
                 @endif
               </address>
             </div>
@@ -93,7 +93,7 @@
                   <br>@lang('contact.mobile'): {{$transaction->contact->mobile}}
                 @endif
                 @if(!empty($transaction->contact->email))
-                  <br>Email: {{$transaction->contact->email}}
+                  <br>@lang('business.email'): {{$transaction->contact->email}}
                 @endif
               </address>
             @else
@@ -107,7 +107,7 @@
                       <br>@lang('contact.mobile'): {{$transaction->transaction_for->contact_number}}
                   @endif
                   @if(!empty($transaction->transaction_for->email))
-                      <br>Email: {{$transaction->transaction_for->email}}
+                      <br>@lang('business.email'): {{$transaction->transaction_for->email}}
                   @endif
               </address>
             @endif
@@ -193,7 +193,7 @@
                 --
               @endif
               <br/>
-            <b>@lang('lang_v1.paid_on'):</b> {{ @format_date($single_payment_line->paid_on) }}<br/>
+            <b>@lang('lang_v1.paid_on'):</b> {{ @format_datetime($single_payment_line->paid_on) }}<br/>
             <br>
             @if(!empty($single_payment_line->document_path))
               <a href="{{$single_payment_line->document_path}}" class="btn btn-success btn-xs no-print" download="{{$single_payment_line->document_name}}"><i class="fa fa-download" data-toggle="tooltip" title="{{__('purchase.download_document')}}"></i> {{__('purchase.download_document')}}</a>

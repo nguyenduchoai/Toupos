@@ -21,7 +21,7 @@ class CreateMfgRecipeIngredientsTable extends Migration
             $table->integer('mfg_recipe_id')->unsigned();
             $table->foreign('mfg_recipe_id')->references('id')->on('mfg_recipes')->onDelete('cascade');
             $table->integer('variation_id');
-            $table->decimal('quantity', 20, 4)->default(0);
+            $table->decimal('quantity', 22, 4)->default(0);
             $table->integer('sub_unit_id')->nullable();
             $table->timestamps();
         });

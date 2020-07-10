@@ -4,6 +4,7 @@ namespace Modules\Essentials\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class NewLeaveNotification extends Notification
 {
@@ -29,7 +30,12 @@ class NewLeaveNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        $channels = ['database'];
+        if (isPusherEnabled()) {
+            $channels[] = 'broadcast';
+        }
+        
+        return $channels;
     }
 
     /**
@@ -54,5 +60,20 @@ class NewLeaveNotification extends Notification
             "applied_by" => $this->leave->user_id,
             "ref_no" => $this->leave->ref_no,
         ];
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage([
+            'title' => __('essentials::lang.leave_added_successfully'),
+            'body' => strip_tags( __('essentials::lang.new_leave_notification', ['employee' => $this->leave->user->user_full_name, 'ref_no' => $this->leave->ref_no]) ),
+            'link' => action('\Modules\Essentials\Http\Controllers\EssentialsLeaveController@index')
+        ]);
     }
 }

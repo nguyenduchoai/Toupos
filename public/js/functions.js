@@ -11,7 +11,9 @@ function __calculate_amount(calculation_type, calculation_amount, amount) {
         case 'fixed':
             return parseFloat(calculation_amount);
         case 'percentage':
-            return parseFloat((calculation_amount / 100) * amount);
+        case 'percent':
+                var div = Decimal.div(calculation_amount, 100).toNumber();
+            return Decimal.mul(div, amount).toNumber();
         default:
             return 0;
     }
@@ -22,7 +24,9 @@ function __add_percent(amount, percentage = 0) {
     var amount = parseFloat(amount);
     var percentage = isNaN(percentage) ? 0 : parseFloat(percentage);
 
-    return amount + (percentage / 100) * amount;
+    var div = Decimal.div(percentage, 100).toNumber();
+    var mul = Decimal.mul(div, amount).toNumber();
+    return Decimal.add(amount, mul).toNumber();
 }
 
 //Substract specified percentage to the input amount.
@@ -30,27 +34,32 @@ function __substract_percent(amount, percentage = 0) {
     var amount = parseFloat(amount);
     var percentage = isNaN(percentage) ? 0 : parseFloat(percentage);
 
-    return amount - (percentage / 100) * amount;
+    var div = Decimal.div(percentage, 100).toNumber();
+    var mul = Decimal.mul(div, amount).toNumber();
+    return Decimal.sub(amount, mul).toNumber();
 }
 
 //Returns the principle amount for the calculated amount and percentage
 function __get_principle(amount, percentage = 0, minus = false) {
     var amount = parseFloat(amount);
     var percentage = isNaN(percentage) ? 0 : parseFloat(percentage);
-
+    var mul = Decimal.mul(100, amount).toNumber();
+    var sum = 1;
     if (minus) {
-        return (100 * amount) / (100 - percentage);
+        sum = Decimal.sub(100, percentage).toNumber();
     } else {
-        return (100 * amount) / (100 + percentage);
+        sum = Decimal.add(100, percentage).toNumber();
     }
+    return Decimal.div(mul, sum).toNumber();
 }
 
 //Returns the rate at which amount is calculated from principal
 function __get_rate(principal, amount) {
     var principal = isNaN(principal) ? 0 : parseFloat(principal);
     var amount = isNaN(amount) ? 0 : parseFloat(amount);
-    var interest = amount - principal;
-    return (interest / principal) * 100;
+    var interest = Decimal.sub(amount, principal).toNumber();
+    var div = Decimal.div(interest, principal).toNumber();
+    return Decimal.mul(div, 100).toNumber();
 }
 
 function __tab_key_up(e) {
@@ -183,7 +192,7 @@ function __write_number(
 }
 
 //Return the font-awesome html based on class value
-function __fa_awesome($class = 'fa-refresh fa-spin fa-fw ') {
+function __fa_awesome($class = 'fa-sync fa-spin fa-fw ') {
     return '<i class="fa ' + $class + '"></i>';
 }
 
@@ -259,6 +268,34 @@ function sum_table_col(table, class_name) {
         });
 
     return sum;
+}
+
+function __count_status(data, key) {
+    var statuses = [];
+    for (var r in data){
+        var element = $(data[r][key]);
+        if (element.data('orig-value')) {
+            var status_name = element.data('orig-value');
+            if (!(status_name in statuses)) {
+                statuses[status_name] = [];
+                statuses[status_name]['count'] = 1;
+                statuses[status_name]['display_name'] = element.data('status-name');
+            } else {
+                statuses[status_name]['count'] += 1;
+            }
+        }
+    }
+
+    //generate html
+    var html = '<p class="text-left"><small>';
+    for (var key in statuses) {
+        html +=
+            statuses[key]['display_name'] + ' - ' + statuses[key]['count'] + '</br>';
+    }
+
+    html += '</small></p>';
+
+    return html;
 }
 
 function __sum_status(table, class_name) {
@@ -356,9 +393,9 @@ function __print_receipt(section_id = null) {
         setTimeout(function() {
             window.print();
 
-            setTimeout(function() {
-                $('#receipt_section').html('');
-            }, 5000);
+            // setTimeout(function() {
+            //     $('#receipt_section').html('');
+            // }, 5000);
             
         }, 1000);
     }
@@ -369,9 +406,9 @@ function incrementImageCounter() {
     if ( img_counter === img_len ) {
         window.print();
         
-        setTimeout(function() {
-            $('#receipt_section').html('');
-        }, 5000);
+        // setTimeout(function() {
+        //     $('#receipt_section').html('');
+        // }, 5000);
     }
 }
 
@@ -382,4 +419,34 @@ function __getUnitMultiplier(row){
     } else {
         return parseFloat(multiplier);
     }
+}
+
+//Rounds a number to the nearest given multiple
+function __round(number, multiple = 0){
+
+    rounded_number = number;
+    if(multiple > 0) {
+        x = new Decimal(number)
+        rounded_number = x.toNearest(multiple);
+    }
+
+    var output = {
+        number: rounded_number,
+        diff: rounded_number - number
+    }
+    
+    return output;
+}
+
+//This method removes unwanted get parameter from the data.
+function __datatable_ajax_callback(data){
+    for (var i = 0, len = data.columns.length; i < len; i++) {
+        if (! data.columns[i].search.value) delete data.columns[i].search;
+        if (data.columns[i].searchable === true) delete data.columns[i].searchable;
+        if (data.columns[i].orderable === true) delete data.columns[i].orderable;
+        if (data.columns[i].data === data.columns[i].name) delete data.columns[i].name;
+    }
+    delete data.search.regex;
+
+    return data;
 }

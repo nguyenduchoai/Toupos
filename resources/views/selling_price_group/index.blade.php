@@ -154,6 +154,22 @@
             });
         });
 
+        $(document).on('click', 'button.activate_deactivate_spg', function(){
+            var href = $(this).data('href');
+                $.ajax({
+                    url: href,
+                    dataType: "json",
+                    success: function(result){
+                        if(result.success == true){
+                            toastr.success(result.msg);
+                            selling_price_group_table.ajax.reload();
+                        } else {
+                            toastr.error(result.msg);
+                        }
+                    }
+                });
+        });
+
     });
 </script>
 @endsection

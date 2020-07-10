@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\BusinessLocation;
 
 use App\Product;
-use App\Transaction;
-use App\BusinessLocation;
 use App\PurchaseLine;
-
+use App\Transaction;
 use App\Utils\ProductUtil;
+
 use App\Utils\TransactionUtil;
+use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +44,7 @@ class OpeningStockController extends Controller
      */
     public function add($product_id)
     {
-        if (!auth()->user()->can('product.update')) {
+        if (!auth()->user()->can('product.opening_stock')) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -53,7 +53,11 @@ class OpeningStockController extends Controller
         //Get the product
         $product = Product::where('business_id', $business_id)
                             ->where('id', $product_id)
-                            ->with(['variations', 'variations.product_variation', 'unit'])
+                            ->with(['variations',
+                                    'variations.product_variation',
+                                    'unit',
+                                    'product_locations'
+                                ])
                             ->first();
         if (!empty($product) && $product->enable_stock == 1) {
             //Get Opening Stock Transactions for the product if exists
@@ -86,6 +90,15 @@ class OpeningStockController extends Controller
             }
 
             $locations = BusinessLocation::forDropdown($business_id);
+
+            //Unset locations where product is not available
+            $available_locations = $product->product_locations->pluck('id')->toArray();
+            foreach ($locations as $key => $value) {
+                if (!in_array($key, $available_locations)) {
+                    unset($locations[$key]);
+                }
+            }
+            
 
             $enable_expiry = request()->session()->get('business.enable_product_expiry');
             $enable_lot = request()->session()->get('business.enable_lot_number');
@@ -121,7 +134,7 @@ class OpeningStockController extends Controller
      */
     public function save(Request $request)
     {
-        if (!auth()->user()->can('product.update')) {
+        if (!auth()->user()->can('product.opening_stock')) {
             abort(403, 'Unauthorized action.');
         }
 

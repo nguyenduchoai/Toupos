@@ -3,13 +3,16 @@
 
 @section('content')
 
-<!-- Content Header (Page header) -->
-<section class="content-header no-print">
-    <h1>{{ __('contact.view_contact') }}</h1>
-</section>
-
 <!-- Main content -->
 <section class="content no-print">
+    <div class="row no-print">
+        <div class="col-md-4">
+            <h3>@lang('contact.view_contact')</h3>
+        </div>
+        <div class="col-md-4 col-xs-12 mt-15 pull-right">
+            {!! Form::select('contact_id', $contact_dropdown, $contact->id , ['class' => 'form-control select2', 'id' => 'contact_id']); !!}
+        </div>
+    </div>
     <div class="hide print_table_part">
         <style type="text/css">
             .info_col {
@@ -36,142 +39,236 @@
             </div>
         </div>
     </div>
-	<div class="box">
-        <div class="box-header">
-        	<h3 class="box-title">
-                <i class="fa fa-user margin-r-5"></i>
-                @if($contact->type == 'both') 
-                    @lang( 'contact.contact_info', ['contact' => __('contact.contact') ])
-                @else
-                    @lang( 'contact.contact_info', ['contact' => ucfirst($contact->type) ])
-                @endif
-            </h3>
-        </div>
-        <div class="box-body">
-            <span id="view_contact_page"></span>
-            <div class="row">
-                <div class="col-sm-3">
-                    <div class="well well-sm">
-                        @include('contact.contact_basic_info')
-                    </div>
+    <input type="hidden" id="sell_list_filter_customer_id" value="{{$contact->id}}">
+    <input type="hidden" id="purchase_list_filter_supplier_id" value="{{$contact->id}}">
+    <br>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box box-solid">
+                <div class="box-body">
+                    @include('contact.partials.contact_info_tab')
                 </div>
-                <div class="col-sm-3">
-                    <div class="well well-sm">
-                        @include('contact.contact_more_info')
-                    </div>
-                </div>
-                @if( $contact->type != 'customer')
-                    <div class="col-sm-3">
-                        <div class="well well-sm">
-                            @include('contact.contact_tax_info')
-                        </div>
-                    </div>
-                @endif
-                <div class="col-sm-3">
-                    <div class="well well-sm">
-                        @include('contact.contact_payment_info')
-                    </div>
-                </div>
-                @if($reward_enabled)
-                    <div class="clearfix"></div>
-                    <div class="col-md-3">
-                        <div class="info-box bg-yellow">
-                            <span class="info-box-icon"><i class="fa fa-gift"></i></span>
-
-                            <div class="info-box-content">
-                              <span class="info-box-text">{{session('business.rp_name')}}</span>
-                              <span class="info-box-number">{{$contact->total_rp ?? 0}}</span>
-                            </div>
-                            <!-- /.info-box-content -->
-                        </div>
-                    </div>
-                @endif
-
-                @if( $contact->type == 'supplier' || $contact->type == 'both')
-                    <div class="clearfix"></div>
-                    <div class="col-sm-12">
-                        @if(($contact->total_purchase - $contact->purchase_paid) > 0)
-                            <a href="{{action('TransactionPaymentController@getPayContactDue', [$contact->id])}}?type=purchase" class="pay_purchase_due btn btn-primary btn-sm pull-right"><i class="fa fa-money" aria-hidden="true"></i> @lang("contact.pay_due_amount")</a>
-                        @endif
-                    </div>
-                @endif
             </div>
         </div>
     </div>
-    <!-- list purchases -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="nav-tabs-custom">
+                <ul class="nav nav-tabs nav-justified">
+                    <li class="
+                            @if(!empty($view_type) &&  $view_type == 'ledger')
+                                active
+                            @else
+                                ''
+                            @endif">
+                        <a href="#ledger_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-scroll" aria-hidden="true"></i> @lang('lang_v1.ledger')</a>
+                    </li>
+                    @if(in_array($contact->type, ['both', 'supplier']))
+                        <li class="
+                            @if(!empty($view_type) &&  $view_type == 'purchase')
+                                active
+                            @else
+                                ''
+                            @endif">
+                            <a href="#purchases_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-arrow-circle-down" aria-hidden="true"></i> @lang( 'purchase.purchases')</a>
+                        </li>
+                        <li class="
+                            @if(!empty($view_type) &&  $view_type == 'stock_report')
+                                active
+                            @else
+                                ''
+                            @endif">
+                            <a href="#stock_report_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-hourglass-half" aria-hidden="true"></i> @lang( 'report.stock_report')</a>
+                        </li>
+                    @endif
+                    @if(in_array($contact->type, ['both', 'customer']))
+                        <li class="
+                            @if(!empty($view_type) &&  $view_type == 'sales')
+                                active
+                            @else
+                                ''
+                            @endif">
+                            <a href="#sales_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-arrow-circle-up" aria-hidden="true"></i> @lang( 'sale.sells')</a>
+                        </li>
+                        @if(in_array('subscription', $enabled_modules))
+                            <li class="
+                                @if(!empty($view_type) &&  $view_type == 'subscriptions')
+                                    active
+                                @else
+                                    ''
+                                @endif">
+                                <a href="#subscriptions_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-recycle" aria-hidden="true"></i> @lang( 'lang_v1.subscriptions')</a>
+                            </li>
+                        @endif
+                    @endif
+                    <li class="
+                            @if(!empty($view_type) &&  $view_type == 'documents_and_notes')
+                                active
+                            @else
+                                ''
+                            @endif
+                            ">
+                        <a href="#documents_and_notes_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-paperclip" aria-hidden="true"></i> @lang('lang_v1.documents_and_notes')</a>
+                    </li>
 
-    @php
-        $transaction_types = [];
-        if(in_array($contact->type, ['both', 'supplier'])){
-            $transaction_types['purchase'] = __('lang_v1.purchase');
-            $transaction_types['purchase_return'] = __('lang_v1.purchase_return');
-        }
+                    @if( in_array($contact->type, ['customer', 'both']) && session('business.enable_rp'))
+                        <li class="
+                            @if(!empty($view_type) &&  $view_type == 'reward_point')
+                                active
+                            @else
+                                ''
+                            @endif">
+                            <a href="#reward_point_tab" data-toggle="tab" aria-expanded="true"><i class="fas fa-gift" aria-hidden="true"></i> {{ session('business.rp_name') ?? __( 'lang_v1.reward_points')}}</a>
+                        </li>
+                    @endif
 
-        if(in_array($contact->type, ['both', 'customer'])){
-            $transaction_types['sell'] = __('sale.sale');
-            $transaction_types['sell_return'] = __('lang_v1.sell_return');
-        }
+                    @if(!empty($contact_view_tabs))
+                        @foreach($contact_view_tabs as $key => $tabs)
+                            @foreach ($tabs as $index => $value)
+                                @if(!empty($value['tab_menu_path']))
+                                    @php
+                                        $tab_data = !empty($value['tab_data']) ? $value['tab_data'] : [];
+                                    @endphp
+                                    @include($value['tab_menu_path'], $tab_data)
+                                @endif
+                            @endforeach
+                        @endforeach
+                    @endif
 
-        $transaction_types['opening_balance'] = __('lang_v1.opening_balance');
-    @endphp
+                </ul>
 
-    @component('components.widget', ['class' => 'box-primary', 'title' => __('lang_v1.ledger')])
-        <div class="row">
-            <div class="col-md-12">
-                @foreach($transaction_types as $key => $value)
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <div class="checkbox">
-                                <label>
-                                  {!! Form::checkbox('transaction_types[]', $key, true, 
-                                  [ 'class' => 'input-icheck transaction_types']); !!} {{$value}}
-                                </label>
+                <div class="tab-content">
+                    <div class="tab-pane
+                                @if(!empty($view_type) &&  $view_type == 'ledger')
+                                    active
+                                @else
+                                    ''
+                                @endif"
+                            id="ledger_tab">
+                        @include('contact.partials.ledger_tab')
+                    </div>
+                    @if(in_array($contact->type, ['both', 'supplier']))
+                        <div class="tab-pane
+                            @if(!empty($view_type) &&  $view_type == 'purchase')
+                                active
+                            @else
+                                ''
+                            @endif"
+                        id="purchases_tab">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        {!! Form::label('purchase_list_filter_date_range', __('report.date_range') . ':') !!}
+                                        {!! Form::text('purchase_list_filter_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    @include('purchase.partials.purchase_table')
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
-                
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <div class="checkbox">
-                            <label>
-                              {!! Form::checkbox('show_payments', 1, true, 
-                              [ 'class' => 'input-icheck', 'id' => 'show_payments']); !!} @lang('lang_v1.show_payments')
-                            </label>
+                        <div class="tab-pane 
+                            @if(!empty($view_type) &&  $view_type == 'stock_report')
+                                active
+                            @else
+                                ''
+                            @endif" id="stock_report_tab">
+                            @include('contact.partials.stock_report_tab')
                         </div>
+                    @endif
+                    @if(in_array($contact->type, ['both', 'customer']))
+                        <div class="tab-pane 
+                            @if(!empty($view_type) &&  $view_type == 'sales')
+                                active
+                            @else
+                                ''
+                            @endif"
+                        id="sales_tab">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @component('components.widget')
+                                        @include('sell.partials.sell_list_filters', ['only' => ['sell_list_filter_payment_status', 'sell_list_filter_date_range', 'only_subscriptions']])
+                                    @endcomponent
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    @include('sale_pos.partials.sales_table')
+                                </div>
+                            </div>
+                        </div>
+                        @if(in_array('subscription', $enabled_modules))
+                            @include('contact.partials.subscriptions')
+                        @endif
+                    @endif
+                    <div class="tab-pane
+                            @if(!empty($view_type) &&  $view_type == 'documents_and_notes')
+                                active
+                            @else
+                                ''
+                            @endif"
+                        id="documents_and_notes_tab">
+                        @include('contact.partials.documents_and_notes_tab')
                     </div>
+
+                    @if( in_array($contact->type, ['customer', 'both']) && session('business.enable_rp'))
+                        <div class="tab-pane
+                            @if(!empty($view_type) &&  $view_type == 'reward_point')
+                                active
+                            @else
+                                ''
+                            @endif"
+                        id="reward_point_tab">
+                        <br>
+                            <div class="row">
+                            @if($reward_enabled)
+                                <div class="col-md-3">
+                                    <div class="info-box bg-yellow">
+                                        <span class="info-box-icon"><i class="fa fa-gift"></i></span>
+
+                                        <div class="info-box-content">
+                                          <span class="info-box-text">{{session('business.rp_name')}}</span>
+                                          <span class="info-box-number">{{$contact->total_rp ?? 0}}</span>
+                                        </div>
+                                        <!-- /.info-box-content -->
+                                    </div>
+                                </div>
+                            @endif
+                            <div class="col-md-12">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped" 
+                                    id="rp_log_table" width="100%">
+                                        <thead>
+                                            <tr>
+                                                <th>@lang('messages.date')</th>
+                                                <th>@lang('sale.invoice_no')</th>
+                                                <th>@lang('lang_v1.earned')</th>
+                                                <th>@lang('lang_v1.redeemed')</th>
+                                            </tr>
+                                        </thead>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    @endif
+
+                    @if(!empty($contact_view_tabs))
+                        @foreach($contact_view_tabs as $key => $tabs)
+                            @foreach ($tabs as $index => $value)
+                                @if(!empty($value['tab_content_path']))
+                                    @php
+                                        $tab_data = !empty($value['tab_data']) ? $value['tab_data'] : [];
+                                    @endphp
+                                    @include($value['tab_content_path'], $tab_data)
+                                @endif
+                            @endforeach
+                        @endforeach
+                    @endif
                 </div>
-                <div class="clearfix"></div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        {!! Form::label('ledger_date_range', __('report.date_range') . ':') !!}
-                        {!! Form::text('ledger_date_range', null, ['placeholder' => __('lang_v1.select_a_date_range'), 'class' => 'form-control', 'readonly']); !!}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-12">
-                <div id="contact_ledger_div"></div>
             </div>
         </div>
-    @endcomponent
-
-    @if( in_array($contact->type, ['customer', 'both']) && session('business.enable_rp'))
-        @component('components.widget', ['class' => 'box-primary', 'title' => session('business.rp_name')])
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped" 
-                id="rp_log_table">
-                    <thead>
-                        <tr>
-                            <th>@lang('messages.date')</th>
-                            <th>@lang('sale.invoice_no')</th>
-                            <th>@lang('lang_v1.earned')</th>
-                            <th>@lang('lang_v1.redeemed')</th>
-                        </tr>
-                    </thead>
-                </table>
-            </div>
-        @endcomponent
-    @endif
+    </div>
 </section>
 <!-- /.content -->
 <div class="modal fade payment_modal" tabindex="-1" role="dialog" 
@@ -209,6 +306,39 @@ $(document).ready( function(){
             { data: 'rp_redeemed', name: 'transactions.rp_redeemed'},
         ]
     });
+
+    supplier_stock_report_table = $('#supplier_stock_report_table').DataTable({
+        processing: true,
+        serverSide: true,
+        'ajax': {
+            url: "{{action('ContactController@getSupplierStockReport', [$contact->id])}}",
+            data: function (d) {
+                d.location_id = $('#sr_location_id').val();
+            }
+        },
+        columns: [
+            { data: 'product_name', name: 'p.name'  },
+            { data: 'sub_sku', name: 'v.sub_sku'  },
+            { data: 'purchase_quantity', name: 'purchase_quantity', searchable: false},
+            { data: 'total_quantity_sold', name: 'total_quantity_sold', searchable: false},
+            { data: 'total_quantity_returned', name: 'total_quantity_returned', searchable: false},
+            { data: 'current_stock', name: 'current_stock', searchable: false},
+            { data: 'stock_price', name: 'stock_price', searchable: false}
+        ],
+        fnDrawCallback: function(oSettings) {
+            __currency_convert_recursively($('#supplier_stock_report_table'));
+        },
+    });
+
+    $('#sr_location_id').change( function() {
+        supplier_stock_report_table.ajax.reload();
+    });
+
+    $('#contact_id').change( function() {
+        if ($(this).val()) {
+            window.location = "{{url('/contacts')}}/" + $(this).val();
+        }
+    });
 });
 
 $("input.transaction_types, input#show_payments").on('ifChanged', function (e) {
@@ -232,16 +362,76 @@ function get_contact_ledger() {
         success: function(result) {
             $('#contact_ledger_div')
                 .html(result);
-            __currency_convert_recursively($('#ledger_table'));
+            __currency_convert_recursively($('#contact_ledger_div'));
 
             $('#ledger_table').DataTable({
-                searchable: false,
-                ordering:false
+                searching: false,
+                ordering:false,
+                paging:false,
+                dom: 't'
             });
         },
     });
 }
-</script>
-<script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>
 
+$(document).on('click', '#send_ledger', function() {
+    var start_date = $('#ledger_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
+    var end_date = $('#ledger_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
+
+    var url = "{{action('NotificationController@getTemplate', [$contact->id, 'send_ledger'])}}" + '?start_date=' + start_date + '&end_date=' + end_date;
+
+    $.ajax({
+        url: url,
+        dataType: 'html',
+        success: function(result) {
+            $('.view_modal')
+                .html(result)
+                .modal('show');
+        },
+    });
+})
+
+$(document).on('click', '#print_ledger_pdf', function() {
+    var start_date = $('#ledger_date_range').data('daterangepicker').startDate.format('YYYY-MM-DD');
+    var end_date = $('#ledger_date_range').data('daterangepicker').endDate.format('YYYY-MM-DD');
+
+    var url = $(this).data('href') + '&start_date=' + start_date + '&end_date=' + end_date;
+    window.open(url);
+});
+
+</script>
+@include('sale_pos.partials.sale_table_javascript')
+<script src="{{ asset('js/payment.js?v=' . $asset_v) }}"></script>
+@if(in_array($contact->type, ['both', 'supplier']))
+    <script src="{{ asset('js/purchase.js?v=' . $asset_v) }}"></script>
+@endif
+
+<!-- document & note.js -->
+@include('documents_and_notes.document_and_note_js')
+@if(!empty($contact_view_tabs))
+    @foreach($contact_view_tabs as $key => $tabs)
+        @foreach ($tabs as $index => $value)
+            @if(!empty($value['module_js_path']))
+                @include($value['module_js_path'])
+            @endif
+        @endforeach
+    @endforeach
+@endif
+
+<script type="text/javascript">
+    $(document).ready( function(){
+        $('#purchase_list_filter_date_range').daterangepicker(
+            dateRangeSettings,
+            function (start, end) {
+                $('#purchase_list_filter_date_range').val(start.format(moment_date_format) + ' ~ ' + end.format(moment_date_format));
+               purchase_table.ajax.reload();
+            }
+        );
+        $('#purchase_list_filter_date_range').on('cancel.daterangepicker', function(ev, picker) {
+            $('#purchase_list_filter_date_range').val('');
+            purchase_table.ajax.reload();
+        });
+    });
+</script>
+@include('sale_pos.partials.subscriptions_table_javascript', ['contact_id' => $contact->id])
 @endsection

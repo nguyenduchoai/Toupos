@@ -26,9 +26,7 @@
                     <a href="#" class="list-group-item text-center">@lang('business.sale')</a>
                     <a href="#" class="list-group-item text-center">@lang('sale.pos_sale')</a>
                     <a href="#" class="list-group-item text-center">@lang('purchase.purchases')</a>
-                    @if(!config('constants.disable_expiry', true))
                     <a href="#" class="list-group-item text-center">@lang('business.dashboard')</a>
-                    @endif
                     <a href="#" class="list-group-item text-center">@lang('business.system')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.prefixes')</a>
                     <a href="#" class="list-group-item text-center">@lang('lang_v1.email_settings')</a>
@@ -56,9 +54,7 @@
                 @include('business.partials.settings_purchase')
                 <!-- tab 5 end -->
                 <!-- tab 6 start -->
-                @if(!config('constants.disable_expiry', true))
-                    @include('business.partials.settings_dashboard')
-                @endif
+                @include('business.partials.settings_dashboard')
                 <!-- tab 6 end -->
                 <!-- tab 7 start -->
                 @include('business.partials.settings_system')

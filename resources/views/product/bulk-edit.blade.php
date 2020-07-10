@@ -26,16 +26,17 @@
 			<table class="table text-center table-bordered" id="product_table">
 				<thead id="product_table_head">
 					<tr class="bg-gray">
-						<th>@lang('sale.product')</th>
-						<th>@lang('product.category')</th>
-						<th>@lang('product.sub_category')</th>
-						<th>@lang('product.brand')</th>
-                		<th>@lang('product.tax')</th>
+						<th class="col-md-1">@lang('sale.product')</th>
+						<th class="col-md-2">@lang('product.category')</th>
+						<th class="col-md-2">@lang('product.sub_category')</th>
+						<th class="col-md-2">@lang('product.brand')</th>
+                		<th class="col-md-2">@lang('product.tax')</th>
+                		<th class="col-md-3">@lang('business.business_locations')</th>
 					</tr>
 				</thead>
-					@foreach($products as $product)
-						@include('product.partials.bulk_edit_product_row')
-					@endforeach
+				@foreach($products as $product)
+					@include('product.partials.bulk_edit_product_row')
+				@endforeach
 			</table>
 		</div>
 	</div>

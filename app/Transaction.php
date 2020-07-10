@@ -14,6 +14,13 @@ class Transaction extends Model
      * @var array
      */
     protected $guarded = ['id'];
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'transactions';
     
     public function purchase_lines()
     {
@@ -32,7 +39,7 @@ class Transaction extends Model
 
     public function payment_lines()
     {
-        return $this->hasMany(\App\TransactionPayment::class);
+        return $this->hasMany(\App\TransactionPayment::class, 'transaction_id');
     }
 
     public function location()
@@ -83,6 +90,16 @@ class Transaction extends Model
     public function recurring_parent()
     {
         return $this->hasOne(\App\Transaction::class, 'id', 'recur_parent_id');
+    }
+
+    public function price_group()
+    {
+        return $this->belongsTo(\App\SellingPriceGroup::class, 'selling_price_group_id');
+    }
+
+    public function types_of_service()
+    {
+        return $this->belongsTo(\App\TypesOfService::class, 'types_of_service_id');
     }
 
     /**
@@ -208,5 +225,58 @@ class Transaction extends Model
     public function transaction_for()
     {
         return $this->belongsTo(\App\User::class, 'expense_for');
+    }
+
+    /**
+     * Returns the list of discount types.
+     */
+    public static function discountTypes()
+    {
+        return [
+                'fixed' => __('lang_v1.fixed'),
+                'percentage' => __('lang_v1.percentage')
+            ];
+    }
+
+    public static function transactionTypes()
+    {
+        return  [
+                'sell' => __('sale.sale'),
+                'purchase' => __('lang_v1.purchase'),
+                'sell_return' => __('lang_v1.sell_return'),
+                'purchase_return' =>  __('lang_v1.purchase_return'),
+                'opening_balance' => __('lang_v1.opening_balance'),
+                'payment' => __('lang_v1.payment')
+            ];
+    }
+
+    public static function getPaymentStatus($transaction)
+    {
+        $payment_status = $transaction->payment_status;
+
+        if (in_array($payment_status, ['partial', 'due']) && !empty($transaction->pay_term_number) && !empty($transaction->pay_term_type)) {
+            $transaction_date = \Carbon::parse($transaction->transaction_date);
+            $due_date = $transaction->pay_term_type == 'days' ? $transaction_date->addDays($transaction->pay_term_number) : $transaction_date->addMonths($transaction->pay_term_number);
+            $now = \Carbon::now();
+            if ($now->gt($due_date)) {
+                $payment_status = $payment_status == 'due' ? 'overdue' : 'partial-overdue';
+            }
+        }
+
+        return $payment_status;
+    }
+
+    /**
+     * Due date custom attribute
+     */
+    public function getDueDateAttribute()
+    {
+        $due_date = null;
+        if (!empty($this->pay_term_type) && !empty($this->pay_term_number)) {
+            $transaction_date = \Carbon::parse($this->transaction_date);
+            $due_date = $this->pay_term_type == 'days' ? $transaction_date->addDays($this->pay_term_number) : $transaction_date->addMonths($this->pay_term_number);
+        }
+
+        return $due_date;
     }
 }

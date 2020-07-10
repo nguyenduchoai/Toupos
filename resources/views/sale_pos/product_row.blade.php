@@ -6,7 +6,7 @@
 		@endphp
 
 		@if($edit_price || $edit_discount )
-		<div data-toggle="tooltip" data-placement="bottom" title="@lang('lang_v1.pos_edit_product_price_help')">
+		<div title="@lang('lang_v1.pos_edit_product_price_help')">
 		<span class="text-link text-info cursor-pointer" data-toggle="modal" data-target="#row_edit_product_price_modal_{{$row_count}}">
 			{!! $product_name !!}
 			&nbsp;<i class="fa fa-info-circle"></i>
@@ -20,9 +20,6 @@
 			class="product_type" 
 			name="products[{{$row_count}}][product_type]" 
 			value="{{$product->product_type}}">
-		<div data-toggle="tooltip" data-placement="bottom" title="@lang('lang_v1.add_description')">
-			<i class="fa fa-commenting cursor-pointer text-primary add-pos-row-description" data-toggle="modal" data-target="#row_description_modal_{{$row_count}}"></i>
-		</div>
 
 		@php
 			$hide_tax = 'hide';
@@ -43,33 +40,6 @@
 			@include('sale_pos.partials.row_edit_product_price_modal')
 		</div>
 
-		<!-- Description modal start -->
-		<div class="modal fade row_description_modal" id="row_description_modal_{{$row_count}}" tabindex="-1" role="dialog">
-		  <div class="modal-dialog" role="document">
-		    <div class="modal-content">
-		      <div class="modal-header">
-		        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		        <h4 class="modal-title" id="myModalLabel">{{$product->product_name}} - {{$product->sub_sku}}</h4>
-		      </div>
-		      <div class="modal-body">
-		      	<div class="form-group">
-		      		<label>@lang('lang_v1.description')</label>
-		      		@php
-		      			$sell_line_note = '';
-		      			if(!empty($product->sell_line_note)){
-		      				$sell_line_note = $product->sell_line_note;
-		      			}
-		      		@endphp
-		      		<textarea class="form-control" name="products[{{$row_count}}][sell_line_note]" rows="3">{{$sell_line_note}}</textarea>
-		      		<p class="help-block">@lang('lang_v1.sell_line_description_help')</p>
-		      	</div>
-		      </div>
-		      <div class="modal-footer">
-		        <button type="button" class="btn btn-default" data-dismiss="modal">@lang('messages.close')</button>
-		      </div>
-		    </div>
-		  </div>
-		</div>
 		<!-- Description modal end -->
 		@if(in_array('modifiers' , $enabled_modules))
 			<div class="modifiers_html">
@@ -276,6 +246,6 @@
 		<span class="display_currency pos_line_total_text @if(!empty($pos_settings['is_pos_subtotal_editable'])) hide @endif" data-currency_symbol="true">{{$product->quantity_ordered*$unit_price_inc_tax}}</span>
 	</td>
 	<td class="text-center">
-		<i class="fa fa-close text-danger pos_remove_row cursor-pointer" aria-hidden="true"></i>
+		<i class="fa fa-times text-danger pos_remove_row cursor-pointer" aria-hidden="true"></i>
 	</td>
 </tr>

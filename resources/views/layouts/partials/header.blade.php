@@ -10,6 +10,7 @@
     <nav class="navbar navbar-static-top" role="navigation">
       <!-- Sidebar toggle button-->
       <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        &#9776;
         <span class="sr-only">Toggle navigation</span>
       </a>
 
@@ -39,14 +40,16 @@
           </button>
         @endif
 
-        @can('sell.create')
-          <a href="{{action('SellPosController@create')}}" title="POS" data-toggle="tooltip" data-placement="bottom" class="btn btn-success btn-flat pull-left m-8 hidden-xs btn-sm mt-10">
-            <strong><i class="fa fa-th-large"></i> &nbsp; @lang('sale.pos_sale')</strong>
-          </a>
-        @endcan
+        @if(in_array('pos_sale', $enabled_modules))
+          @can('sell.create')
+            <a href="{{action('SellPosController@create')}}" title="@lang('sale.pos_sale')" data-toggle="tooltip" data-placement="bottom" class="btn btn-success btn-flat pull-left m-8 hidden-xs btn-sm mt-10">
+              <strong><i class="fa fa-th-large"></i> &nbsp; @lang('sale.pos_sale')</strong>
+            </a>
+          @endcan
+        @endif
         @can('profit_loss_report.view')
           <button type="button" id="view_todays_profit" title="{{ __('home.todays_profit') }}" data-toggle="tooltip" data-placement="bottom" class="btn btn-success btn-flat pull-left m-8 hidden-xs btn-sm mt-10">
-            <strong><i class="fa fa-money fa-lg"></i></strong>
+            <strong><i class="fas fa-money-bill-alt fa-lg"></i></strong>
           </button>
         @endcan
 
@@ -66,7 +69,12 @@
             <!-- Menu Toggle Button -->
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
               <!-- The user image in the navbar-->
-              <!-- <img src="dist/img/user2-160x160.jpg" class="user-image" alt="User Image"> -->
+              @php
+                $profile_photo = auth()->user()->media;
+              @endphp
+              @if(!empty($profile_photo))
+                <img src="{{$profile_photo->display_url}}" class="user-image" alt="User Image">
+              @endif
               <!-- hidden-xs hides the username on small devices so only the image appears. -->
               <span>{{ Auth::User()->first_name }} {{ Auth::User()->last_name }}</span>
             </a>

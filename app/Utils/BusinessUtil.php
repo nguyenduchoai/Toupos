@@ -308,6 +308,15 @@ class BusinessUtil extends Util
         $ref_count = $this->setAndGetReferenceCount('business_location', $business_id);
         $location_id = $this->generateReferenceNumber('business_location', $ref_count, $business_id);
 
+        //Enable all payment methods by default
+        $payment_types = $this->payment_types();
+        $location_payment_types = [];
+        foreach ($payment_types as $key => $value) {
+            $location_payment_types[$key] = [
+                'is_enabled' => 1,
+                'account' => null
+            ];
+        }
         $location = BusinessLocation::create(['business_id' => $business_id,
                             'name' => $location_details['name'],
                             'landmark' => $location_details['landmark'],
@@ -321,7 +330,8 @@ class BusinessUtil extends Util
                             'alternate_number' => !empty($location_details['alternate_number']) ? $location_details['alternate_number'] : '',
                             'website' => !empty($location_details['website']) ? $location_details['website'] : '',
                             'email' => '',
-                            'location_id' => $location_id
+                            'location_id' => $location_id,
+                            'default_payment_accounts' => json_encode($location_payment_types)
                         ]);
         return $location;
     }
@@ -430,7 +440,7 @@ class BusinessUtil extends Util
      */
     public function defaultSmsSettings()
     {
-        //02/10/19 DanhVT add
+         //02/10/19 DanhVT add
         // return ['url' => '', 'send_to_param_name' => 'to', 'msg_param_name' => 'text', 'request_method' => 'post', 'param_1' => '', 'param_val_1' => '', 'param_2' => '', 'param_val_2' => '','param_3' => '', 'param_val_3' => '','param_4' => '', 'param_val_4' => '','param_5' => '', 'param_val_5' => '', ];
         return [
             'checked' => 'tousms',
@@ -442,12 +452,8 @@ class BusinessUtil extends Util
                 'secretkey' => '',
                 'brandname' => ''
             ],
-            'vht' => [
-                'account' => '',
-                'password' => '',
-                'brandname' => ''
-            ]
+            
         ];
-        //02/10/19 DanhVT end
     }
+        //02/10/19 DanhVT end  
 }

@@ -1,4 +1,4 @@
-@extends('layouts.auth', ['no_header' => 1])
+@extends('layouts.install', ['no_header' => 1])
 @section('title', 'POS Installation - Check server')
 
 @section('content')
@@ -36,7 +36,7 @@
 
                   <h4 class="install_instuction">Hey, I need your help. </h4>
                   <p class="install_instuction">
-                    Please create a file with name <code>.env</code> in application folder with <code>read & write permission</code> and paste the below content. <br/> Press install after it.
+                    Please create a file with name <code>.env</code> at <strong>{{$envPath}}</strong> with <code>read & write permission</code> and paste the below content. <br/> Press install after it.
                   </p>
                   <hr/>
 

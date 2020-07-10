@@ -25,15 +25,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $env = config('app.env');
-        $email = env('MAIL_USERNAME');
+        $email = config('mail.username');
 
         if ($env === 'live') {
             //Scheduling backup, specify the time when the backup will get cleaned & time when it will run.
-            $schedule->command('backup:run')->dailyAt('23:30');
+            $schedule->command('backup:run')->dailyAt('23:50');
 
             //Schedule to create recurring invoices
-            $schedule->command('pos:generateSubscriptionInvoices')->daily();
-            $schedule->command('pos:updateRewardPoints')->daily();
+            $schedule->command('pos:generateSubscriptionInvoices')->dailyAt('23:30');
+            $schedule->command('pos:updateRewardPoints')->dailyAt('23:45');
         }
 
         if ($env === 'demo' && !empty($email)) {

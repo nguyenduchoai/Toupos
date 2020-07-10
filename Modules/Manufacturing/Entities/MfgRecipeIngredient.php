@@ -28,4 +28,12 @@ class MfgRecipeIngredient extends Model
     {
         return $this->belongsTo(\App\Unit::class, 'sub_unit_id');
     }
+
+    /**
+     * Get the ingredient group associated with the ingredient.
+     */
+    public function ingredient_group()
+    {
+        return $this->belongsTo(\Modules\Manufacturing\Entities\MfgIngredientGroup::class, 'mfg_ingredient_group_id');
+    }
 }

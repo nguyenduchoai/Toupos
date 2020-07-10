@@ -3,10 +3,22 @@
   @php
     $form_id = 'contact_add_form';
     if(isset($quick_add)){
-    $form_id = 'quick_add_contact';
+      $form_id = 'quick_add_contact';
+    }
+
+    if(isset($store_action)) {
+      $url = $store_action;
+      $type = 'lead';
+      $customer_groups = [];
+    } else {
+      $url = action('ContactController@store');
+      $type = '';
+      $sources = [];
+      $life_stages = [];
+      $users = [];
     }
   @endphp
-    {!! Form::open(['url' => action('ContactController@store'), 'method' => 'post', 'id' => $form_id ]) !!}
+    {!! Form::open(['url' => $url, 'method' => 'post', 'id' => $form_id ]) !!}
 
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -23,7 +35,7 @@
                 <span class="input-group-addon">
                     <i class="fa fa-user"></i>
                 </span>
-                {!! Form::select('type', $types, null , ['class' => 'form-control', 'id' => 'contact_type','placeholder' => __('messages.please_select'), 'required']); !!}
+                {!! Form::select('type', $types, $type , ['class' => 'form-control', 'id' => 'contact_type','placeholder' => __('messages.please_select'), 'required']); !!}
             </div>
         </div>
       </div>
@@ -72,21 +84,57 @@
               </div>
           </div>
         </div>
+
+        <!-- lead additional field -->
+        <div class="col-md-4 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('crm_source', __('lang_v1.source') . ':' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fas fa fa-search"></i>
+                  </span>
+                  {!! Form::select('crm_source', $sources, null , ['class' => 'form-control', 'id' => 'crm_source','placeholder' => __('messages.please_select')]); !!}
+              </div>
+          </div>
+        </div>
+        <div class="col-md-4 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('crm_life_stage', __('lang_v1.life_stage') . ':' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fas fa fa-life-ring"></i>
+                  </span>
+                  {!! Form::select('crm_life_stage', $life_stages, null , ['class' => 'form-control', 'id' => 'crm_life_stage','placeholder' => __('messages.please_select')]); !!}
+              </div>
+          </div>
+        </div>
+        <div class="col-md-6 lead_additional_div">
+          <div class="form-group">
+              {!! Form::label('user_id', __('lang_v1.assigned_to') . ':*' ) !!}
+              <div class="input-group">
+                  <span class="input-group-addon">
+                      <i class="fa fa-user"></i>
+                  </span>
+                  {!! Form::select('user_id[]', $users, null , ['class' => 'form-control select2', 'id' => 'user_id', 'multiple', 'required', 'style' => 'width: 100%;']); !!}
+              </div>
+          </div>
+        </div>
+
         <div class="clearfix"></div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 opening_balance">
           <div class="form-group">
               {!! Form::label('opening_balance', __('lang_v1.opening_balance') . ':') !!}
               <div class="input-group">
                   <span class="input-group-addon">
-                      <i class="fa fa-money"></i>
+                      <i class="fas fa-money-bill-alt"></i>
                   </span>
                   {!! Form::text('opening_balance', 0, ['class' => 'form-control input_number']); !!}
               </div>
           </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-4 pay_term">
           <div class="form-group">
             <div class="multi-input">
               {!! Form::label('pay_term_number', __('contact.pay_term') . ':') !!} @show_tooltip(__('tooltip.pay_term'))
@@ -114,7 +162,7 @@
               {!! Form::label('credit_limit', __('lang_v1.credit_limit') . ':') !!}
               <div class="input-group">
                   <span class="input-group-addon">
-                      <i class="fa fa-money"></i>
+                      <i class="fas fa-money-bill-alt"></i>
                   </span>
                   {!! Form::text('credit_limit', null, ['class' => 'form-control input_number']); !!}
               </div>
@@ -214,44 +262,57 @@
             </div>
         </div>
       </div>
-      <div> 
       <div class="clearfix"></div>
       <div class="col-md-12">
         <hr/>
       </div>
+      @php
+        $custom_labels = json_decode(session('business.custom_labels'), true);
+        $contact_custom_field1 = !empty($custom_labels['contact']['custom_field_1']) ? $custom_labels['contact']['custom_field_1'] : __('lang_v1.contact_custom_field1');
+        $contact_custom_field2 = !empty($custom_labels['contact']['custom_field_2']) ? $custom_labels['contact']['custom_field_2'] : __('lang_v1.contact_custom_field2');
+        $contact_custom_field3 = !empty($custom_labels['contact']['custom_field_3']) ? $custom_labels['contact']['custom_field_3'] : __('lang_v1.contact_custom_field3');
+        $contact_custom_field4 = !empty($custom_labels['contact']['custom_field_4']) ? $custom_labels['contact']['custom_field_4'] : __('lang_v1.contact_custom_field4');
+      @endphp
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field1', __('lang_v1.custom_field', ['number' => 1]) . ':') !!}
+            {!! Form::label('custom_field1', $contact_custom_field1 . ':') !!}
             {!! Form::text('custom_field1', null, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 1])]); !!}
+                'placeholder' => __('lang_v1.contact_custom_field1')]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field2', __('lang_v1.custom_field', ['number' => 2]) . ':') !!}
+            {!! Form::label('custom_field2', $contact_custom_field2 . ':') !!}
             {!! Form::text('custom_field2', null, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 2])]); !!}
+                'placeholder' => $contact_custom_field2]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field3', __('lang_v1.custom_field', ['number' => 3]) . ':') !!}
+            {!! Form::label('custom_field3', $contact_custom_field3 . ':') !!}
             {!! Form::text('custom_field3', null, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 3])]); !!}
+                'placeholder' => $contact_custom_field3]); !!}
         </div>
       </div>
       <div class="col-md-3">
         <div class="form-group">
-            {!! Form::label('custom_field4', __('lang_v1.custom_field', ['number' => 4]) . ':') !!}
+            {!! Form::label('custom_field4', $contact_custom_field4 . ':') !!}
             {!! Form::text('custom_field4', null, ['class' => 'form-control', 
-                'placeholder' => __('lang_v1.custom_field', ['number' => 4])]); !!}
+                'placeholder' => $contact_custom_field4]); !!}
         </div>
       </div>
+      <div class="col-md-12"><hr></div>
+      <div class="col-md-8" >
+          <strong>{{__('lang_v1.shipping_address')}}</strong><br>
+          {!! Form::text('shipping_address', null, ['class' => 'form-control', 
+                'placeholder' => __('lang_v1.search_address'), 'id' => 'shipping_address']); !!}
+        <div id="map"></div>
       </div>
-      <div class="clearfix"></div>
+      {!! Form::hidden('position', null, ['id' => 'position']); !!}
 
+      </div>
     </div>
-    </div>
+    
     <div class="modal-footer">
       <button type="submit" class="btn btn-primary">@lang( 'messages.save' )</button>
       <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>

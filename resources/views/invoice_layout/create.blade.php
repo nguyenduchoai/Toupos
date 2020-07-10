@@ -7,6 +7,9 @@
 
 
 </style>
+@php
+  $custom_labels = json_decode(session('business.custom_labels'), true);
+@endphp
 <!-- Content Header (Page header) -->
 <section class="content-header">
     <h1>@lang('invoice.add_invoice_layout')</h1>
@@ -30,7 +33,9 @@
           <div class="form-group">
             {!! Form::label('design', __('lang_v1.design') . ':*') !!}
               {!! Form::select('design', $designs, 'classic', ['class' => 'form-control']); !!}
-              <span class="help-block">Used for browser based printing</span>
+              <span class="help-block">
+                @lang('lang_v1.used_for_browser_based_printing')
+              </span>
           </div>
 
           <div class="form-group hide" id="columnize-taxes">
@@ -64,7 +69,7 @@
         <div class="col-sm-6">
           <div class="form-group">
             {!! Form::label('logo', __('invoice.invoice_logo') . ':') !!}
-            {!! Form::file('logo'); !!}
+            {!! Form::file('logo', ['accept' => 'image/*']); !!}
             <span class="help-block">@lang('lang_v1.invoice_logo_help', ['max_size' => '1 MB'])</span>
           </div>
         </div>
@@ -181,6 +186,22 @@
 
         <div class="col-sm-3">
           <div class="form-group">
+            {!! Form::label('due_date_label', __('lang_v1.due_date_label') . ':' ) !!}
+            {!! Form::text('common_settings[due_date_label]', 'Due Date', ['class' => 'form-control',
+              'placeholder' => __('lang_v1.due_date_label'), 'id' => 'due_date_label' ]); !!}
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('common_settings[show_due_date]', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_due_date')</label>
+              </div>
+          </div>
+        </div>
+
+        <div class="col-sm-3">
+          <div class="form-group">
             {!! Form::label('date_time_format', __('lang_v1.date_time_format') . ':' ) !!}
             {!! Form::text('date_time_format', null, ['class' => 'form-control',
               'placeholder' => __('lang_v1.date_time_format') ]); !!} 
@@ -274,13 +295,12 @@
               </div>
           </div>
         </div>
-
         <div class="clearfix"></div>
         <div class="col-sm-3">
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('contact_custom_fields[]', 'custom_field1', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 1])</label>
+              {!! Form::checkbox('contact_custom_fields[]', 'custom_field1', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }}</label>
           </div>
         </div>
       </div>
@@ -289,7 +309,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('contact_custom_fields[]', 'custom_field2', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 2])</label>
+              {!! Form::checkbox('contact_custom_fields[]', 'custom_field2', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }}</label>
           </div>
         </div>
       </div>
@@ -298,7 +318,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('contact_custom_fields[]', 'custom_field3', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 3])</label>
+              {!! Form::checkbox('contact_custom_fields[]', 'custom_field3', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }}</label>
           </div>
         </div>
       </div>
@@ -306,7 +326,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('contact_custom_fields[]', 'custom_field4', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 4])</label>
+              {!! Form::checkbox('contact_custom_fields[]', 'custom_field4', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }}</label>
           </div>
         </div>
       </div>
@@ -361,7 +381,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('location_custom_fields[]', 'custom_field1', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 1])</label>
+              {!! Form::checkbox('location_custom_fields[]', 'custom_field1', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['location']['custom_field_1'] ?? __('lang_v1.location_custom_field1') }}</label>
           </div>
         </div>
       </div>
@@ -370,7 +390,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('location_custom_fields[]', 'custom_field2', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 2])</label>
+              {!! Form::checkbox('location_custom_fields[]', 'custom_field2', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['location']['custom_field_2'] ?? __('lang_v1.location_custom_field2') }}</label>
           </div>
         </div>
       </div>
@@ -379,7 +399,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('location_custom_fields[]', 'custom_field3', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 3])</label>
+              {!! Form::checkbox('location_custom_fields[]', 'custom_field3', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['location']['custom_field_3'] ?? __('lang_v1.location_custom_field3') }}</label>
           </div>
         </div>
       </div>
@@ -388,7 +408,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('location_custom_fields[]', 'custom_field4', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.custom_field', ['number' => 4])</label>
+              {!! Form::checkbox('location_custom_fields[]', 'custom_field4', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['location']['custom_field_4'] ?? __('lang_v1.location_custom_field4') }}</label>
           </div>
         </div>
       </div>
@@ -484,6 +504,13 @@
               'placeholder' => 'HSN or Category Code' ]); !!}
           </div>
         </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            {!! Form::label('total_quantity_label', __('lang_v1.total_quantity_label') . ':' ) !!}
+            {!! Form::text('common_settings[total_quantity_label]', 'Total Quantity', ['class' => 'form-control',
+              'placeholder' => __('lang_v1.total_quantity_label'), 'id' => 'total_quantity_label' ]); !!}
+          </div>
+        </div>
         
         <div class="col-sm-12">
           <h4>@lang('lang_v1.product_details_to_be_shown'):</h4>
@@ -529,7 +556,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field1', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.product_custom_field1')</label>
+              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field1', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['product']['custom_field_1'] ?? __('lang_v1.product_custom_field1') }}</label>
           </div>
         </div>
       </div>
@@ -538,7 +565,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field2', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.product_custom_field2')</label>
+              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field2', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['product']['custom_field_2'] ?? __('lang_v1.product_custom_field2') }}</label>
           </div>
         </div>
       </div>
@@ -547,7 +574,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field3', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.product_custom_field3')</label>
+              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field3', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['product']['custom_field_3'] ?? __('lang_v1.product_custom_field3') }}</label>
           </div>
         </div>
       </div>
@@ -556,7 +583,7 @@
         <div class="form-group">
           <div class="checkbox">
             <label>
-              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field4', false, ['class' => 'input-icheck']); !!} @lang('lang_v1.product_custom_field4')</label>
+              {!! Form::checkbox('product_custom_fields[]', 'product_custom_field4', false, ['class' => 'input-icheck']); !!} {{ $custom_labels['product']['custom_field_4'] ?? __('lang_v1.product_custom_field4') }}</label>
           </div>
         </div>
       </div>
@@ -587,6 +614,32 @@
             <div class="checkbox">
               <label>
                 {!! Form::checkbox('show_image', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_product_image')</label>
+              </div>
+          </div>
+        </div>
+
+        <div class="clearfix"></div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('common_settings[show_warranty_name]', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_warranty_name')</label>
+              </div>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('common_settings[show_warranty_exp_date]', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_warranty_exp_date')</label>
+              </div>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('common_settings[show_warranty_description]', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.show_warranty_description')</label>
               </div>
           </div>
         </div>
@@ -625,6 +678,15 @@
               'placeholder' => __('invoice.total_label') ]); !!}
           </div>
         </div>
+        
+        <div class="col-sm-3">
+          <div class="form-group">
+            {!! Form::label('round_off_label', __('lang_v1.round_off_label') . ':' ) !!}
+            {!! Form::text('round_off_label', 'Round off', ['class' => 'form-control',
+              'placeholder' => __('lang_v1.round_off_label') ]); !!}
+          </div>
+        </div>
+
         <div class="col-sm-3">
           <div class="form-group">
             {!! Form::label('total_due_label', __('invoice.total_due_label') . ' (' . __('lang_v1.current_sale') . '):' ) !!}
@@ -674,6 +736,23 @@
               </div>
           </div>
         </div>
+        <div class="col-sm-3">
+          <div class="form-group">
+            {!! Form::label('change_return_label', __('lang_v1.change_return_label') . ':' ) !!} @show_tooltip(__('lang_v1.change_return_help'))
+            {!! Form::text('change_return_label', 'Change Return', ['class' => 'form-control',
+              'placeholder' => __('lang_v1.change_return_label') ]); !!}
+          </div>
+        </div>
+
+        <div class="col-sm-3 hide" id="hide_price_div">
+          <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('common_settings[hide_price]', 1, false, ['class' => 'input-icheck']); !!} @lang('lang_v1.hide_all_prices')</label>
+              </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -712,6 +791,10 @@
       </div>
     </div>
   </div>
+
+  @if(!empty($enabled_modules) && in_array('types_of_service', $enabled_modules) )
+    @include('types_of_service.invoice_layout_settings')
+  @endif
   
   <!-- Call restaurant module if defined -->
   @include('restaurant.partials.invoice_layout')

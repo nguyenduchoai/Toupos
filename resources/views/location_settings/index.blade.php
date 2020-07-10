@@ -41,7 +41,7 @@
                                 @show_tooltip(__('tooltip.print_receipt_on_invoice'))
                                 <div class="input-group">
                                     <span class="input-group-addon">
-                                        <i class="fa fa-file-text-o"></i>
+                                        <i class="fa fa-file-alt"></i>
                                     </span>
                                     {!! Form::select('print_receipt_on_invoice', $printReceiptOnInvoice, $location->print_receipt_on_invoice, ['class' => 'form-control select2', 'required']); !!}
                                 </div>

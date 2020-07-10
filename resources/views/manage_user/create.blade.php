@@ -34,13 +34,41 @@
         </div>
       </div>
       <div class="clearfix"></div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="form-group">
           {!! Form::label('email', __( 'business.email' ) . ':*') !!}
             {!! Form::text('email', null, ['class' => 'form-control', 'required', 'placeholder' => __( 'business.email' ) ]); !!}
         </div>
       </div>
-      <div class="col-md-6">
+
+      <div class="col-md-4">
+        <div class="form-group">
+          <div class="checkbox">
+            <br/>
+            <label>
+                 {!! Form::checkbox('is_active', 'active', true, ['class' => 'input-icheck status']); !!} {{ __('lang_v1.status_for_user') }}
+            </label>
+            @show_tooltip(__('lang_v1.tooltip_enable_user_active'))
+          </div>
+        </div>
+      </div>
+  @endcomponent
+  </div>
+  <div class="col-md-12">
+    @component('components.widget', ['title' => __('lang_v1.roles_and_permissions')])
+      <div class="col-md-4">
+        <div class="form-group">
+            <div class="checkbox">
+              <label>
+                {!! Form::checkbox('allow_login', 1, true, 
+                [ 'class' => 'input-icheck', 'id' => 'allow_login']); !!} {{ __( 'lang_v1.allow_login' ) }}
+              </label>
+            </div>
+        </div>
+      </div>
+      <div class="clearfix"></div>
+      <div class="user_auth_fields">
+      <div class="col-md-4">
         <div class="form-group">
           {!! Form::label('username', __( 'business.username' ) . ':') !!}
           @if(!empty($username_ext))
@@ -55,62 +83,20 @@
           <p class="help-block">@lang('lang_v1.username_help')</p>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="form-group">
           {!! Form::label('password', __( 'business.password' ) . ':*') !!}
             {!! Form::password('password', ['class' => 'form-control', 'required', 'placeholder' => __( 'business.password' ) ]); !!}
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-4">
         <div class="form-group">
           {!! Form::label('confirm_password', __( 'business.confirm_password' ) . ':*') !!}
             {!! Form::password('confirm_password', ['class' => 'form-control', 'required', 'placeholder' => __( 'business.confirm_password' ) ]); !!}
         </div>
       </div>
-      <div class="col-md-4">
-        <div class="form-group">
-          {!! Form::label('cmmsn_percent', __( 'lang_v1.cmmsn_percent' ) . ':') !!} @show_tooltip(__('lang_v1.commsn_percent_help'))
-            {!! Form::text('cmmsn_percent', null, ['class' => 'form-control input_number', 'placeholder' => __( 'lang_v1.cmmsn_percent' ) ]); !!}
-        </div>
-      </div>
-      
-      <div class="col-md-4">
-        <div class="form-group">
-            <div class="checkbox">
-            <br/>
-              <label>
-                {!! Form::checkbox('selected_contacts', 1, false, 
-                [ 'class' => 'input-icheck', 'id' => 'selected_contacts']); !!} {{ __( 'lang_v1.allow_selected_contacts' ) }}
-              </label>
-              @show_tooltip(__('lang_v1.allow_selected_contacts_tooltip'))
-            </div>
-        </div>
-      </div>
-
-      <div class="col-sm-4 hide selected_contacts_div">
-          <div class="form-group">
-              {!! Form::label('selected_contacts', __('lang_v1.selected_contacts') . ':') !!}
-              <div class="form-group">
-                  {!! Form::select('selected_contact_ids[]', $contacts, null, ['class' => 'form-control select2', 'multiple', 'style' => 'width: 100%;' ]); !!}
-              </div>
-          </div>
-      </div>
-
+    </div>
       <div class="clearfix"></div>
-      <div class="col-md-4">
-        <div class="form-group">
-          <div class="checkbox">
-            <label>
-                 {!! Form::checkbox('is_active', 'active', true, ['class' => 'input-icheck status']); !!} {{ __('lang_v1.status_for_user') }}
-            </label>
-            @show_tooltip(__('lang_v1.tooltip_enable_user_active'))
-          </div>
-        </div>
-      </div>
-  @endcomponent
-  </div>
-  <div class="col-md-12">
-    @component('components.widget', ['title' => __('lang_v1.roles_and_permissions')])
       <div class="col-md-6">
         <div class="form-group">
           {!! Form::label('role', __( 'user.role' ) . ':*') !!} @show_tooltip(__('lang_v1.admin_role_location_permission_help'))
@@ -144,8 +130,55 @@
         </div>
     @endcomponent
   </div>
+
+  <div class="col-md-12">
+    @component('components.widget', ['title' => __('sale.sells')])
+      <div class="col-md-4">
+        <div class="form-group">
+          {!! Form::label('cmmsn_percent', __( 'lang_v1.cmmsn_percent' ) . ':') !!} @show_tooltip(__('lang_v1.commsn_percent_help'))
+            {!! Form::text('cmmsn_percent', null, ['class' => 'form-control input_number', 'placeholder' => __( 'lang_v1.cmmsn_percent' ) ]); !!}
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          {!! Form::label('max_sales_discount_percent', __( 'lang_v1.max_sales_discount_percent' ) . ':') !!} @show_tooltip(__('lang_v1.max_sales_discount_percent_help'))
+            {!! Form::text('max_sales_discount_percent', null, ['class' => 'form-control input_number', 'placeholder' => __( 'lang_v1.max_sales_discount_percent' ) ]); !!}
+        </div>
+      </div>
+      <div class="clearfix"></div>
+      
+      <div class="col-md-4">
+        <div class="form-group">
+            <div class="checkbox">
+            <br/>
+              <label>
+                {!! Form::checkbox('selected_contacts', 1, false, 
+                [ 'class' => 'input-icheck', 'id' => 'selected_contacts']); !!} {{ __( 'lang_v1.allow_selected_contacts' ) }}
+              </label>
+              @show_tooltip(__('lang_v1.allow_selected_contacts_tooltip'))
+            </div>
+        </div>
+      </div>
+      <div class="col-sm-4 hide selected_contacts_div">
+          <div class="form-group">
+              {!! Form::label('selected_contacts', __('lang_v1.selected_contacts') . ':') !!}
+              <div class="form-group">
+                  {!! Form::select('selected_contact_ids[]', $contacts, null, ['class' => 'form-control select2', 'multiple', 'style' => 'width: 100%;' ]); !!}
+              </div>
+          </div>
+      </div>
+
+    @endcomponent
+  </div>
+
   </div>
     @include('user.edit_profile_form_part')
+
+    @if(!empty($form_partials))
+      @foreach($form_partials as $partial)
+        {!! $partial !!}
+      @endforeach
+    @endif
   <div class="row">
     <div class="col-md-12">
       <button type="submit" class="btn btn-primary pull-right" id="submit_user_button">@lang( 'messages.save' )</button>
@@ -161,6 +194,13 @@
     });
     $('#selected_contacts').on('ifUnchecked', function(event){
       $('div.selected_contacts_div').addClass('hide');
+    });
+
+    $('#allow_login').on('ifChecked', function(event){
+      $('div.user_auth_fields').removeClass('hide');
+    });
+    $('#allow_login').on('ifUnchecked', function(event){
+      $('div.user_auth_fields').addClass('hide');
     });
   });
 

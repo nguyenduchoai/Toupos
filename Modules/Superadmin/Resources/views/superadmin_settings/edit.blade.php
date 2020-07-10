@@ -14,6 +14,8 @@
 
 <!-- Main content -->
 <section class="content">
+    @include('layouts.partials.search_settings')
+    <br>
     {!! Form::open(['action' => '\Modules\Superadmin\Http\Controllers\SuperadminSettingsController@update', 'method' => 'put']) !!}
     <div class="row">
         <div class="col-xs-12">
@@ -27,6 +29,8 @@
                         <a href="#" class="list-group-item text-center">@lang('superadmin::lang.payment_gateways')</a>
                         <a href="#" class="list-group-item text-center">@lang('superadmin::lang.backup')</a>
                         <a href="#" class="list-group-item text-center">@lang('superadmin::lang.cron')</a>
+                        <a href="#" class="list-group-item text-center">@lang('superadmin::lang.pusher_settings')</a>
+                        <a href="#" class="list-group-item text-center">@lang('superadmin::lang.additional_js_css')</a>
                     </div>
                 </div>
                 <div class="col-lg-10 col-md-10 col-sm-10 col-xs-10 pos-tab">
@@ -36,6 +40,8 @@
                     @include('superadmin::superadmin_settings.partials.payment_gateways')
                     @include('superadmin::superadmin_settings.partials.backup')
                     @include('superadmin::superadmin_settings.partials.cron')
+                    @include('superadmin::superadmin_settings.partials.pusher_setting')
+                    @include('superadmin::superadmin_settings.partials.additional_js_css')
                 </div>
             </div>
             <!--  </pos-tab-container> -->
@@ -58,6 +64,20 @@
             $('div#dropbox_access_token_div').removeClass('hide');
         } else {
             $('div#dropbox_access_token_div').addClass('hide');
+        }
+    });
+
+    $(document).ready( function(){
+        if ($('#welcome_email_body').length) {
+            tinymce.init({
+                selector: 'textarea#welcome_email_body',
+            });
+        }
+
+        if ($('#superadmin_register_tc').length) {
+            tinymce.init({
+                selector: 'textarea#superadmin_register_tc'
+            });
         }
     });
 </script>

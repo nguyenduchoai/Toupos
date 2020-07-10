@@ -6,4 +6,5 @@
 	 	<button type="submit" class="btn btn-success"> <i class="fa fa-hand-grab-o"></i> {{$v}}</button>
 	</form>
 	<p class="help-block">@lang('superadmin::lang.offline_pay_helptext')</p>
+	<p class="help-block">{!! nl2br($offline_payment_details) ?? '' !!}</p>
 </div>

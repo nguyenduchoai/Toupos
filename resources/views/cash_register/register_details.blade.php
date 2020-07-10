@@ -3,7 +3,7 @@
 
     <div class="modal-header">
       <button type="button" class="close no-print" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-      <h3 class="modal-title">@lang( 'cash_register.register_details' ) ( {{ \Carbon::createFromFormat('Y-m-d H:i:s', $register_details->open_time)->format('jS M, Y h:i A') }} - {{ \Carbon::now()->format('jS M, Y h:i A') }})</h3>
+      <h3 class="modal-title">@lang( 'cash_register.register_details' ) ( {{ \Carbon::createFromFormat('Y-m-d H:i:s', $register_details->open_time)->format('jS M, Y h:i A') }} -  {{\Carbon::createFromFormat('Y-m-d H:i:s', $close_time)->format('jS M, Y h:i A')}} )</h3>
     </div>
 
     <div class="modal-body">
@@ -50,7 +50,7 @@
                 <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_bank_transfer }}</span>
               </td>
             </tr>
-            @if(config('constants.enable_custom_payment_1'))
+            @if(array_key_exists('custom_pay_1', $payment_types))
               <tr>
                 <td>
                   {{$payment_types['custom_pay_1']}}:
@@ -60,7 +60,7 @@
                 </td>
               </tr>
             @endif
-            @if(config('constants.enable_custom_payment_2'))
+            @if(array_key_exists('custom_pay_2', $payment_types))
               <tr>
                 <td>
                   {{$payment_types['custom_pay_2']}}:
@@ -70,7 +70,7 @@
                 </td>
               </tr>
             @endif
-            @if(config('constants.enable_custom_payment_3'))
+            @if(array_key_exists('custom_pay_3', $payment_types))
               <tr>
                 <td>
                   {{$payment_types['custom_pay_3']}}:
@@ -107,14 +107,14 @@
                 @if($register_details->total_bank_transfer_refund != 0)
                   Bank Transfer: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_bank_transfer_refund }}</span><br>
                 @endif
-                @if(config('constants.enable_custom_payment_1') && $register_details->total_custom_pay_1_refund != 0)
-                    @lang('lang_v1.custom_payment_1'): <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_1_refund }}</span>
+                @if(array_key_exists('custom_pay_1', $payment_types) && $register_details->total_custom_pay_1_refund != 0)
+                    {{$payment_types['custom_pay_1']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_1_refund }}</span>
                 @endif
-                @if(config('constants.enable_custom_payment_2') && $register_details->total_custom_pay_2_refund != 0)
-                    @lang('lang_v1.custom_payment_2'): <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_2_refund }}</span>
+                @if(array_key_exists('custom_pay_2', $payment_types) && $register_details->total_custom_pay_2_refund != 0)
+                    {{$payment_types['custom_pay_2']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_2_refund }}</span>
                 @endif
-                @if(config('constants.enable_custom_payment_3') && $register_details->total_custom_pay_3_refund != 0)
-                    @lang('lang_v1.custom_payment_3'): <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_3_refund }}</span>
+                @if(array_key_exists('custom_pay_3', $payment_types) && $register_details->total_custom_pay_3_refund != 0)
+                    {{$payment_types['custom_pay_3']}}: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_custom_pay_3_refund }}</span>
                 @endif
                 @if($register_details->total_other_refund != 0)
                   Other: <span class="display_currency" data-currency_symbol="true">{{ $register_details->total_other_refund }}</span>
@@ -155,7 +155,8 @@
       <div class="row">
         <div class="col-xs-6">
           <b>@lang('report.user'):</b> {{ $register_details->user_name}}<br>
-          <b>Email:</b> {{ $register_details->email}}
+          <b>@lang('business.email'):</b> {{ $register_details->email}}<br>
+          <b>@lang('business.business_location'):</b> {{ $register_details->location_name}}<br>
         </div>
         @if(!empty($register_details->closing_note))
           <div class="col-xs-6">

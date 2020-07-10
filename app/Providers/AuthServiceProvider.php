@@ -26,8 +26,10 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         Gate::before(function ($user, $ability) {
-            if (in_array($ability, ['backup', 'superadmin'])) {
-                $administrator_list = env('ADMINISTRATOR_USERNAMES');
+            if (in_array($ability, ['backup', 'superadmin', 
+                'manage_modules'])) {
+                $administrator_list = config('constants.administrator_usernames');
+            
                 if (in_array($user->username, explode(',', $administrator_list))) {
                     return true;
                 }

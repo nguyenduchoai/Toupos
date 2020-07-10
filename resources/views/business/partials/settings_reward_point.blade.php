@@ -10,15 +10,16 @@
             </div>
         </div>
     </div>
-    <div class="clearfix"></div>
-    <div class="col-sm-12">
-        <h4>@lang('lang_v1.earning_points_setting'):</h4>
-    </div>
     <div class="col-sm-4">
         <div class="form-group">
             {!! Form::label('rp_name', __('lang_v1.rp_name') . ':') !!}
             {!! Form::text('rp_name', $business->rp_name, ['class' => 'form-control','placeholder' => __('lang_v1.rp_name')]); !!}
         </div>
+    </div>
+
+    <div class="clearfix"></div>
+    <div class="col-sm-12">
+        <h4>@lang('lang_v1.earning_points_setting'):</h4>
     </div>
     <div class="col-sm-4">
         <div class="form-group">
@@ -32,7 +33,7 @@
             {!! Form::text('min_order_total_for_rp', @num_format($business->min_order_total_for_rp), ['class' => 'form-control input_number','placeholder' => __('lang_v1.min_order_total_for_rp')]); !!}
         </div>
     </div>
-    <div class="clearfix"></div>
+    
     <div class="col-sm-4">
         <div class="form-group">
             {!! Form::label('max_rp_per_order', __('lang_v1.max_rp_per_order') . ':') !!} @show_tooltip(__('lang_v1.max_rp_per_order_tooltip'))

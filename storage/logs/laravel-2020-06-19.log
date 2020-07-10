@@ -1,0 +1,6 @@
+[2020-06-19 13:58:36] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ImportProductsController.phpLine:583Message:UNIT not found in row no. 1  
+[2020-06-19 13:59:24] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ImportProductsController.phpLine:583Message:UNIT not found in row no. 1  
+[2020-06-19 14:02:00] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ImportProductsController.phpLine:583Message:No location with name 'Ngọc Ánh Yersin' found in row no. 1  
+[2020-06-19 16:10:02] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ContactController.phpLine:1032Message:Mobile number is required in row no. 1  
+[2020-06-19 16:30:14] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ContactController.phpLine:1032Message:Contact name is required in row no. 5  
+[2020-06-19 16:32:08] live.EMERGENCY: File:/www/wwwroot/toupos.com/app/Http/Controllers/ContactController.phpLine:1032Message:Mobile number is required in row no. 551  

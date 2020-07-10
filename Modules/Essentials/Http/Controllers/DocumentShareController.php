@@ -9,7 +9,6 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Modules\Essentials\Entities\Document;
 use Modules\Essentials\Entities\DocumentShare;
-
 use Modules\Essentials\Notifications\DocumentShareNotification;
 use Spatie\Permission\Models\Role;
 

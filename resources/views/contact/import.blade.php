@@ -153,24 +153,27 @@
                         <td>@lang('business.landmark') <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>&nbsp;</td>
                     </tr>
+                    @php
+                        $custom_labels = json_decode(session('business.custom_labels'), true);
+                    @endphp
                     <tr>
                         <td>18</td>
-                         <td>@lang('lang_v1.custom_field', ['number' => 1]) <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                         <td>{{ $custom_labels['contact']['custom_field_1'] ?? __('lang_v1.contact_custom_field1') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td>19</td>
-                        <td>@lang('lang_v1.custom_field', ['number' => 2]) <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td>{{ $custom_labels['contact']['custom_field_2'] ?? __('lang_v1.contact_custom_field2') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td>20</td>
-                        <td>@lang('lang_v1.custom_field', ['number' => 3]) <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td>{{ $custom_labels['contact']['custom_field_3'] ?? __('lang_v1.contact_custom_field3') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
                         <td>21</td>
-                        <td>@lang('lang_v1.custom_field', ['number' => 4]) <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
+                        <td>{{ $custom_labels['contact']['custom_field_4'] ?? __('lang_v1.contact_custom_field4') }} <small class="text-muted">(@lang('lang_v1.optional'))</small></td>
                         <td>&nbsp;</td>
                     </tr>
                 </table>

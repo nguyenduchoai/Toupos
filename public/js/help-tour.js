@@ -25,11 +25,11 @@ $(document).ready(function() {
             content: LANG.tour_step2_content,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step2_menu')
+                    !$('#tour_step2')
                         .closest('li')
                         .hasClass('active')
                 ) {
-                    $('#tour_step2_menu').trigger('click');
+                    $('#tour_step2').trigger('click');
                 }
             },
         },
@@ -39,11 +39,10 @@ $(document).ready(function() {
             content: LANG.tour_step3_content_modified,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step2_menu')
-                        .closest('li')
+                    !$('#tour_step3')
                         .hasClass('active')
                 ) {
-                    $('#tour_step2_menu').trigger('click');
+                    $('#tour_step3 a:first').trigger('click');
                 }
             },
         },
@@ -53,11 +52,10 @@ $(document).ready(function() {
             content: LANG.tour_step4_content,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step4_menu')
-                        .closest('li')
+                    !$('#tour_step4')
                         .hasClass('active')
                 ) {
-                    $('#tour_step4_menu').trigger('click');
+                    $('#tour_step4 a:first').trigger('click');
                 }
             },
         },
@@ -67,11 +65,10 @@ $(document).ready(function() {
             content: LANG.tour_step5_content_modified,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step5_menu')
-                        .closest('li')
+                    !$('#tour_step5')
                         .hasClass('active')
                 ) {
-                    $('#tour_step5_menu').trigger('click');
+                    $('#tour_step5 a:first').trigger('click');
                 }
             },
         },
@@ -81,11 +78,10 @@ $(document).ready(function() {
             content: LANG.tour_step6_content,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step6_menu')
-                        .closest('li')
+                    !$('#tour_step6')
                         .hasClass('active')
                 ) {
-                    $('#tour_step6_menu').trigger('click');
+                    $('#tour_step6 a:first').trigger('click');
                 }
             },
         },
@@ -95,11 +91,10 @@ $(document).ready(function() {
             content: LANG.tour_step7_content,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step7_menu')
-                        .closest('li')
+                    !$('#tour_step7')
                         .hasClass('active')
                 ) {
-                    $('#tour_step7_menu').trigger('click');
+                    $('#tour_step7 :first').trigger('click');
                 }
             },
         },
@@ -109,11 +104,10 @@ $(document).ready(function() {
             content: LANG.tour_step8_content,
             onShow: function(tour) {
                 if (
-                    !$('#tour_step8_menu')
-                        .closest('li')
+                    !$('#tour_step8')
                         .hasClass('active')
                 ) {
-                    $('#tour_step8_menu').trigger('click');
+                    $('#tour_step8 a:first').trigger('click');
                 }
             },
         },

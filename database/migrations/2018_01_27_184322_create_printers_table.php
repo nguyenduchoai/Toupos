@@ -19,7 +19,7 @@ class CreatePrintersTable extends Migration
             $table->integer('business_id')->unsigned();
             $table->foreign('business_id')->references('id')->on('business')->onDelete('cascade');
 
-            $table->string('name', 256);
+            $table->string('name');
             $table->enum('connection_type', ['network', 'windows', 'linux']);
             $table->enum('capability_profile', ['default', 'simple', 'SP2000', 'TEP-200M', 'P822D'])->default('default');
             $table->string('char_per_line')->nullable();

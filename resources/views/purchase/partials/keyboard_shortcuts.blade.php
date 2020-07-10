@@ -1,4 +1,3 @@
-<script src="{{ asset('plugins/mousetrap/mousetrap.min.js?v=' . $asset_v) }}"></script>
 <script type="text/javascript">
 	$(document).ready( function() {
 		//Shortcuts to go recent product quantity

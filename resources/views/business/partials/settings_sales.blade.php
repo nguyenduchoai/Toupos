@@ -62,6 +62,20 @@
             </div>
         </div>
 
+        <div class="col-sm-4">
+            <div class="form-group">
+                {!! Form::label('amount_rounding_method', __('lang_v1.amount_rounding_method') . ':') !!} @show_tooltip(__('lang_v1.amount_rounding_method_help'))
+                {!! Form::select('pos_settings[amount_rounding_method]', 
+                [ 
+                    '1' =>  __('lang_v1.round_to_nearest_whole_number'), 
+                    '0.05' =>  __('lang_v1.round_to_nearest_decimal', ['multiple' => 0.05]), 
+                    '0.1' =>  __('lang_v1.round_to_nearest_decimal', ['multiple' => 0.1]),
+                    '0.5' =>  __('lang_v1.round_to_nearest_decimal', ['multiple' => 0.5])
+                ], 
+                !empty($pos_settings['amount_rounding_method']) ? $pos_settings['amount_rounding_method'] : null, ['class' => 'form-control select2', 'style' => 'width: 100%;', 'placeholder' => __('lang_v1.none')]); !!}
+            </div>
+        </div>
+
         <div class="col-sm-8">
             <div class="form-group">
                 <div class="checkbox">

@@ -20,9 +20,13 @@ class AccountTransaction extends Model
     protected $dates = [
         'operation_date',
         'created_at',
-        'updated_at',
-        'deleted_at'
+        'updated_at'
     ];
+
+    public function media()
+    {
+        return $this->morphMany(\App\Media::class, 'model');
+    }
 
     public function transaction()
     {
@@ -42,6 +46,7 @@ class AccountTransaction extends Model
             'expense' => 'debit',
             'purchase_return' => 'credit',
             'sell_return' => 'debit',
+            'payroll' => 'debit'
         ];
 
         return $account_transaction_types[$tansaction_type];
@@ -101,6 +106,11 @@ class AccountTransaction extends Model
                     'transaction_id' => $transaction_payment->transaction_id,
                     'transaction_payment_id' => $transaction_payment->id
                 ];
+
+                //If change return then set type as debit
+                if ($transaction_payment->transaction->type == 'sell' && $transaction_payment->is_return == 1) {
+                    $accnt_trans_data['type'] = 'debit';
+                }
 
                 self::createAccountTransaction($accnt_trans_data);
             }

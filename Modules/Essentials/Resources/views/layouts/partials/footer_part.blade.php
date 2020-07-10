@@ -43,11 +43,14 @@
                         $('.clock_out_btn').addClass('hide');
                         $('.clock_in_btn').removeClass('hide');
                     }
-                    $('#clock_in_clock_out_form')[0].reset();
-                     $('#clock_in_clock_out_form').find('button[type="submit"]').removeAttr('disabled');
                 } else {
-                    toastr.error(result.msg);
+                    swal({
+                        title: result.msg,
+                        icon: 'error'
+                    })
                 }
+                $('#clock_in_clock_out_form')[0].reset();
+                $('#clock_in_clock_out_form').find('button[type="submit"]').removeAttr('disabled');
             },
         });
     });

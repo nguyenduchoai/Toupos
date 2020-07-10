@@ -4,6 +4,8 @@ namespace Modules\Essentials\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\BroadcastMessage;
+use Modules\Essentials\Entities\DocumentShare;
 
 class DocumentShareNotification extends Notification
 {
@@ -31,7 +33,12 @@ class DocumentShareNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['database'];
+        $channels = ['database'];
+        if (isPusherEnabled()) {
+            $channels[] = 'broadcast';
+        }
+        
+        return $channels;
     }
 
     /**
@@ -51,6 +58,27 @@ class DocumentShareNotification extends Notification
      * @return array
      */
     public function toDatabase($notifiable)
+    {
+        return $this->notificationData();
+    }
+
+    /**
+     * Get the broadcastable representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return BroadcastMessage
+     */
+    public function toBroadcast($notifiable)
+    {
+        $notifiction_data = DocumentShare::documentShareNotificationData($this->notificationData()); 
+        return new BroadcastMessage([
+            'title' => $notifiction_data['title'],
+            'body' => strip_tags($notifiction_data['msg']),
+            'link' => $notifiction_data['link']
+        ]);
+    }
+
+    private function notificationData()
     {
         return [
             'document_id' => $this->document->id,

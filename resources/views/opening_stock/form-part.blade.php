@@ -1,6 +1,6 @@
 <div class="row">
 	<div class="col-sm-12">
-		@foreach($locations as $key => $value)
+		@forelse($locations as $key => $value)
 		<div class="box box-solid">
 			<div class="box-header">
 	            <h3 class="box-title">@lang('sale.location'): {{$value}}</h3>
@@ -148,6 +148,8 @@
 				</div>
 			</div>
 		</div> <!--box end-->
-		@endforeach
+		@empty
+    		<h3>@lang( 'lang_v1.product_not_assigned_to_any_location' )</h3>
+		@endforelse
 	</div>
 </div>

@@ -6,8 +6,7 @@
                  {!! Form::text('sku_prefix', $business->sku_prefix, ['class' => 'form-control text-uppercase']); !!}
             </div>
         </div>
-
-        @if(!config('constants.disable_expiry', true))
+        
         <div class="col-sm-4">
             {!! Form::label('enable_product_expiry', __( 'product.enable_product_expiry' ) . ':') !!}
             @show_tooltip(__('lang_v1.tooltip_enable_expiry'))
@@ -48,8 +47,6 @@
                 </div>
             </div>
         </div>
-
-        @endif
     </div>
 
     <div class="row">
@@ -151,5 +148,17 @@
                 </div>
             </div>
         </div>
+        <div class="clearfix"></div>
+        <div class="col-sm-4">
+            <div class="form-group">
+                <div class="checkbox">
+                  <label>
+                    {!! Form::checkbox('common_settings[enable_product_warranty]', 1, !empty($common_settings['enable_product_warranty']) ? true : false, 
+                    [ 'class' => 'input-icheck']); !!} {{ __( 'lang_v1.enable_product_warranty' ) }}
+                  </label>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>

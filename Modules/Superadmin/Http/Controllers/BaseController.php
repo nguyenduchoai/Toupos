@@ -2,9 +2,11 @@
 
 namespace Modules\Superadmin\Http\Controllers;
 
+use \Notification;
+use App\System;
 use Illuminate\Routing\Controller;
-
 use Modules\Superadmin\Entities\Subscription;
+use Modules\Superadmin\Notifications\NewSubscriptionNotification;
 
 class BaseController extends Controller
 {
@@ -37,7 +39,12 @@ class BaseController extends Controller
             $gateways['pesapal'] = 'PesaPal';
         }
 
-        $gateways['offline'] = 'Offline';
+        // check if offline payment is enabled or not
+        $is_offline_payment_enabled = System::getProperty('enable_offline_payment');
+
+        if ($is_offline_payment_enabled) {
+            $gateways['offline'] = 'Offline';
+        }
 
         return $gateways;
     }
@@ -87,6 +94,16 @@ class BaseController extends Controller
         $subscription['created_id'] = $user_id;
 
         $subscription = Subscription::create($subscription);
+
+        if (!$is_superadmin) {
+            $email = System::getProperty('email');
+            $is_notif_enabled = System::getProperty('enable_new_subscription_notification');
+
+            if (!empty($email) && $is_notif_enabled == 1) {
+                Notification::route('mail', $email)
+                ->notify(new NewSubscriptionNotification($subscription));
+            }
+        }
 
         return $subscription;
     }

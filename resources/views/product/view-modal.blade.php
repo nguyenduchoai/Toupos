@@ -16,29 +16,38 @@
 						{{$product->unit->short_name ?? '--' }}<br>
 						<b>@lang('product.barcode_type'): </b>
 						{{$product->barcode_type ?? '--' }}
-
+						@php 
+    						$custom_labels = json_decode(session('business.custom_labels'), true);
+						@endphp
 						@if(!empty($product->product_custom_field1))
 							<br/>
-							<b>@lang('lang_v1.product_custom_field1'): </b>
+							<b>{{ $custom_labels['product']['custom_field_1'] ?? __('lang_v1.product_custom_field1') }}: </b>
 							{{$product->product_custom_field1 }}
 						@endif
 
 						@if(!empty($product->product_custom_field2))
 							<br/>
-							<b>@lang('lang_v1.product_custom_field2'): </b>
+							<b>{{ $custom_labels['product']['custom_field_2'] ?? __('lang_v1.product_custom_field2') }}: </b>
 							{{$product->product_custom_field2 }}
 						@endif
 
 						@if(!empty($product->product_custom_field3))
 							<br/>
-							<b>@lang('lang_v1.product_custom_field3'): </b>
+							<b>{{ $custom_labels['product']['custom_field_3'] ?? __('lang_v1.product_custom_field3') }}: </b>
 							{{$product->product_custom_field3 }}
 						@endif
 
 						@if(!empty($product->product_custom_field4))
 							<br/>
-							<b>@lang('lang_v1.product_custom_field4'): </b>
+							<b>{{ $custom_labels['product']['custom_field_4'] ?? __('lang_v1.product_custom_field4') }}: </b>
 							{{$product->product_custom_field4 }}
+						@endif
+						<br>
+						<strong>@lang('lang_v1.available_in_locations'):</strong>
+						@if(count($product->product_locations) > 0)
+							{{implode(', ', $product->product_locations->pluck('name')->toArray())}}
+						@else
+							@lang('lang_v1.none')
 						@endif
 	      			</div>
 
@@ -58,6 +67,12 @@
 						@if($product->enable_stock)
 							<b>@lang('product.alert_quantity'): </b>
 							{{$product->alert_quantity ?? '--' }}
+						@endif
+
+						@if(!empty($product->warranty))
+							<br>
+							<b>@lang('lang_v1.warranty'): </b>
+							{{$product->warranty->display_name }}
 						@endif
 	      			</div>
 					
@@ -146,6 +161,15 @@
       			@include('product.partials.variable_product_details')
       		@elseif($product->type == 'combo')
       			@include('product.partials.combo_product_details')
+      		@endif
+      		@if($product->enable_stock == 1)
+	      		<div class="row">
+	      			<div class="col-md-12">
+	      				<strong>@lang('lang_v1.product_stock_details')</strong>
+	      			</div>
+	      			<div class="col-md-12" id="view_product_stock_details" data-product_id="{{$product->id}}">
+	      			</div>
+	      		</div>
       		@endif
       	</div>
       	<div class="modal-footer">

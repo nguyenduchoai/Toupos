@@ -14,11 +14,6 @@
 
     @include('layouts.partials.css')
 
-    <!-- Jquery Steps -->
-    <link rel="stylesheet" href="{{ asset('plugins/jquery.steps/jquery.steps.css?v=' . $asset_v) }}">
-    <!-- iCheck -->
-    <link rel="stylesheet" href="{{ asset('AdminLTE/plugins/iCheck/square/blue.css?v='.$asset_v) }}">
-
     <!--[if lt IE 9]>
     <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
     <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -45,12 +40,8 @@
     @yield('content')
     
     @include('layouts.partials.javascripts')
-    <script src="{{ asset('plugins/jquery.steps/jquery.steps.min.js?v=' . $asset_v) }}"></script>
-
     <!-- Scripts -->
     <script src="{{ asset('js/login.js?v=' . $asset_v) }}"></script>
-    <!-- iCheck -->
-    <script src="{{ asset('AdminLTE/plugins/iCheck/icheck.min.js?v=' . $asset_v) }}"></script>
     @yield('javascript')
 
     <script type="text/javascript">

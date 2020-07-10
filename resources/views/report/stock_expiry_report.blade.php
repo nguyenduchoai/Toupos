@@ -22,26 +22,26 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        {!! Form::label('category_id','Category:') !!}
-                        {!! Form::select('category', $categories, null, ['placeholder' => 'All', 'class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'category_id']); !!}
+                        {!! Form::label('category_id', __('product.category') . ':') !!}
+                        {!! Form::select('category', $categories, null, ['placeholder' => __('lang_v1.all'), 'class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'category_id']); !!}
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        {!! Form::label('sub_category_id','Sub Category:') !!}
-                        {!! Form::select('sub_category', array(), null, ['placeholder' => 'All', 'class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'sub_category_id']); !!}
+                        {!! Form::label('sub_category_id', __('product.sub_category') . ':') !!}
+                        {!! Form::select('sub_category', array(), null, ['placeholder' => __('lang_v1.all'), 'class' => 'form-control select2', 'style' => 'width:100%', 'id' => 'sub_category_id']); !!}
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        {!! Form::label('brand','Brand:') !!}
-                        {!! Form::select('brand', $brands, null, ['placeholder' => 'All', 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
+                        {!! Form::label('brand', __('product.brand') . ':') !!}
+                        {!! Form::select('brand', $brands, null, ['placeholder' => __('lang_v1.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        {!! Form::label('unit','Unit:') !!}
-                        {!! Form::select('unit', $units, null, ['placeholder' => 'All', 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
+                        {!! Form::label('unit', __('product.unit') . ':') !!}
+                        {!! Form::select('unit', $units, null, ['placeholder' => __('lang_v1.all'), 'class' => 'form-control select2', 'style' => 'width:100%']); !!}
                     </div>
                 </div>
                 <div class="col-md-3">

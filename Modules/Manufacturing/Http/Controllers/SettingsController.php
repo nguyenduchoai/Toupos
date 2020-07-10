@@ -2,8 +2,8 @@
 
 namespace Modules\Manufacturing\Http\Controllers;
 
-use App\System;
 use App\Business;
+use App\System;
 use App\Utils\ModuleUtil;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -63,6 +63,8 @@ class SettingsController extends Controller
             $settings = $request->only(['ref_no_prefix']);
 
             $settings['disable_editing_ingredient_qty'] = !empty($request->input('disable_editing_ingredient_qty')) ? true : false;
+
+            $settings['enable_updating_product_price'] = !empty($request->input('enable_updating_product_price')) ? true : false;
             
             $business = Business::where('id', $business_id)
                                 ->update(['manufacturing_settings' => json_encode($settings)]);

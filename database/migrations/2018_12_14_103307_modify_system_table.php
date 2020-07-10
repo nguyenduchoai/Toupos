@@ -12,7 +12,7 @@ class ModifySystemTable extends Migration
      */
     public function up()
     {
-        DB::statement("ALTER TABLE system MODIFY COLUMN value TEXT DEFAULT NULL");
+        // DB::statement("ALTER TABLE system MODIFY COLUMN value TEXT DEFAULT NULL");
     }
 
     /**

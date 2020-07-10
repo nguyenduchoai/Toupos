@@ -73,6 +73,18 @@ class SuperadminSettingsController extends BaseController
             'PAYPAL_LIVE_API_SECRET' => $is_demo ? null : env('PAYPAL_LIVE_API_SECRET'),
             'BACKUP_DISK' => env('BACKUP_DISK'),
             'DROPBOX_ACCESS_TOKEN' => $is_demo ? null : env('DROPBOX_ACCESS_TOKEN'),
+            'RAZORPAY_KEY_ID' => $is_demo ? null : env('RAZORPAY_KEY_ID'),
+            'RAZORPAY_KEY_SECRET'  => $is_demo ? null : env('RAZORPAY_KEY_SECRET'),
+
+            'PESAPAL_CONSUMER_KEY'  => $is_demo ? null : env('PESAPAL_CONSUMER_KEY'),
+            'PESAPAL_CONSUMER_SECRET'  => $is_demo ? null : env('PESAPAL_CONSUMER_SECRET'),
+            'PESAPAL_LIVE'  => $is_demo ? null : env('PESAPAL_LIVE'),
+            'PUSHER_APP_ID' => $is_demo ? null : env('PUSHER_APP_ID'),
+            'PUSHER_APP_KEY' => $is_demo ? null : env('PUSHER_APP_KEY'),
+            'PUSHER_APP_SECRET' => $is_demo ? null : env('PUSHER_APP_SECRET'),
+            'PUSHER_APP_CLUSTER' => $is_demo ? null : env('PUSHER_APP_CLUSTER'),
+            'GOOGLE_MAP_API_KEY' => $is_demo ? null : env('GOOGLE_MAP_API_KEY'),
+            'ALLOW_REGISTRATION' => $is_demo ? null : env('ALLOW_REGISTRATION')
         ];
         $mail_drivers = $this->mailDrivers;
 
@@ -118,11 +130,11 @@ class SuperadminSettingsController extends BaseController
                             ];
                 return back()->with('status', $output);
             }
-            
-            $system_settings = $request->only(['app_currency_id', 'invoice_business_name', 'email', 'invoice_business_landmark', 'invoice_business_zip', 'invoice_business_state', 'invoice_business_city', 'invoice_business_country', 'package_expiry_alert_days', 'superadmin_register_tc']);
+
+            $system_settings = $request->only(['app_currency_id', 'invoice_business_name', 'email', 'invoice_business_landmark', 'invoice_business_zip', 'invoice_business_state', 'invoice_business_city', 'invoice_business_country', 'package_expiry_alert_days', 'superadmin_register_tc', 'welcome_email_subject', 'welcome_email_body', 'additional_js', 'additional_css', 'offline_payment_details']);
 
             //Checkboxes
-            $checkboxes = ['enable_business_based_username', 'superadmin_enable_register_tc', 'allow_email_settings_to_businesses'];
+            $checkboxes = ['enable_business_based_username', 'superadmin_enable_register_tc', 'allow_email_settings_to_businesses', 'enable_new_business_registration_notification', 'enable_new_subscription_notification', 'enable_welcome_email', 'enable_offline_payment'];
             $input = $request->input();
             foreach ($checkboxes as $checkbox) {
                 $system_settings[$checkbox] = !empty($input[$checkbox]) ? 1 : 0;
@@ -144,8 +156,12 @@ class SuperadminSettingsController extends BaseController
                 'PAYPAL_SANDBOX_API_PASSWORD',
                 'PAYPAL_SANDBOX_API_SECRET', 'PAYPAL_LIVE_API_USERNAME',
                 'PAYPAL_LIVE_API_PASSWORD', 'PAYPAL_LIVE_API_SECRET',
-                'BACKUP_DISK', 'DROPBOX_ACCESS_TOKEN'
+                'BACKUP_DISK', 'DROPBOX_ACCESS_TOKEN',
+                'RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET',
+                'PESAPAL_CONSUMER_KEY', 'PESAPAL_CONSUMER_SECRET', 'PESAPAL_LIVE', 'PUSHER_APP_ID', 'PUSHER_APP_KEY', 'PUSHER_APP_SECRET', 'PUSHER_APP_CLUSTER', 'GOOGLE_MAP_API_KEY'
             ]);
+            $env_settings['ALLOW_REGISTRATION'] = !empty($request->input('ALLOW_REGISTRATION')) ? 'true' : 'false';
+            $env_settings['BROADCAST_DRIVER'] = 'pusher';
 
             $found_envs = [];
             $env_path = base_path('.env');

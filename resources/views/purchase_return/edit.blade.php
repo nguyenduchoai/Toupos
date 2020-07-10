@@ -48,8 +48,9 @@
 				<div class="col-sm-3">
 	                <div class="form-group">
 	                    {!! Form::label('document', __('purchase.attach_document') . ':') !!}
-	                    {!! Form::file('document', ['id' => 'upload_document']); !!}
-	                    <p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])</p>
+	                    {!! Form::file('document', ['id' => 'upload_document', 'accept' => implode(',', array_keys(config('constants.document_upload_mimes_types')))]); !!}
+	                    <p class="help-block">@lang('purchase.max_file_size', ['size' => (config('constants.document_size_limit') / 1000000)])
+	                    @includeIf('components.document_help_text')</p>
 	                </div>
 	            </div>
 			</div>

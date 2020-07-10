@@ -3,6 +3,8 @@
 namespace App\Utils;
 
 use App\Business;
+use App\BusinessLocation;
+use App\Contact;
 use App\Product;
 use App\ReferenceCount;
 use App\Transaction;
@@ -10,7 +12,6 @@ use App\TransactionSellLine;
 use App\Unit;
 use App\User;
 use App\VariationLocationDetails;
-
 use DB;
 
 use GuzzleHttp\Client;
@@ -138,22 +139,31 @@ class Util
      *
      * @return array
      */
-    public function payment_types()
+    public function payment_types($location = null)
     {
         $payment_types = ['cash' => __('lang_v1.cash'), 'card' => __('lang_v1.card'), 'cheque' => __('lang_v1.cheque'), 'bank_transfer' => __('lang_v1.bank_transfer'), 'other' => __('lang_v1.other')];
 
         $custom_labels = !empty(session('business.custom_labels')) ? json_decode(session('business.custom_labels'), true) : [];
 
-        if (config('constants.enable_custom_payment_1')) {
-            $payment_types['custom_pay_1'] = !empty($custom_labels['payments']['custom_pay_1']) ? $custom_labels['payments']['custom_pay_1'] : __('lang_v1.custom_payment_1');
-        }
+        $payment_types['custom_pay_1'] = !empty($custom_labels['payments']['custom_pay_1']) ? $custom_labels['payments']['custom_pay_1'] : __('lang_v1.custom_payment_1');
+        $payment_types['custom_pay_2'] = !empty($custom_labels['payments']['custom_pay_2']) ? $custom_labels['payments']['custom_pay_2'] : __('lang_v1.custom_payment_2');
+        $payment_types['custom_pay_3'] = !empty($custom_labels['payments']['custom_pay_3']) ? $custom_labels['payments']['custom_pay_3'] : __('lang_v1.custom_payment_3');
 
-        if (config('constants.enable_custom_payment_2')) {
-            $payment_types['custom_pay_2'] = !empty($custom_labels['payments']['custom_pay_2']) ? $custom_labels['payments']['custom_pay_2'] : __('lang_v1.custom_payment_2');
-        }
-
-        if (config('constants.enable_custom_payment_3')) {
-            $payment_types['custom_pay_3'] = !empty($custom_labels['payments']['custom_pay_3']) ? $custom_labels['payments']['custom_pay_3'] : __('lang_v1.custom_payment_3');
+        //Unset payment types if not enabled in business location
+        if (!empty($location)) {
+            $location = is_object($location) ? $location : BusinessLocation::find($location);
+            $location_account_settings = !empty($location->default_payment_accounts) ? json_decode($location->default_payment_accounts, true) : [];
+            $enabled_accounts = [];
+            foreach ($location_account_settings as $key => $value) {
+                if (!empty($value['is_enabled'])) {
+                    $enabled_accounts[] = $key;
+                }
+            }
+            foreach ($payment_types as $key => $value) {
+                if (!in_array($key, $enabled_accounts)) {
+                    unset($payment_types[$key]);
+                }
+            }
         }
 
         return $payment_types;
@@ -372,18 +382,19 @@ class Util
      * @param  array $data
      * @return void
      */
-    public function sendSms($data)
+     public function sendSms($data)
     {
         $sms_settings = $data['sms_settings'];
         //02/10/19 DanhVT add
         if($sms_settings['checked'] == 'tousms'){
-            return $this->sendTousms($sms_settings['tousms'], $data['mobile_number'], $data['sms_body']);
+            $this->sendTousms($sms_settings['tousms'], $data['mobile_number'], $data['sms_body']);
         } else if($sms_settings['checked'] == 'esms'){
-            return $this->sendEsms($sms_settings['esms'], $data['mobile_number'], $data['sms_body']);
+            $this->sendEsms($sms_settings['esms'], $data['mobile_number'], $data['sms_body']);
         } else if($sms_settings['checked'] == 'vht'){
-            return $this->sendVHT($sms_settings['vht'], $data['mobile_number'], $data['sms_body']);
+            $this->sendVHT($sms_settings['vht'], $data['mobile_number'], $data['sms_body']);
         }
         //02/10/19 DanhVT end
+
         //02/10/19 DanhVT remove
         // $request_data = [
         //     $sms_settings['send_to_param_name'] => $data['mobile_number'],
@@ -402,7 +413,7 @@ class Util
         // if (!empty($sms_settings['param_4'])) {
         //     $request_data[$sms_settings['param_4']] = $sms_settings['param_val_4'];
         // }
-        // if (!empty($sms_settings['param_5'])) {
+        // iDanhVTf (!empty($sms_settings['param_5'])) {
         //     $request_data[$sms_settings['param_5']] = $sms_settings['param_val_5'];
         // }
         // if (!empty($sms_settings['param_6'])) {
@@ -430,8 +441,6 @@ class Util
         //         'form_params' => $request_data
         //     ]);
         // }
-
-        // return $response;
         //02/10/19 DanhVT end
     }
 
@@ -547,6 +556,8 @@ class Util
         return false;
     }
     //02/10/19 DanhVT end
+
+
     /**
     * Retrieves sub units of a base unit
     *
@@ -657,7 +668,7 @@ class Util
      *
      * @return string
      */
-    public function uploadFile($request, $file_name, $dir_name)
+    public function uploadFile($request, $file_name, $dir_name, $file_type = 'document')
     {
         //If app environment is demo return null
         if (config('app.env') == 'demo') {
@@ -666,6 +677,20 @@ class Util
         
         $uploaded_file_name = null;
         if ($request->hasFile($file_name) && $request->file($file_name)->isValid()) {
+            
+            //Check if mime type is image
+            if ($file_type == 'image') {
+                if (strpos($request->$file_name->getClientMimeType(), 'image/') === false) {
+                    throw new \Exception("Invalid image file");
+                }
+            }
+
+            if ($file_type == 'document') {
+                if (!in_array($request->$file_name->getClientMimeType(), array_keys(config('constants.document_upload_mimes_types')))) {
+                    throw new \Exception("Invalid document file");
+                }
+            }
+            
             if ($request->$file_name->getSize() <= config('constants.document_size_limit')) {
                 $new_file_name = time() . '_' . $request->$file_name->getClientOriginalName();
                 if ($request->$file_name->storeAs($dir_name, $new_file_name)) {
@@ -673,6 +698,7 @@ class Util
                 }
             }
         }
+
         return $uploaded_file_name;
     }
     
@@ -709,9 +735,9 @@ class Util
      *
      * @return array
      */
-    public function replaceTags($business_id, $data, $transaction)
+    public function replaceTags($business_id, $data, $transaction, $contact = null)
     {
-        if (!is_object($transaction)) {
+        if (!empty($transaction) && !is_object($transaction)) {
             $transaction = Transaction::where('business_id', $business_id)
                             ->with(['contact', 'payment_lines'])
                             ->findOrFail($transaction);
@@ -722,16 +748,23 @@ class Util
         foreach ($data as $key => $value) {
             //Replace contact name
             if (strpos($value, '{contact_name}') !== false) {
-                $contact_name = $transaction->contact->name;
+                $contact_name = empty($contact) ? $transaction->contact->name : $contact->name;
 
                 $data[$key] = str_replace('{contact_name}', $contact_name, $data[$key]);
             }
 
             //Replace invoice number
             if (strpos($value, '{invoice_number}') !== false) {
-                $invoice_number = $transaction->type == 'sell' ? $transaction->invoice_no : $transaction->ref_no;
+                $invoice_number = $transaction->type == 'sell' ? $transaction->invoice_no : '';
 
                 $data[$key] = str_replace('{invoice_number}', $invoice_number, $data[$key]);
+            }
+
+            //Replace ref number
+            if (strpos($value, '{order_ref_number}') !== false) {
+                $order_ref_number = $transaction->ref_no;
+
+                $data[$key] = str_replace('{order_ref_number}', $order_ref_number, $data[$key]);
             }
             //Replace total_amount
             if (strpos($value, '{total_amount}') !== false) {
@@ -741,16 +774,31 @@ class Util
             }
 
             $total_paid = 0;
-            foreach ($transaction->payment_lines as $payment) {
-                if ($payment->is_return != 1) {
-                    $total_paid += $payment->amount;
+            $payment_ref_number = [];
+            if (!empty($transaction)) {
+                foreach ($transaction->payment_lines as $payment) {
+                    if ($payment->is_return != 1) {
+                        $total_paid += $payment->amount;
+                        $payment_ref_number[] = $payment->payment_ref_no;
+                    }
                 }
             }
-            //Replace total_amount
-            if (strpos($value, '{paid_amount}') !== false) {
-                $paid_amount = $this->num_f($total_paid, true);
+            
+            $paid_amount = $this->num_f($total_paid, true);
 
+            //Replace paid_amount
+            if (strpos($value, '{paid_amount}') !== false) {
                 $data[$key] = str_replace('{paid_amount}', $paid_amount, $data[$key]);
+            }
+
+            //Replace received_amount
+            if (strpos($value, '{received_amount}') !== false) {
+                $data[$key] = str_replace('{received_amount}', $paid_amount, $data[$key]);
+            }
+
+            //Replace payment_ref_number
+            if (strpos($value, '{payment_ref_number}') !== false) {
+                $data[$key] = str_replace('{payment_ref_number}', implode(', ', $payment_ref_number), $data[$key]);
             }
 
             //Replace due_amount
@@ -776,9 +824,27 @@ class Util
             }
 
             //Replace invoice_url
-            if (strpos($value, '{invoice_url}') !== false && $transaction->type == 'sell') {
+            if (!empty($transaction) && strpos($value, '{invoice_url}') !== false && $transaction->type == 'sell') {
                 $invoice_url = $this->getInvoiceUrl($transaction->id, $transaction->business_id);
                 $data[$key] = str_replace('{invoice_url}', $invoice_url, $data[$key]);
+            }
+
+            if (strpos($value, '{cumulative_due_amount}') !== false) {
+                $due = $this->getContactDue($transaction->contact_id);
+                $data[$key] = str_replace('{cumulative_due_amount}', $due, $data[$key]);
+            }
+
+            if (strpos($value, '{due_date}') !== false) {
+                $due_date = $transaction->due_date;
+                if (!empty($due_date)) {
+                    $due_date = $this->format_date($due_date->toDateTimeString(), true);
+                }
+                $data[$key] = str_replace('{due_date}', $due_date, $data[$key]);
+            }
+
+            if (strpos($value, '{contact_business_name}') !== false) {
+                $contact_business_name = !empty($transaction->contact->supplier_business_name) ? $transaction->contact->supplier_business_name : '';
+                $data[$key] = str_replace('{contact_business_name}', $contact_business_name, $data[$key]);
             }
         }
 
@@ -973,5 +1039,42 @@ class Util
         ];
 
         return $statuses;
+    }
+
+    /**
+     * Retrieves sum of due amount of a contact
+     * @param int $contact_id
+     *
+     * @return mixed
+     */
+    public function getContactDue($contact_id)
+    {
+        $contact_payments = Contact::where('contacts.id', $contact_id)
+                    ->join('transactions AS t', 'contacts.id', '=', 't.contact_id')
+                    ->whereIn('t.type', ['sell', 'opening_balance', 'purchase'])
+                    ->select(
+                        DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', final_total, 0)) as total_invoice"),
+                        DB::raw("SUM(IF(t.type = 'purchase', final_total, 0)) as total_purchase"),
+                        DB::raw("SUM(IF(t.status = 'final' AND t.type = 'sell', (SELECT SUM(IF(is_return = 1,-1*amount,amount)) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as total_paid"),
+                        DB::raw("SUM(IF(t.type = 'purchase', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as purchase_paid"),
+                        DB::raw("SUM(IF(t.type = 'opening_balance', final_total, 0)) as opening_balance"),
+                        DB::raw("SUM(IF(t.type = 'opening_balance', (SELECT SUM(amount) FROM transaction_payments WHERE transaction_payments.transaction_id=t.id), 0)) as opening_balance_paid")
+                    )->first();
+        $due = $contact_payments->total_invoice + $contact_payments->total_purchase - $contact_payments->total_paid - $contact_payments->purchase_paid + $contact_payments->opening_balance - $contact_payments->opening_balance_paid;
+
+        return $due;
+    }
+
+    public function getDays()
+    {
+      return [
+            'sunday' => __('lang_v1.sunday'),
+            'monday' => __('lang_v1.monday'),
+            'tuesday' => __('lang_v1.tuesday'),
+            'wednesday' => __('lang_v1.wednesday'),
+            'thursday' => __('lang_v1.thursday'),
+            'friday' => __('lang_v1.friday'),
+            'saturday' => __('lang_v1.saturday')
+        ];
     }
 }

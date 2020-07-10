@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Restaurant;
 
 use App\Product;
 
+use App\Utils\ProductUtil;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Routing\Controller;
 
-use App\Utils\ProductUtil;
+use Illuminate\Support\Facades\DB;
 
 class ModifierSetsController extends Controller
 {
@@ -114,7 +114,6 @@ class ModifierSetsController extends Controller
                 'type' => 'modifier',
                 'sku' => ' ',
                 'tax_type' => 'inclusive',
-                'alert_quantity' => 0,
                 'business_id' => $business_id,
                 'created_by' => $user_id
             ];

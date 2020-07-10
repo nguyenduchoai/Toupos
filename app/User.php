@@ -37,7 +37,7 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected $dates = ['deleted_at'];
+    
 
     /**
      * Get the business that owns the user.
@@ -45,6 +45,11 @@ class User extends Authenticatable
     public function business()
     {
         return $this->belongsTo(\App\Business::class);
+    }
+
+    public function scopeUser($query)
+    {
+        return $query->where('users.user_type', 'user');
     }
 
     /**
@@ -55,6 +60,14 @@ class User extends Authenticatable
     public function contactAccess()
     {
         return $this->belongsToMany(\App\Contact::class, 'user_contact_access');
+    }
+
+    /**
+     * Get all of the users's notes & documents.
+     */
+    public function documentsAndnote()
+    {
+        return $this->morphMany('App\DocumentAndNote', 'notable');
     }
 
     /**
@@ -130,7 +143,9 @@ class User extends Authenticatable
      */
     public static function forDropdown($business_id, $prepend_none = true, $include_commission_agents = false, $prepend_all = false)
     {
-        $query = User::where('business_id', $business_id);
+        $query = User::where('business_id', $business_id)
+                    ->user();
+                    
         if (!$include_commission_agents) {
             $query->where('is_cmmsn_agnt', 0);
         }
@@ -229,6 +244,13 @@ class User extends Authenticatable
 
     public function getRoleNameAttribute()
     {
-        return explode('#', $this->getRoleNames()[0])[0];
+        $role_name_array = $this->getRoleNames();
+        $role_name = !empty($role_name_array[0]) ? explode('#', $role_name_array[0])[0] : '';
+        return $role_name;
+    }
+
+    public function media()
+    {
+        return $this->morphOne(\App\Media::class, 'model');
     }
 }

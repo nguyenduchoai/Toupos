@@ -93,25 +93,27 @@
         <div class="box-body">
         	<div class="row">
                 <div class ="col-xs-12">
-                <!-- location table-->
-                    <table class="table table-bordered table-hover" 
-                    id="all_subscriptions_table">
-                        <thead>
-                        <tr>
-                            <th>@lang( 'superadmin::lang.package_name' )</th>
-                            <th>@lang( 'superadmin::lang.start_date' )</th>
-                            <th>@lang( 'superadmin::lang.trial_end_date' )</th>
-                            <th>@lang( 'superadmin::lang.end_date' )</th>
-                            <th>@lang( 'superadmin::lang.price' )</th>
-                            <th>@lang( 'superadmin::lang.paid_via' )</th>
-                            <th>@lang( 'superadmin::lang.payment_transaction_id' )</th>
-                            <th>@lang( 'sale.status' )</th>
-                            <th>@lang( 'lang_v1.created_at' )</th>
-                            <th>@lang( 'business.created_by' )</th>
-                            <th>@lang('messages.action')</th>
-                        </tr>
-                        </thead>
-                    </table>
+                <div class="table-responsive">
+                    <!-- location table-->
+                        <table class="table table-bordered table-hover" 
+                        id="all_subscriptions_table">
+                            <thead>
+                            <tr>
+                                <th>@lang( 'superadmin::lang.package_name' )</th>
+                                <th>@lang( 'superadmin::lang.start_date' )</th>
+                                <th>@lang( 'superadmin::lang.trial_end_date' )</th>
+                                <th>@lang( 'superadmin::lang.end_date' )</th>
+                                <th>@lang( 'superadmin::lang.price' )</th>
+                                <th>@lang( 'superadmin::lang.paid_via' )</th>
+                                <th>@lang( 'superadmin::lang.payment_transaction_id' )</th>
+                                <th>@lang( 'sale.status' )</th>
+                                <th>@lang( 'lang_v1.created_at' )</th>
+                                <th>@lang( 'business.created_by' )</th>
+                                <th>@lang('messages.action')</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

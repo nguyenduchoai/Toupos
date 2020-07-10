@@ -36,7 +36,7 @@
                 {!! Form::label('currency_id', __('business.currency') . ':') !!}
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <i class="fa fa-money"></i>
+                        <i class="fas fa-money-bill-alt"></i>
                     </span>
                     {!! Form::select('currency_id', $currencies, $business->currency_id, ['class' => 'form-control select2','placeholder' => __('business.currency'), 'required']); !!}
                 </div>
@@ -53,7 +53,7 @@
                 {!! Form::label('time_zone', __('business.time_zone') . ':') !!}
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <i class="fa fa-clock-o"></i>
+                        <i class="fas fa-clock"></i>
                     </span>
                     {!! Form::select('time_zone', $timezone_list, $business->time_zone, ['class' => 'form-control select2', 'required']); !!}
                 </div>
@@ -119,7 +119,7 @@
                 {!! Form::label('time_format', __('lang_v1.time_format') . ':*') !!}
                 <div class="input-group">
                     <span class="input-group-addon">
-                        <i class="fa fa-clock-o"></i>
+                        <i class="fas fa-clock"></i>
                     </span>
                     {!! Form::select('time_format', [12 => __('lang_v1.12_hour'), 24 => __('lang_v1.24_hour')], $business->time_format, ['class' => 'form-control select2', 'required']); !!}
                 </div>

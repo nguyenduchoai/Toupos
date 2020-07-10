@@ -60,6 +60,7 @@
                         <div class="col-md-12">
                         <hr>
                         <div class="row">
+                            <div class="table-responsive">
                             <table class="table">
                                 <tr>
                                     <th>
@@ -168,6 +169,7 @@
                                 </tr>
                             @endforeach
                             </table>
+                        </div>
                         </div>
                         </div>
                     @endif

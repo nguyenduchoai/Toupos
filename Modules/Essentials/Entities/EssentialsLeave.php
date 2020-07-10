@@ -33,4 +33,9 @@ class EssentialsLeave extends Model
     {
         return $this->belongsTo(\Modules\Essentials\Entities\EssentialsLeaveType::class, 'essentials_leave_type_id');
     }
+
+    public function changed_by_user()
+    {
+        return $this->belongsTo(\App\User::class, 'changed_by');
+    }
 }

@@ -4,7 +4,7 @@
         <div class="box-header">
             {!!$icon ?? '' !!}
             <h3 class="box-title">{{ $title ?? '' }}</h3>
-            {{$tool ?? ''}}
+            {!!$tool ?? ''!!}
         </div>
         @endif
     @else

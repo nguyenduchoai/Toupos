@@ -47,29 +47,29 @@
                 <h3 class="text-muted">
                     {{ __('report.total_sell') }} - {{ __('lang_v1.total_sales_return') }}: 
                     <span id="sr_total_sales">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                     -
                     <span id="sr_total_sales_return">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                     =
                     <span id="sr_total_sales_final">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                 </h3>
                 <div class="hide" id="total_commission_div">
                     <h3 class="text-muted">
                         {{ __('lang_v1.total_sale_commission') }}: 
                         <span id="sr_total_commission">
-                            <i class="fa fa-refresh fa-spin fa-fw"></i>
+                            <i class="fas fa-sync fa-spin fa-fw"></i>
                         </span>
                     </h3>
                 </div>
                 <h3 class="text-muted">
                     {{ __('report.total_expense') }}: 
                     <span id="sr_total_expenses">
-                        <i class="fa fa-refresh fa-spin fa-fw"></i>
+                        <i class="fas fa-sync fa-spin fa-fw"></i>
                     </span>
                 </h3>
             @endcomponent

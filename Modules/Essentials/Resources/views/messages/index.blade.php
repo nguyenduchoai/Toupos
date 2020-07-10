@@ -29,7 +29,8 @@
 		  			{!! Form::select('location_id',$business_locations,  null, ['class' => 'form-control', 'placeholder' => __('lang_v1.select_location'), 'style' => 'width: 100%;' ]); !!}
 		  		</div>
 		  		<div class="input-group-btn">
-		  			<button type="submit" class="btn btn-success pull-right"><i class="fa fa-plus"></i>
+		  			<button type="submit" class="btn btn-success pull-right ladda-button" data-style="expand-right">
+		  				<span class="ladda-label"><i class="fa fa-plus"></i></span>
 		  			</button>
 		  		</div>
 			</div>
@@ -51,12 +52,15 @@
 			var msg = $('#chat-msg').val().trim();
 			if(msg) {
 				var data = $(this).serialize();
+				var ladda = Ladda.create(document.querySelector('.ladda-button'));
+				ladda.start();
 				$.ajax({
 					url: "{{action('\Modules\Essentials\Http\Controllers\EssentialsMessageController@store')}}",
 					data: data,
 					method: 'post',
 					dataType: "json",
 					success: function(result){
+						ladda.stop();
 						if(result.html) {
 							$('div#chat-box').append(result.html);
 							scroll_down_chat_div();
@@ -93,12 +97,30 @@
 	            }
 	        });
 		});
+		var chat_refresh_interval = "{{config('essentials::config.chat_refresh_interval', 20)}}";
+		chat_refresh_interval = parseInt(chat_refresh_interval) * 1000;
+		setInterval(function(){ getNewMessages() }, chat_refresh_interval);
 	});
 
 	function scroll_down_chat_div() {
 		var chat_box    = $('#chat-box');
 		var height = chat_box[0].scrollHeight;
 		chat_box.scrollTop(height);
+	}
+
+	function getNewMessages() {
+		var last_chat_time =  $('div.msg-box').length ? $('div.msg-box:last').data('delivered-at') : '';
+		$.ajax({
+            url: "{{action('\Modules\Essentials\Http\Controllers\EssentialsMessageController@getNewMessages')}}?last_chat_time=" + last_chat_time,
+            dataType: 'html',
+            global: false,
+            success: function(result) {
+            	if(result.trim() != ''){
+            		$('div#chat-box').append(result);
+					scroll_down_chat_div();
+            	}
+            },
+        });
 	}
 </script>
 @endsection

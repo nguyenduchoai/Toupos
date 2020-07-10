@@ -25,7 +25,7 @@
 	        	@if(!($request->segment(1) == 'business' && $request->segment(2) == 'register'))
 
 	        		<!-- Register Url -->
-		        	@if(env('ALLOW_REGISTRATION', true))
+		        	@if(config('constants.allow_registration'))
 		            	<a 
 		            		href="{{ route('business.getRegister') }}@if(!empty(request()->lang)){{'?lang=' . request()->lang}} @endif"
 		            		class="btn bg-maroon btn-flat margin" 

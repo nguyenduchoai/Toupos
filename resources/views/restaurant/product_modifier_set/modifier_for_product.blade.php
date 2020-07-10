@@ -7,7 +7,7 @@
       @include('restaurant.product_modifier_set.add_selected_modifiers', array('index' => $row_count, 'modifiers' => $product->modifiers ) )
     @endif
   </span>&nbsp;  
-  <i class="fa fa-external-link-square cursor-pointer text-primary select-modifiers-btn" title="@lang('restaurant.modifiers_for_product')" data-toggle="modal" data-target="#{{$id}}"></i>
+  <i class="fa fa-external-link-alt cursor-pointer text-primary select-modifiers-btn" title="@lang('restaurant.modifiers_for_product')" data-toggle="modal" data-target="#{{$id}}"></i>
 </div>
 <div class="modal fade modifier_modal" id="{{$id}}" tabindex="-1" role="dialog">
 <div class="modal-dialog" role="document">
@@ -64,7 +64,7 @@
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn btn-primary add_modifier" data-dismiss="modal">
+      <button data-url="{{action('Restaurant\ProductModifierSetController@add_selected_modifiers')}}" type="button" class="btn btn-primary add_modifier" data-dismiss="modal">
         @lang( 'messages.add' )</button>
       <button type="button" class="btn btn-default" data-dismiss="modal">@lang( 'messages.close' )</button>
     </div>

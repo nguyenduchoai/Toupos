@@ -70,7 +70,8 @@ class InstallController extends Controller
         }
 
         DB::statement('SET default_storage_engine=INNODB;');
-        Artisan::call('migrate', ["--force"=> true]);
+        Artisan::call('module:migrate', ['module' => "Manufacturing"]);
+        System::addProperty($this->module_name . '_version', $this->appVersion);
 
         $output = ['success' => 1,
                     'msg' => 'Manufacturing module installed succesfully'
@@ -115,7 +116,7 @@ class InstallController extends Controller
                 $this->installSettings();
                 
                 DB::statement('SET default_storage_engine=INNODB;');
-                Artisan::call('migrate', ["--force"=> true]);
+                Artisan::call('module:migrate', ['module' => "Manufacturing"]);
 
                 System::setProperty($this->module_name . '_version', $this->appVersion);
             } else {
@@ -134,5 +135,29 @@ class InstallController extends Controller
             DB::rollBack();
             die($e->getMessage());
         }
+    }
+
+    /**
+     * Uninstall
+     * @return Response
+     */
+    public function uninstall(){
+        if (!auth()->user()->can('superadmin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            System::removeProperty($this->module_name . '_version');
+
+            $output = ['success' => true,
+                            'msg' => __("lang_v1.success")
+                        ];
+        } catch (\Exception $e) {
+            $output = ['success' => false,
+                        'msg' => $e->getMessage()
+                    ];
+        }
+
+        return redirect()->back()->with(['status' => $output]);
     }
 }

@@ -1,5 +1,23 @@
 <div class="pos-tab-content">
     <div class="row">
+        <div class="col-xs-6">
+            <div class="form-group">
+                <label>
+                {!! Form::checkbox('enable_offline_payment', 1,!empty($settings["enable_offline_payment"]), 
+                [ 'class' => 'input-icheck']); !!}
+                @lang('superadmin::lang.enable_offline_payment')
+                </label>
+            </div>
+        </div>
+        <div class="col-xs-6">
+            <div class="form-group">
+                {!! Form::label('offline_payment_details', __('superadmin::lang.offline_payment_details') . ':') !!}
+                @show_tooltip(__('superadmin::lang.offline_payment_details_tooltip'))
+                {!! Form::textarea('offline_payment_details', !empty($settings["offline_payment_details"]) ? $settings["offline_payment_details"] : null, ['class' => 'form-control','placeholder' => __('superadmin::lang.offline_payment_details'), 'rows' => 3]); !!}
+            </div>
+        </div>
+    </div>
+    <div class="row">
     	<h4>Stripe:</h4>
     	<div class="col-xs-4">
             <div class="form-group">
@@ -59,6 +77,48 @@
             <div class="form-group">
             	{!! Form::label('PAYPAL_LIVE_API_SECRET', __('superadmin::lang.paypal_live_api_secret') . ':') !!}
             	{!! Form::text('PAYPAL_LIVE_API_SECRET', $default_values['PAYPAL_LIVE_API_SECRET'], ['class' => 'form-control','placeholder' => __('superadmin::lang.paypal_live_api_secret')]); !!}
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+        
+        <h4>Razorpay: <small>(For INR India)</small></h4>
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('RAZORPAY_KEY_ID', 'Key ID:') !!}
+                {!! Form::text('RAZORPAY_KEY_ID', $default_values['RAZORPAY_KEY_ID'], ['class' => 'form-control']); !!}
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('RAZORPAY_KEY_SECRET', 'Key Secret:') !!}
+                {!! Form::text('RAZORPAY_KEY_SECRET', $default_values['RAZORPAY_KEY_SECRET'], ['class' => 'form-control']); !!}
+            </div>
+        </div>
+
+
+
+
+        <div class="clearfix"></div>
+        
+        <h4>Pesapal: <small>(For KES currency)</small></h4>
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('PESAPAL_CONSUMER_KEY', 'Consumer Key:') !!}
+                {!! Form::text('PESAPAL_CONSUMER_KEY', $default_values['PESAPAL_CONSUMER_KEY'], ['class' => 'form-control']); !!}
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('PESAPAL_CONSUMER_SECRET', 'Consumer Secret:') !!}
+                {!! Form::text('PESAPAL_CONSUMER_SECRET', $default_values['PESAPAL_CONSUMER_SECRET'], ['class' => 'form-control']); !!}
+            </div>
+        </div>
+
+        <div class="col-xs-4">
+            <div class="form-group">
+                {!! Form::label('PESAPAL_LIVE', 'Is Live?') !!}
+                {!! Form::select('PESAPAL_LIVE',['false' => 'False', 'true' => 'True'],  $default_values['PESAPAL_LIVE'], ['class' => 'form-control']); !!}
             </div>
         </div>
 

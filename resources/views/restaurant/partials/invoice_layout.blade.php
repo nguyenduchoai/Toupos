@@ -20,7 +20,7 @@
 <div class="box box-solid">
     <div class="box-body">
     	<div class="box-header">
-            <h3 class="box-title">@lang('restaurant.modules_settings')</h3>
+            <h3 class="box-title">@lang('lang_v1.restaurant_module_settings')</h3>
         </div>
 		<div class="row">
 		@if(in_array('tables', $enabled_modules) )

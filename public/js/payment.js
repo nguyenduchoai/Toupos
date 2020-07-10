@@ -10,8 +10,9 @@ $(document).ready(function() {
                 if (result.status == 'due') {
                     container.html(result.view).modal('show');
                     __currency_convert_recursively(container);
-                    $('#paid_on').datepicker({
-                        autoclose: true,
+                    $('#paid_on').datetimepicker({
+                        format: moment_date_format + ' ' + moment_time_format,
+                        ignoreReadonly: true,
                     });
                     container.find('form#transaction_payment_add_form').validate();
                 } else {
@@ -30,9 +31,9 @@ $(document).ready(function() {
             success: function(result) {
                 container.html(result).modal('show');
                 __currency_convert_recursively(container);
-                $('#paid_on').datepicker({
-                    autoclose: true,
-                    toggleActive: false,
+                $('#paid_on').datetimepicker({
+                    format: moment_date_format + ' ' + moment_time_format,
+                    ignoreReadonly: true,
                 });
                 container.find('form#transaction_payment_add_form').validate();
             },
@@ -83,6 +84,10 @@ $(document).ready(function() {
                             }
                             if (typeof ob_payment_table != 'undefined') {
                                 ob_payment_table.ajax.reload();
+                            }
+                            // project Module
+                            if (typeof project_invoice_datatable != 'undefined') {
+                                project_invoice_datatable.ajax.reload();
                             }
                         } else {
                             toastr.error(result.msg);
